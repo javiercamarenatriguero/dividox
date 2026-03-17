@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./gradlew :composeApp:assembleDebug 2>&1)",
+      "Bash(./gradlew :composeApp:jvmTest 2>&1)",
+      "WebSearch",
+      "WebFetch(domain:detekt.dev)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:mvnrepository.com)",
+      "WebFetch(domain:plugins.gradle.org)",
+      "Bash(./gradlew :composeApp:detekt)",
+      "Bash(./gradlew :composeApp:tasks --group=verification)",
+      "Bash(./gradlew :composeApp:detektMetadataCommonMain)",
+      "Bash(./gradlew :composeApp:detektJvmMain :composeApp:detektIosArm64Main :composeApp:detektAndroidDebug)",
+      "Bash(./gradlew :composeApp:detektMetadataCommonMain :composeApp:detektJvmMain :composeApp:detektAndroidDebug :composeApp:detektIosArm64Main :composeApp:detektIosSimulatorArm64Main)",
+      "Bash(./gradlew :composeApp:detektJvmMain)",
+      "Bash(./gradlew :composeApp:detektAndroidDebug)"
+    ]
+  }
+}
