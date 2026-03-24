@@ -3,6 +3,7 @@ package com.akole.dividox.common.mvi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.flow.StateFlow
 
 /**
@@ -13,4 +14,4 @@ import kotlinx.coroutines.flow.StateFlow
  */
 @Composable
 fun <VS> collectViewState(viewState: StateFlow<VS>): State<VS> =
-    viewState.collectAsState()
+    viewState.collectAsStateWithLifecycle()

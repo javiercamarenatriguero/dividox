@@ -21,6 +21,9 @@ kotlin {
     jvm()
 
     sourceSets {
+        commonMain.dependencies {
+            implementation(projects.common.mvi)
+        }
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutinesSwing)
