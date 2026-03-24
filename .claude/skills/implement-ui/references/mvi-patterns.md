@@ -2,25 +2,28 @@
 
 ## Common MVI Patterns
 
+> All patterns use the `mvi()` delegate from `:common:mvi`.  
+> Import: `com.akole.dividox.common.mvi.viewmodel.{MVI, mvi}`
+
 ### Loading State Pattern
 ```kotlin
 data class ViewState(
     val isLoading: Boolean = false,
     val data: Data? = null,
-    val error: String? = null
-)
+    val error: String? = null,
+) : com.akole.dividox.common.mvi.ViewState
 
-// In ViewModel
+// In ViewModel — use updateViewState { copy(...) }
 private fun loadData() {
     viewModelScope.launch {
-        updateState { copy(isLoading = true, error = null) }
+        updateViewState { copy(isLoading = true, error = null) }
 
         repository.getData()
             .onSuccess { data ->
-                updateState { copy(isLoading = false, data = data) }
+                updateViewState { copy(isLoading = false, data = data) }
             }
             .onFailure { error ->
-                updateState { copy(isLoading = false, error = error.message) }
+                updateViewState { copy(isLoading = false, error = error.message) }
             }
     }
 }
@@ -32,13 +35,21 @@ data class FormViewState(
     val name: String = "",
     val email: String = "",
     val isValid: Boolean = false,
-    val isSubmitting: Boolean = false
-)
+    val isSubmitting: Boolean = false,
+) : com.akole.dividox.common.mvi.ViewState
 
-sealed interface FormViewEvent {
+sealed interface FormViewEvent : com.akole.dividox.common.mvi.ViewEvent {
     data class OnNameChanged(val value: String) : FormViewEvent
     data class OnEmailChanged(val value: String) : FormViewEvent
     data object OnSubmitClicked : FormViewEvent
+}
+```
+
+### Side Effect Emission
+```kotlin
+// Always use viewModelScope.emitSideEffect — never launch a separate coroutine manually
+private fun navigateToDetails(id: String) {
+    viewModelScope.emitSideEffect(FeatureSideEffect.Navigation.GoToDetails(id))
 }
 ```
 
@@ -67,10 +78,18 @@ class FeatureViewModel : ViewModel() {
     var data by mutableStateOf("")
 }
 
-// GOOD - Use StateFlow or MVI delegate
+// BAD — raw MutableStateFlow bypasses the MVI contract
 class FeatureViewModel : ViewModel() {
     private val _state = MutableStateFlow(FeatureViewState())
     val state: StateFlow<FeatureViewState> = _state.asStateFlow()
+}
+
+// GOOD — use the mvi() delegate from :common:mvi
+class FeatureViewModel : ViewModel(),
+    MVI<FeatureViewState, FeatureViewEvent, FeatureSideEffect>
+    by mvi(FeatureViewState()) {
+
+    override fun onViewEvent(viewEvent: FeatureViewEvent) { ... }
 }
 ```
 
@@ -81,8 +100,8 @@ private fun handleAction() {
     navController.navigate("route")
 }
 
-// GOOD - Emit side effect
+// GOOD — emit side effect via viewModelScope.emitSideEffect
 private fun handleAction() {
-    emitSideEffect(FeatureSideEffect.Navigation.NavigateToDetails)
+    viewModelScope.emitSideEffect(FeatureSideEffect.Navigation.NavigateToDetails)
 }
 ```

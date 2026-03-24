@@ -2,6 +2,9 @@
 
 ## ViewModel Test Template
 
+ViewModels implement the `MVI` interface from `:common:mvi`.
+Access state via `sut.viewState.value` and side effects via `sut.sideEffect`.
+
 ```kotlin
 class FeatureViewModelTest {
 
@@ -43,7 +46,7 @@ class FeatureViewModelTest {
         // THEN
         assertEquals(
             FeatureViewState(data = expectedData),
-            sut.state.value
+            sut.viewState.value   // ← viewState, not state (MVI interface property)
         )
     }
 }

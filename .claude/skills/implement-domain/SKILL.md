@@ -7,9 +7,40 @@ description: Scaffolds the Logic Layer (Domain & Data) including Use Cases, Repo
 
 Scaffold the complete Logic layer (Domain + Data) following Clean Architecture principles.
 
+## Module Location
+
+All code lives in **`:component:[name]`**.
+
+```
+component/
+└── [name]/
+    ├── build.gradle.kts
+    └── src/
+        ├── commonMain/kotlin/com/akole/dividox/component/[name]/
+        │   ├── domain/
+        │   │   ├── model/          → Domain models (pure data classes)
+        │   │   ├── repository/     → Repository interfaces
+        │   │   └── usecase/        → Use Cases
+        │   └── data/
+        │       ├── repository/     → Repository implementations
+        │       ├── datasource/     → Data source interfaces + commonMain impls
+        │       └── mapper/         → DTO ↔ Domain mappers (optional)
+        ├── androidMain/kotlin/...  → Platform actuals (Room, DataStore, etc.)
+        ├── iosMain/kotlin/...      → Platform actuals (NSUserDefaults, etc.)
+        ├── jvmMain/kotlin/...      → Platform actuals (Desktop)
+        └── commonTest/kotlin/...   → Use Case and Repository tests
+```
+
+> ✅ Repository **interfaces** always in `domain/` (commonMain — no platform APIs).  
+> ✅ Use `expect/actual` when data source needs platform-specific implementation.  
+> ❌ No Compose, ViewModel, or navigation code in component modules.  
+> ❌ Component modules must NOT depend on other `:component/*` — use `:integration/*`.  
+> See `skill: module-organization` for full module rules.
+
 ## 1. Analyze the Request
 - Identify the `component-name` (e.g., `user`, `settings`).
 - If not provided, ask the user for it.
+- Check that the `:component:[name]` module exists in `settings.gradle.kts`; create it if not.
 
 ## 2. Execution Steps
 

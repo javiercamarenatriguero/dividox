@@ -29,12 +29,13 @@ composable<DetailsRoute> { backStackEntry ->
 fun NavGraphBuilder.featureNavigation(navController: NavController) {
     composable<FeatureRoute> {
         val viewModel: FeatureViewModel = koinViewModel()
-        val state by viewModel.state.collectAsState()
+        val state by collectViewState(viewModel.viewState)   // from :common:mvi
 
         FeatureScreen(
             state = state,
             onEvent = viewModel::onViewEvent,
-            onNavigateBack = { navController.popBackStack() },
+            sideEffects = viewModel.sideEffect,
+            onNavigation = { navController.popBackStack() },
         )
     }
 }

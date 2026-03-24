@@ -5,6 +5,25 @@ description: Expert on Dependency Injection (DI) configuration using Koin for Ko
 
 # Dependency Manager Skill
 
+## Module Location
+
+All DI configuration lives in **`:app`** → `commonMain/di/`.
+
+```
+app/
+└── src/
+    └── commonMain/kotlin/com/akole/dividox/
+        └── di/
+            ├── AppModule.kt          → Dispatchers, CoroutineScope, platform providers
+            ├── RepositoryModule.kt   → Repository bindings (:component/* impls)
+            ├── DomainModule.kt       → Use Case factories (:component/* use cases)
+            └── ViewModelModule.kt    → ViewModel registrations (:feature/* ViewModels)
+```
+
+> ❌ Never create Koin modules inside `:feature/*` or `:component/*`.  
+> ✅ Components and features use **constructor injection only** — no Koin references inside them.  
+> See `skill: module-organization` for full module rules.
+
 ## Description
 Expert on Dependency Injection (DI) configuration using Koin for the Dividox KMP project. Use this skill when configuring modules, registering dependencies, or setting up test overrides.
 

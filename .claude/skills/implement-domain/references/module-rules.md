@@ -1,6 +1,8 @@
 # Module Rules & Best Practices
 
-## Clean Architecture Guidelines
+> For the full multi-module architecture (app/feature/component/integration/common), see `skill: module-organization`.
+
+## Clean Architecture Guidelines within `:component:[name]`
 
 ### Domain Layer (`domain/`)
 - **Pure Kotlin**: No Android/platform dependencies.
