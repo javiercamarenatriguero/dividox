@@ -4,10 +4,6 @@ plugins {
     alias(libs.plugins.dividox.detekt)
 }
 
-android {
-    namespace = "com.akole.dividox.common.mvi"
-}
-
 kotlin {
     jvm()
     iosArm64()
@@ -16,7 +12,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(libs.kotlinx.coroutines.core)
-            implementation(compose.runtime)
+            implementation(libs.compose.runtime)
         }
     }
 }

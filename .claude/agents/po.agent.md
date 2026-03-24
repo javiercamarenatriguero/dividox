@@ -8,11 +8,8 @@ model: inherit
 color: purple
 tools: ["Read", "Grep", "Glob"]
 skills:
-  - module-organization
   - task-planner
   - write-meta-prompt
-  - manage-git-flow
-  - skill-creator
 memory: project
 ---
 

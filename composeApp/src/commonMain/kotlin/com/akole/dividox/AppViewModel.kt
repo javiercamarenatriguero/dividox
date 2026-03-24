@@ -18,6 +18,7 @@ class AppViewModel : ViewModel(),
     override fun onViewEvent(viewEvent: AppViewEvent) {
         when (viewEvent) {
             AppViewEvent.OnButtonClicked -> onButtonClicked()
+            AppViewEvent.OnDetailClicked -> Unit // Navigation handled directly in HomeNavigation
         }
     }
 

@@ -13,7 +13,10 @@ interface AppContract {
 
     sealed interface AppViewEvent : ViewEvent {
         data object OnButtonClicked : AppViewEvent
+        data object OnDetailClicked : AppViewEvent
     }
 
-    sealed interface AppSideEffect : SideEffect
+    sealed interface AppSideEffect : SideEffect {
+        sealed interface Navigation : AppSideEffect
+    }
 }

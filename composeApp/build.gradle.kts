@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.dividox.kmp.ios)
     alias(libs.plugins.dividox.kmp.test)
     alias(libs.plugins.dividox.detekt)
+    alias(libs.plugins.kotlinxSerialization)
 }
 
 android {
@@ -23,6 +24,8 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(projects.common.mvi)
+            implementation(libs.androidx.navigation.compose)
+            implementation(libs.kotlinx.serialization.core)
         }
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)

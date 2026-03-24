@@ -24,6 +24,7 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
             }
 
             extensions.configure<LibraryExtension> {
+                namespace = buildAndroidNamespace()
                 compileSdk = libs.findVersion("android-compileSdk").get().requiredVersion.toInt()
                 defaultConfig {
                     minSdk = libs.findVersion("android-minSdk").get().requiredVersion.toInt()
@@ -44,5 +45,16 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
                 }
             }
         }
+    }
+
+    /**
+     * Derives Android namespace from the Gradle project path.
+     * Example: `:common:mvi` → `com.akole.dividox.common.mvi`
+     */
+    private fun Project.buildAndroidNamespace(): String {
+        val modulePath = path
+            .removePrefix(":")
+            .replace(":", ".")
+        return "com.akole.dividox.$modulePath"
     }
 }
