@@ -3,6 +3,7 @@ package com.akole.dividox.navigation
 import androidx.compose.runtime.getValue
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
 import com.akole.dividox.AppContract.AppSideEffect
 import com.akole.dividox.AppContract.AppViewEvent
@@ -11,6 +12,14 @@ import com.akole.dividox.AppViewModel
 import com.akole.dividox.common.mvi.CollectSideEffect
 import com.akole.dividox.common.mvi.collectViewState
 import com.akole.dividox.getPlatform
+import kotlinx.serialization.Serializable
+
+@Serializable
+data object HomeRoute
+
+fun NavController.navigateToHome(navOptions: NavOptions? = null) {
+    this.navigate(HomeRoute, navOptions)
+}
 
 fun NavGraphBuilder.homeScreenNode(navController: NavController) {
     composable<HomeRoute> {
@@ -29,7 +38,7 @@ fun NavGraphBuilder.homeScreenNode(navController: NavController) {
                 when (event) {
                     AppViewEvent.OnButtonClicked -> viewModel.onViewEvent(event)
                     AppViewEvent.OnDetailClicked -> {
-                        navController.navigate(DetailRoute(platformName = getPlatform().name))
+                        navController.navigateToDetail(platformName = getPlatform().name)
                     }
                 }
             },

@@ -1,85 +1,143 @@
 ---
 name: implement-navigation
-description: Manages navigation wiring for features. Use when adding new screens, routes, or navigation flows to the app.
+description: Describes and enforces the type-safe KMP navigation pattern. Use when adding new screens, routes, or navigation flows to the app.
 ---
 
-# Navigation Manager
+# Navigation Pattern
 
-Wire up feature navigation following type-safe navigation patterns.
+## Pattern Overview
 
-## Module Location
-
-All navigation wiring lives in **`:app`** → `commonMain/navigation/`.
+Navigation follows a **wiring-layer pattern** where feature modules expose stateless `Screen` composables and the app module wires them to type-safe routes via `NavGraphBuilder` extensions.
 
 ```
-app/
-└── src/
-    └── commonMain/kotlin/com/akole/dividox/
-        └── navigation/
-            ├── RootNavGraph.kt               → Root NavHost
-            └── [feature]/
-                └── [Feature]Navigation.kt    → Feature-specific nav extension
+Screen (feature module)  ←  ScreenNode (navigation wiring)  ←  RootNavGraph  ←  App.kt
+       stateless                 creates ViewModel                 NavHost          rememberNavController
+       pure UI                   collects state                    registers nodes
+                                 handles side effects
 ```
 
-> ❌ Never add `composable { }` or `NavGraphBuilder` extensions inside `:feature/*`.  
-> ✅ Feature modules only expose `Screen` composables — `:app` wires them to routes.  
-> ✅ Routes (`@Serializable` objects) can live in `:feature/*` or `:app/navigation/`.  
-> See `skill: module-organization` for full module rules.
+### Key Concepts
 
-## 1. Analyze the Request
-- Identify the `feature-name` (e.g., `user-profile`).
-- Identify if it's a top-level route or a nested route.
+| Concept | Description |
+|---------|-------------|
+| **Route** | `@Serializable` object/data class. Co-located in its `[Feature]Navigation.kt` |
+| **navigateTo Extension** | `NavController.navigateTo*()` extension, co-located with its route |
+| **ScreenNode** | `NavGraphBuilder` extension that wires ViewModel → Screen for a given route |
+| **RootNavGraph** | Single `NavHost` composable that registers all screen nodes |
+| **Side Effect Handling** | Navigation actions flow as `SideEffect` from ViewModel → handled in the ScreenNode |
 
-## 2. Execution Steps
+### Principles
 
-### Step 1: Create/Update Feature Navigation File
+1. **Type Safety** — Routes use `@Serializable` via `kotlinx.serialization`, no string-based routing
+2. **Centralized Routes** — All routes in a single `Routes.kt`
+3. **Separation** — Feature modules expose `Screen` composables only; navigation wiring lives in `composeApp/navigation/`
+4. **No NavController in ViewModel** — ViewModels emit side effects; ScreenNodes translate them to `navController` calls
+5. **KMP Compatible** — Uses `org.jetbrains.androidx.navigation:navigation-compose`
 
-Use `collectViewState` and `CollectSideEffect` from `:common:mvi` to wire state and side effects.
+## Directory Structure
+
+```
+composeApp/src/commonMain/kotlin/.../
+└── navigation/
+    ├── RootNavGraph.kt              → SetupRootNavGraph with NavHost
+    ├── HomeNavigation.kt            → HomeRoute + navigateToHome() + homeScreenNode()
+    ├── [Feature]Navigation.kt       → [Feature]Route + navigateTo[Feature]() + [feature]ScreenNode()
+    └── ...
+```
+
+## How to Add a New Screen
+
+### 1. Define Route and Navigation Extension
+
+Each `[Feature]Navigation.kt` file contains its route, `navigateTo*` extension, and screen node:
 
 ```kotlin
-package com.akole.dividox.navigation.[feature_name]
-
-import androidx.navigation.NavController
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.compose.composable
-import com.akole.dividox.common.mvi.CollectSideEffect
-import com.akole.dividox.common.mvi.collectViewState
-import kotlinx.serialization.Serializable
-import org.koin.compose.viewmodel.koinViewModel
-
+// [Feature]Navigation.kt
 @Serializable
-object [FeatureName]Route
+data object FeatureRoute
 
-fun NavGraphBuilder.[featureName]Navigation(
-    navController: NavController,
-) {
-    composable<[FeatureName]Route> {
-        val viewModel: [FeatureName]ViewModel = koinViewModel()
+fun NavController.navigateToFeature(navOptions: NavOptions? = null) {
+    this.navigate(FeatureRoute, navOptions)
+}
+
+// With arguments
+@Serializable
+data class ProfileRoute(val userId: String)
+
+fun NavController.navigateToProfile(userId: String, navOptions: NavOptions? = null) {
+    this.navigate(ProfileRoute(userId = userId), navOptions)
+}
+```
+
+### 2. Create ScreenNode
+
+```kotlin
+// [Feature]Navigation.kt
+fun NavGraphBuilder.[feature]ScreenNode(navController: NavController) {
+    composable<FeatureRoute> {
+        val viewModel = viewModel { FeatureViewModel() }
         val state by collectViewState(viewModel.viewState)
 
-        [FeatureName]Screen(
+        CollectSideEffect(viewModel.sideEffect) { effect ->
+            when (effect) {
+                is FeatureSideEffect.Navigation ->
+                    handleNavigation(effect, navController)
+            }
+        }
+
+        FeatureScreen(
             state = state,
             onEvent = viewModel::onViewEvent,
-            sideEffects = viewModel.sideEffect,
-            onNavigation = { navigation ->
-                when (navigation) {
-                    [FeatureName]SideEffect.Navigation.NavigateBack ->
-                        navController.popBackStack()
-                }
-            },
         )
     }
 }
 ```
 
-### Step 2: Add to Graph
-- Add the function call: `[featureName]Navigation(navController)` to the appropriate NavHost.
+**With route arguments:**
 
-## 3. Verification
-- Ensure Route is `@Serializable`.
-- Ensure ViewModel is resolved correctly.
-- Ensure Screen signature matches the one in the feature module.
+```kotlin
+composable<FeatureRoute> { backStackEntry ->
+    val route = backStackEntry.toRoute<FeatureRoute>()
+    val viewModel = viewModel { FeatureViewModel(id = route.id) }
+    // ...
+}
+```
 
-## 4. References
-- For core principles, see [references/navigation-rules.md](references/navigation-rules.md).
-- For specific navigation patterns (Nested, Dialogs, Results), see [references/navigation-patterns.md](references/navigation-patterns.md).
+### 3. Register in RootNavGraph
+
+```kotlin
+NavHost(navController, startDestination = HomeRoute) {
+    [feature]ScreenNode(navController)
+}
+```
+
+### 4. Navigate To
+
+Use the `NavController` extension from `Routes.kt`:
+
+```kotlin
+navController.navigateToFeature()
+navController.navigateToProfile(userId = "123")
+```
+
+## Rules
+
+### Do's ✅
+
+- Co-locate route, `navigateTo*()` extension, and screen node in the same `[Feature]Navigation.kt`
+- Use `navigateTo*()` extensions instead of raw `navController.navigate(Route)`
+- Use `collectViewState()` and `CollectSideEffect` from `:common:mvi`
+- Create a private `handleNavigation()` function per ScreenNode
+- Name extensions as `[feature]ScreenNode(navController)`
+
+### Don'ts ❌
+
+- **NEVER** add `composable {}` inside feature modules
+- **NEVER** pass `NavController` to ViewModels
+- **NEVER** use hardcoded string routes
+- **NEVER** navigate from inside a ViewModel — emit a side effect
+
+## References
+
+- For advanced patterns (Nested Graphs, Dialogs, Results), see [references/navigation-patterns.md](references/navigation-patterns.md).
+- For naming and dependency rules, see [references/navigation-rules.md](references/navigation-rules.md).

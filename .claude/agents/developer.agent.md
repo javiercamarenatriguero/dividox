@@ -138,7 +138,7 @@ Even in Autonomous Mode, automatically switch to Assisted when:
 | `skill: implement-domain` | Scaffold Use Cases, Repositories, Domain Models in `:component/*` |
 | `skill: implement-ui` | Scaffold MVI ViewModels, Contracts, Compose Screens in `:feature/*` |
 | `skill: implement-di` | Configure Koin modules in `:app/di/` |
-| `skill: implement-navigation` | Wire app-side navigation in `:app/navigation/` |
+| `skill: implement-navigation` | Describes and enforces the type-safe KMP navigation pattern |
 | `skill: write-unit-test` | Write unit tests in commonTest |
 | `skill: manage-git-flow` | Branch creation, commit formatting, PR generation |
 | `skill: audit-compose-performance` | Audit and optimize Compose Multiplatform performance |

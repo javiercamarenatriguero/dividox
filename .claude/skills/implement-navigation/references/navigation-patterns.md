@@ -1,96 +1,83 @@
 # Navigation Patterns
 
-## Type-Safe Navigation
-
-Use Kotlin Serialization for type-safe routes:
+## Simple Screen (No Arguments)
 
 ```kotlin
-@Serializable
-object WelcomeRoute
+fun NavGraphBuilder.featureScreenNode(navController: NavController) {
+    composable<FeatureRoute> {
+        val viewModel = viewModel { FeatureViewModel() }
+        val state by collectViewState(viewModel.viewState)
 
-@Serializable
-data class DetailsRoute(val itemId: String)
-
-// Navigation with arguments
-navController.navigate(DetailsRoute(itemId = "123"))
-
-// Composable with arguments
-composable<DetailsRoute> { backStackEntry ->
-    val route = backStackEntry.toRoute<DetailsRoute>()
-    DetailsScreen(itemId = route.itemId)
+        FeatureScreen(state = state, onEvent = viewModel::onViewEvent)
+    }
 }
 ```
 
-## Common Scenarios
-
-### Simple Navigation
+## Screen with Route Arguments
 
 ```kotlin
-fun NavGraphBuilder.featureNavigation(navController: NavController) {
-    composable<FeatureRoute> {
-        val viewModel: FeatureViewModel = koinViewModel()
-        val state by collectViewState(viewModel.viewState)   // from :common:mvi
+composable<FeatureRoute> { backStackEntry ->
+    val route = backStackEntry.toRoute<FeatureRoute>()
+    val viewModel = viewModel { FeatureViewModel(id = route.id) }
+    // ...
+}
+```
 
-        FeatureScreen(
-            state = state,
-            onEvent = viewModel::onViewEvent,
-            sideEffects = viewModel.sideEffect,
-            onNavigation = { navController.popBackStack() },
+## Side Effect Navigation
+
+```kotlin
+private fun handleNavigation(
+    effect: FeatureSideEffect.Navigation,
+    navController: NavController,
+) {
+    when (effect) {
+        FeatureSideEffect.Navigation.NavigateBack ->
+            navController.popBackStack()
+        is FeatureSideEffect.Navigation.GoToDetail ->
+            navController.navigateToDetail(id = effect.id)
+    }
+}
+```
+
+## Nested Navigation (Flows)
+
+```kotlin
+fun NavGraphBuilder.onboardingFlow(navController: NavController) {
+    navigation<OnboardingGraphRoute>(startDestination = StepOneRoute) {
+        composable<StepOneRoute> { /* ... */ }
+        composable<StepTwoRoute> { /* ... */ }
+    }
+}
+```
+
+## Dialog Navigation
+
+```kotlin
+fun NavGraphBuilder.errorDialogNode(navController: NavController) {
+    dialog<ErrorDialogRoute> { backStackEntry ->
+        val route = backStackEntry.toRoute<ErrorDialogRoute>()
+        ErrorDialog(
+            message = route.message,
+            onDismiss = { navController.popBackStack() },
         )
     }
 }
 ```
 
-### Nested Navigation (Flows)
+## Navigation with Result
 
 ```kotlin
-fun NavGraphBuilder.onboardingNavigation(navController: NavController) {
-    navigation<OnboardingGraphRoute>(startDestination = StepOneRoute) {
-        composable<StepOneRoute> { /* ... */ }
-        composable<StepTwoRoute> { /* ... */ }
-        composable<StepThreeRoute> { /* ... */ }
-    }
-}
-```
-
-### Dialog Navigation
-
-```kotlin
-composable<ErrorDialogRoute> {
-    val route = it.toRoute<ErrorDialogRoute>()
-    ErrorDialog(
-        message = route.message,
-        onDismiss = { navController.popBackStack() },
-    )
-}
-```
-
-### Deep Links
-
-```kotlin
-composable<FeatureRoute>(
-    deepLinks = listOf(
-        navDeepLink<FeatureRoute>(basePath = "dividox://feature")
-    )
-) {
-    FeatureScreen(/* ... */)
-}
-```
-
-### Navigation with Result
-
-```kotlin
-composable<DetailsRoute> { backStackEntry ->
-    val savedStateHandle = backStackEntry.savedStateHandle
-
+// Receive result
+composable<SettingsRoute> { backStackEntry ->
     LaunchedEffect(Unit) {
-        savedStateHandle.getStateFlow<String?>("result", null)
+        backStackEntry.savedStateHandle
+            .getStateFlow<String?>("result", null)
             .filterNotNull()
-            .collect { result -> /* Handle result */ }
+            .collect { result -> /* handle */ }
     }
 }
 
-// Set result before navigating back
-savedStateHandle["result"] = "some_result"
+// Send result before navigating back
+navController.previousBackStackEntry?.savedStateHandle?.set("result", "value")
 navController.popBackStack()
 ```
