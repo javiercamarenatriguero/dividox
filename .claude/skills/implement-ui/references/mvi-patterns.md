@@ -63,12 +63,21 @@ fun FeatureScreen(viewModel: FeatureViewModel) {
     val state = viewModel.state.collectAsState()
 }
 
-// GOOD
+// GOOD — Screen receives state, onEvent, sideEffects, and onNavigation
 @Composable
 fun FeatureScreen(
     state: FeatureViewState,
-    onEvent: (FeatureViewEvent) -> Unit
-)
+    onEvent: (FeatureViewEvent) -> Unit,
+    sideEffects: Flow<FeatureSideEffect>,
+    onNavigation: (FeatureSideEffect.Navigation) -> Unit,
+) {
+    CollectSideEffect(sideEffects) { effect ->
+        when (effect) {
+            is FeatureSideEffect.Navigation -> onNavigation(effect)
+        }
+    }
+    // UI content
+}
 ```
 
 ### Don't use mutable state in ViewModel

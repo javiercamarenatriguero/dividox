@@ -1,4 +1,4 @@
-package com.akole.dividox
+package com.akole.dividox.feature.home
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
@@ -16,17 +16,27 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.akole.dividox.AppContract.AppViewEvent
-import com.akole.dividox.AppContract.AppViewState
-import dividox.composeapp.generated.resources.Res
-import dividox.composeapp.generated.resources.compose_multiplatform
+import com.akole.dividox.common.mvi.CollectSideEffect
+import com.akole.dividox.feature.home.HomeContract.HomeSideEffect
+import com.akole.dividox.feature.home.HomeContract.HomeViewEvent
+import com.akole.dividox.feature.home.HomeContract.HomeViewState
+import dividox.common.ui_resources.generated.resources.Res
+import dividox.common.ui_resources.generated.resources.compose_multiplatform
+import kotlinx.coroutines.flow.Flow
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
-fun AppScreen(
-    state: AppViewState,
-    onEvent: (AppViewEvent) -> Unit,
+fun HomeScreen(
+    state: HomeViewState,
+    onEvent: (HomeViewEvent) -> Unit,
+    sideEffects: Flow<HomeSideEffect>,
+    onNavigation: (HomeSideEffect.Navigation) -> Unit,
 ) {
+    CollectSideEffect(sideEffects) { effect ->
+        when (effect) {
+            is HomeSideEffect.Navigation -> onNavigation(effect)
+        }
+    }
     Column(
         modifier = Modifier
             .background(MaterialTheme.colorScheme.primaryContainer)
@@ -34,7 +44,7 @@ fun AppScreen(
             .fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Button(onClick = { onEvent(AppViewEvent.OnButtonClicked) }) {
+        Button(onClick = { onEvent(HomeViewEvent.OnButtonClicked) }) {
             Text("Click me!")
         }
         AnimatedVisibility(state.showContent) {
@@ -47,7 +57,7 @@ fun AppScreen(
             }
         }
         Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = { onEvent(AppViewEvent.OnDetailClicked) }) {
+        Button(onClick = { onEvent(HomeViewEvent.OnDetailClicked) }) {
             Text("View Platform Details")
         }
     }

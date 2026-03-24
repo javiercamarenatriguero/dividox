@@ -50,11 +50,13 @@ class KmpLibraryConventionPlugin : Plugin<Project> {
     /**
      * Derives Android namespace from the Gradle project path.
      * Example: `:common:mvi` → `com.akole.dividox.common.mvi`
+     * Example: `:common:ui-resources` → `com.akole.dividox.common.ui_resources`
      */
     private fun Project.buildAndroidNamespace(): String {
         val modulePath = path
             .removePrefix(":")
             .replace(":", ".")
+            .replace("-", "_")
         return "com.akole.dividox.$modulePath"
     }
 }

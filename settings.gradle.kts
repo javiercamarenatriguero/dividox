@@ -35,3 +35,6 @@ plugins {
 
 include(":composeApp")
 include(":common:mvi")
+include(":common:ui-resources")
+include(":feature:home")
+include(":feature:details")

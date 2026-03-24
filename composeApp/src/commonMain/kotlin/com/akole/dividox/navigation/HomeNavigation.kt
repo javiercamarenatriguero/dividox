@@ -5,12 +5,11 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
-import com.akole.dividox.AppContract.AppSideEffect
-import com.akole.dividox.AppContract.AppViewEvent
-import com.akole.dividox.AppScreen
-import com.akole.dividox.AppViewModel
-import com.akole.dividox.common.mvi.CollectSideEffect
+import com.akole.dividox.Greeting
 import com.akole.dividox.common.mvi.collectViewState
+import com.akole.dividox.feature.home.HomeContract.HomeSideEffect
+import com.akole.dividox.feature.home.HomeScreen
+import com.akole.dividox.feature.home.HomeViewModel
 import com.akole.dividox.getPlatform
 import kotlinx.serialization.Serializable
 
@@ -23,32 +22,23 @@ fun NavController.navigateToHome(navOptions: NavOptions? = null) {
 
 fun NavGraphBuilder.homeScreenNode(navController: NavController) {
     composable<HomeRoute> {
-        val viewModel = androidx.lifecycle.viewmodel.compose.viewModel { AppViewModel() }
+        val greeting = Greeting().greet()
+        val platformName = getPlatform().name
+        val viewModel = androidx.lifecycle.viewmodel.compose.viewModel {
+            HomeViewModel(greeting = greeting, platformName = platformName)
+        }
         val state by collectViewState(viewModel.viewState)
 
-        CollectSideEffect(viewModel.sideEffect) { effect ->
-            when (effect) {
-                is AppSideEffect.Navigation -> handleHomeNavigation(effect, navController)
-            }
-        }
-
-        AppScreen(
+        HomeScreen(
             state = state,
-            onEvent = { event ->
-                when (event) {
-                    AppViewEvent.OnButtonClicked -> viewModel.onViewEvent(event)
-                    AppViewEvent.OnDetailClicked -> {
-                        navController.navigateToDetail(platformName = getPlatform().name)
-                    }
+            onEvent = viewModel::onViewEvent,
+            sideEffects = viewModel.sideEffect,
+            onNavigation = { navigation ->
+                when (navigation) {
+                    is HomeSideEffect.Navigation.NavigateToDetail ->
+                        navController.navigateToDetail(platformName = navigation.platformName)
                 }
             },
         )
     }
-}
-
-private fun handleHomeNavigation(
-    effect: AppSideEffect.Navigation,
-    navController: NavController,
-) {
-    // Handle future navigation side effects here
 }

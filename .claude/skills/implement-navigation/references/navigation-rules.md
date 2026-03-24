@@ -27,12 +27,11 @@
 - Create `NavController.navigateTo*()` extension per route, co-located in `[Feature]Navigation.kt`
 - Use `navigateTo*()` extensions instead of raw `navController.navigate(Route)`
 - Co-locate route + extension + screenNode in the same `[Feature]Navigation.kt`
-- Use `collectViewState()` from `:common:mvi` for state collection
-- Use `CollectSideEffect` from `:common:mvi` for side effect handling
-- Handle navigation via side effects or direct `navController` calls in the wiring layer
+- Use `collectViewState()` from `:common:mvi` for state collection in ScreenNode
+- Pass `sideEffects` and `onNavigation` to the Screen — let the Screen call `CollectSideEffect`
+- Handle navigation via `onNavigation` callback in the ScreenNode
 - Keep all navigation logic in `composeApp/navigation/`
 - Use `backStackEntry.toRoute<Route>()` to extract route arguments
-- Create a private `handle[Feature]Navigation()` function per feature
 
 ### Don'ts ❌
 
@@ -40,7 +39,8 @@
 - **NEVER** pass `NavController` to ViewModels
 - **NEVER** use hardcoded string routes like `"home/details/{id}"`
 - **NEVER** navigate from inside a ViewModel — emit a side effect instead
-- **NEVER** define routes in feature modules — use centralized `Routes.kt`
+- **NEVER** define routes in feature modules — co-locate in `[Feature]Navigation.kt`
+- **NEVER** collect side effects in the ScreenNode — the Screen does that via `CollectSideEffect`
 
 ## Dependencies
 

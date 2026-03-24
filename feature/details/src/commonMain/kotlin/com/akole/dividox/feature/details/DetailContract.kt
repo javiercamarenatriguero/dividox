@@ -1,4 +1,4 @@
-package com.akole.dividox.detail
+package com.akole.dividox.feature.details
 
 import com.akole.dividox.common.mvi.SideEffect
 import com.akole.dividox.common.mvi.ViewEvent

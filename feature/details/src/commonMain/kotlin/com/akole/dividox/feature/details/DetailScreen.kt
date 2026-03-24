@@ -1,4 +1,4 @@
-package com.akole.dividox.detail
+package com.akole.dividox.feature.details
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -15,9 +15,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.akole.dividox.common.mvi.CollectSideEffect
-import com.akole.dividox.detail.DetailContract.DetailSideEffect
-import com.akole.dividox.detail.DetailContract.DetailViewEvent
-import com.akole.dividox.detail.DetailContract.DetailViewState
+import com.akole.dividox.feature.details.DetailContract.DetailSideEffect
+import com.akole.dividox.feature.details.DetailContract.DetailViewEvent
+import com.akole.dividox.feature.details.DetailContract.DetailViewState
 import kotlinx.coroutines.flow.Flow
 
 @Composable

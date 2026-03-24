@@ -163,8 +163,9 @@ commonMain.dependencies {
 
 ## 3. Verification
 - Ensure the package structure is correct.
-- Confirm the Screen has the correct signature: `(state, onEvent)`.
-- Verify the ViewModel uses proper state management.
+- Confirm the Screen has the correct signature: `(state, onEvent, sideEffects, onNavigation)`.
+- Verify the Screen calls `CollectSideEffect` internally and delegates navigation to `onNavigation`.
+- Verify the ViewModel uses proper state management via `mvi()` delegate.
 
 ## 4. Next Steps
 - Wire up navigation using `skill: implement-navigation`.

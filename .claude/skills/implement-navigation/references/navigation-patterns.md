@@ -8,7 +8,16 @@ fun NavGraphBuilder.featureScreenNode(navController: NavController) {
         val viewModel = viewModel { FeatureViewModel() }
         val state by collectViewState(viewModel.viewState)
 
-        FeatureScreen(state = state, onEvent = viewModel::onViewEvent)
+        FeatureScreen(
+            state = state,
+            onEvent = viewModel::onViewEvent,
+            sideEffects = viewModel.sideEffect,
+            onNavigation = { navigation ->
+                when (navigation) {
+                    // handle navigation side effects
+                }
+            },
+        )
     }
 }
 ```
@@ -19,22 +28,38 @@ fun NavGraphBuilder.featureScreenNode(navController: NavController) {
 composable<FeatureRoute> { backStackEntry ->
     val route = backStackEntry.toRoute<FeatureRoute>()
     val viewModel = viewModel { FeatureViewModel(id = route.id) }
-    // ...
+    val state by collectViewState(viewModel.viewState)
+
+    FeatureScreen(
+        state = state,
+        onEvent = viewModel::onViewEvent,
+        sideEffects = viewModel.sideEffect,
+        onNavigation = { navigation ->
+            when (navigation) {
+                FeatureSideEffect.Navigation.NavigateBack ->
+                    navController.popBackStack()
+            }
+        },
+    )
 }
 ```
 
-## Side Effect Navigation
+## Side Effect Flow
+
+Side effects flow through the Screen, not the ScreenNode:
+
+```
+ViewModel → emitSideEffect() → Screen (CollectSideEffect) → onNavigation callback → ScreenNode → navController
+```
+
+The Screen collects side effects internally and delegates navigation ones to `onNavigation`:
 
 ```kotlin
-private fun handleNavigation(
-    effect: FeatureSideEffect.Navigation,
-    navController: NavController,
-) {
+// Inside Screen composable
+CollectSideEffect(sideEffects) { effect ->
     when (effect) {
-        FeatureSideEffect.Navigation.NavigateBack ->
-            navController.popBackStack()
-        is FeatureSideEffect.Navigation.GoToDetail ->
-            navController.navigateToDetail(id = effect.id)
+        is FeatureSideEffect.Navigation -> onNavigation(effect)
+        // Handle non-navigation side effects internally (e.g., haptics, toasts)
     }
 }
 ```

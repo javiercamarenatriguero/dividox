@@ -7,13 +7,14 @@ description: Describes and enforces the type-safe KMP navigation pattern. Use wh
 
 ## Pattern Overview
 
-Navigation follows a **wiring-layer pattern** where feature modules expose stateless `Screen` composables and the app module wires them to type-safe routes via `NavGraphBuilder` extensions.
+Navigation follows a **wiring-layer pattern** where feature modules expose `Screen` composables (which collect their own side effects) and the app module wires them to type-safe routes via `NavGraphBuilder` extensions.
 
 ```
 Screen (feature module)  ←  ScreenNode (navigation wiring)  ←  RootNavGraph  ←  App.kt
-       stateless                 creates ViewModel                 NavHost          rememberNavController
-       pure UI                   collects state                    registers nodes
-                                 handles side effects
+       receives state,          creates ViewModel                 NavHost          rememberNavController
+       onEvent, sideEffects,    collects state
+       onNavigation             handles onNavigation callback
+       collects side effects
 ```
 
 ### Key Concepts
@@ -24,14 +25,14 @@ Screen (feature module)  ←  ScreenNode (navigation wiring)  ←  RootNavGraph 
 | **navigateTo Extension** | `NavController.navigateTo*()` extension, co-located with its route |
 | **ScreenNode** | `NavGraphBuilder` extension that wires ViewModel → Screen for a given route |
 | **RootNavGraph** | Single `NavHost` composable that registers all screen nodes |
-| **Side Effect Handling** | Navigation actions flow as `SideEffect` from ViewModel → handled in the ScreenNode |
+| **Side Effect Handling** | Screen collects side effects internally via `CollectSideEffect` and delegates navigation to `onNavigation` callback. ScreenNode only handles `onNavigation`. |
 
 ### Principles
 
 1. **Type Safety** — Routes use `@Serializable` via `kotlinx.serialization`, no string-based routing
-2. **Centralized Routes** — All routes in a single `Routes.kt`
+2. **Co-located Routes** — Route + `navigateTo*()` + ScreenNode live in the same `[Feature]Navigation.kt`
 3. **Separation** — Feature modules expose `Screen` composables only; navigation wiring lives in `composeApp/navigation/`
-4. **No NavController in ViewModel** — ViewModels emit side effects; ScreenNodes translate them to `navController` calls
+4. **No NavController in ViewModel** — ViewModels emit side effects; Screens collect them and delegate navigation to `onNavigation`
 5. **KMP Compatible** — Uses `org.jetbrains.androidx.navigation:navigation-compose`
 
 ## Directory Structure
@@ -71,6 +72,8 @@ fun NavController.navigateToProfile(userId: String, navOptions: NavOptions? = nu
 
 ### 2. Create ScreenNode
 
+The ScreenNode creates the ViewModel, collects state, and passes everything to the Screen. The Screen handles side effects internally — the ScreenNode only provides the `onNavigation` callback.
+
 ```kotlin
 // [Feature]Navigation.kt
 fun NavGraphBuilder.[feature]ScreenNode(navController: NavController) {
@@ -78,16 +81,18 @@ fun NavGraphBuilder.[feature]ScreenNode(navController: NavController) {
         val viewModel = viewModel { FeatureViewModel() }
         val state by collectViewState(viewModel.viewState)
 
-        CollectSideEffect(viewModel.sideEffect) { effect ->
-            when (effect) {
-                is FeatureSideEffect.Navigation ->
-                    handleNavigation(effect, navController)
-            }
-        }
-
         FeatureScreen(
             state = state,
             onEvent = viewModel::onViewEvent,
+            sideEffects = viewModel.sideEffect,
+            onNavigation = { navigation ->
+                when (navigation) {
+                    FeatureSideEffect.Navigation.NavigateBack ->
+                        navController.popBackStack()
+                    is FeatureSideEffect.Navigation.GoToDetail ->
+                        navController.navigateToDetail(id = navigation.id)
+                }
+            },
         )
     }
 }
@@ -113,7 +118,7 @@ NavHost(navController, startDestination = HomeRoute) {
 
 ### 4. Navigate To
 
-Use the `NavController` extension from `Routes.kt`:
+Use the `NavController` extension from the corresponding `[Feature]Navigation.kt`:
 
 ```kotlin
 navController.navigateToFeature()
@@ -126,8 +131,8 @@ navController.navigateToProfile(userId = "123")
 
 - Co-locate route, `navigateTo*()` extension, and screen node in the same `[Feature]Navigation.kt`
 - Use `navigateTo*()` extensions instead of raw `navController.navigate(Route)`
-- Use `collectViewState()` and `CollectSideEffect` from `:common:mvi`
-- Create a private `handleNavigation()` function per ScreenNode
+- Use `collectViewState()` from `:common:mvi` for state collection in the ScreenNode
+- Pass `sideEffects` and `onNavigation` to the Screen — let the Screen collect side effects via `CollectSideEffect`
 - Name extensions as `[feature]ScreenNode(navController)`
 
 ### Don'ts ❌
@@ -136,6 +141,7 @@ navController.navigateToProfile(userId = "123")
 - **NEVER** pass `NavController` to ViewModels
 - **NEVER** use hardcoded string routes
 - **NEVER** navigate from inside a ViewModel — emit a side effect
+- **NEVER** collect side effects in the ScreenNode — the Screen does that
 
 ## References
 

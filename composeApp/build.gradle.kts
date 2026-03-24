@@ -24,6 +24,8 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(projects.common.mvi)
+            implementation(projects.feature.home)
+            implementation(projects.feature.details)
             implementation(libs.androidx.navigation.compose)
             implementation(libs.kotlinx.serialization.core)
         }

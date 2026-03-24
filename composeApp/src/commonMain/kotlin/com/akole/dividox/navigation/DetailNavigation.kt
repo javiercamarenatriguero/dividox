@@ -6,10 +6,11 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import com.akole.dividox.Greeting
 import com.akole.dividox.common.mvi.collectViewState
-import com.akole.dividox.detail.DetailContract.DetailSideEffect
-import com.akole.dividox.detail.DetailScreen
-import com.akole.dividox.detail.DetailViewModel
+import com.akole.dividox.feature.details.DetailContract.DetailSideEffect
+import com.akole.dividox.feature.details.DetailScreen
+import com.akole.dividox.feature.details.DetailViewModel
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -22,8 +23,9 @@ fun NavController.navigateToDetail(platformName: String, navOptions: NavOptions?
 fun NavGraphBuilder.detailScreenNode(navController: NavController) {
     composable<DetailRoute> { backStackEntry ->
         val route = backStackEntry.toRoute<DetailRoute>()
+        val greeting = Greeting().greet()
         val viewModel = androidx.lifecycle.viewmodel.compose.viewModel {
-            DetailViewModel(platformName = route.platformName)
+            DetailViewModel(platformName = route.platformName, greeting = greeting)
         }
         val state by collectViewState(viewModel.viewState)
 
