@@ -25,7 +25,7 @@ If a product description document already exists in the project, read it to extr
 
 ## Output Structure
 
-Each PRD is saved as a separate file: `PRDs/PRD-NNN-kebab-case-title.md`
+Each PRD is saved as a separate file under `docs/<product-name>/PRDs/PRD-NNN-kebab-case-title.md`
 
 ### PRD Template
 
@@ -143,7 +143,7 @@ Each PRD is saved as a separate file: `PRDs/PRD-NNN-kebab-case-title.md`
 - Release plan phases should be realistic and incremental
 - File naming: `PRD-NNN-kebab-case-title.md` (e.g., `PRD-001-ai-screening.md`)
 - All content in English
-- Create a PRDs/ directory in the project documentation folder
+- Create the PRDs/ directory under `docs/<product-name>/`
 
 ## Index Table
 

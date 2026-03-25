@@ -24,7 +24,7 @@ If no existing documentation is found, ask the user for the decision context.
 
 ## Output Structure
 
-Each ADR is saved as a separate file: `ADRs/ADR-NNN-kebab-case-title.md`
+Each ADR is saved as a separate file under `docs/<product-name>/ADRs/ADR-NNN-kebab-case-title.md`
 
 ### ADR Template
 

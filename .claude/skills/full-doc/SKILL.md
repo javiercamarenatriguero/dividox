@@ -20,7 +20,6 @@ Before starting, gather from the user:
 2. **Problem domain** — what problem space the product addresses
 3. **Target users** — who will use the product (2-4 user roles)
 4. **Key differentiators** — what makes this product unique (optional)
-5. **Output folder** — where to save the documentation (default: `<product-name>/`)
 
 ## Execution Phases
 
@@ -91,20 +90,23 @@ Generates the delivery timeline:
 
 ## Output Folder Structure
 
+All documentation is generated under the `docs/` directory at the project root.
+
 ```
-<product-name>/
-├── <PRODUCT-NAME>.md          # Main design document (all sections)
-├── prompts.md                 # Log of prompts used (optional)
-├── ADRs/
-│   ├── ADR-001-*.md
-│   ├── ADR-002-*.md
-│   └── ...
-├── PRDs/
-│   ├── PRD-001-*.md
-│   ├── PRD-002-*.md
-│   └── ...
-└── resources/
-    └── (any generated assets)
+docs/
+└── <product-name>/
+    ├── <PRODUCT-NAME>.md          # Main design document (all sections)
+    ├── prompts.md                 # Log of prompts used (optional)
+    ├── ADRs/
+    │   ├── ADR-001-*.md
+    │   ├── ADR-002-*.md
+    │   └── ...
+    ├── PRDs/
+    │   ├── PRD-001-*.md
+    │   ├── PRD-002-*.md
+    │   └── ...
+    └── resources/
+        └── (any generated assets)
 ```
 
 ## Main Document Structure
