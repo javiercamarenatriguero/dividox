@@ -19,7 +19,13 @@
       "Bash(chmod:*)",
       "Bash(jq:*)",
       "Bash(.claude/scripts/pre-commit-check.sh)",
-      "Bash(echo \"exit: $?\")"
+      "Bash(echo \"exit: $?\")",
+      "Bash(xargs ls:*)",
+      "mcp__linear-server__list_projects",
+      "mcp__linear-server__list_teams",
+      "mcp__linear-server__save_issue",
+      "mcp__linear-server__create_document",
+      "mcp__linear-server__save_project"
     ]
   }
 }

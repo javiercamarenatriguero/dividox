@@ -1,4 +1,26 @@
-This is a Kotlin Multiplatform project targeting Android, iOS, Desktop (JVM).
+# DiviDox
+
+DiviDox is a **dividend-focused stock portfolio tracker** for investors who want to understand and grow their passive income from equities. Built with Kotlin Multiplatform, it runs natively on Android, iOS, and Desktop (JVM) from a single shared codebase.
+
+## What DiviDox does
+
+### Portfolio management
+View your holdings at a glance — current value, daily change, and total gain/loss since purchase. Add or remove positions manually, including purchase price, number of shares, currency, and date.
+
+### Dividend analysis
+Go beyond simple yield numbers. DiviDox surfaces dividend history, upcoming ex-dividend and payment dates, annual income projections per holding, and portfolio-wide dividend totals — giving dividend investors the detail they actually need.
+
+### Watchlist
+Follow tickers you don't own yet. Track price and dividend data for stocks you're evaluating before adding them to your portfolio.
+
+### Account management
+Manage your profile, base currency, and app preferences. Authentication via Google, Apple, or email/password through Firebase.
+
+## Tech stack
+
+Kotlin Multiplatform · Compose Multiplatform · Firebase Auth · Firestore · Yahoo Finance API · Material Design 3 · Koin · Clean Architecture
+
+---
 
 * [/composeApp](./composeApp/src) is for code that will be shared across your Compose Multiplatform applications.
   It contains several subfolders:
