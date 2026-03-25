@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/scripts/pre-commit-check.sh",
+            "timeout": 300,
+            "statusMessage": "Running pre-commit checks (detekt + jvmTest)..."
+          }
+        ]
+      }
+    ]
+  }
+}

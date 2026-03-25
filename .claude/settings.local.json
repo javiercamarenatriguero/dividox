@@ -14,7 +14,12 @@
       "Bash(./gradlew :composeApp:detektJvmMain :composeApp:detektIosArm64Main :composeApp:detektAndroidDebug)",
       "Bash(./gradlew :composeApp:detektMetadataCommonMain :composeApp:detektJvmMain :composeApp:detektAndroidDebug :composeApp:detektIosArm64Main :composeApp:detektIosSimulatorArm64Main)",
       "Bash(./gradlew :composeApp:detektJvmMain)",
-      "Bash(./gradlew :composeApp:detektAndroidDebug)"
+      "Bash(./gradlew :composeApp:detektAndroidDebug)",
+      "Skill(update-config)",
+      "Bash(chmod:*)",
+      "Bash(jq:*)",
+      "Bash(.claude/scripts/pre-commit-check.sh)",
+      "Bash(echo \"exit: $?\")"
     ]
   }
 }

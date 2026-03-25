@@ -10,6 +10,7 @@ tools: ["Read", "Grep", "Glob", "Bash"]
 skills:
   - audit-compose-performance
   - manage-git-flow
+  - owasp-security-review
 memory: project
 ---
 
@@ -35,6 +36,7 @@ Analyze code changes in the Dividox KMP project and deliver **strict, actionable
 **Use these skills:**
 - `skill: audit-compose-performance` — **MANDATORY** for all Compose code changes
 - `skill: manage-git-flow` — Validate branch naming and commit conventions
+- `skill: owasp-security-review` — **MANDATORY** for code handling sensitive data, auth, networking, or storage
 
 ---
 
@@ -118,6 +120,7 @@ Highlight good practices to reinforce positive patterns.
 ## Review Checklist
 
 - [ ] `skill: audit-compose-performance` executed for Compose changes
+- [ ] `skill: owasp-security-review` executed for sensitive data, auth, networking, or storage changes
 - [ ] No platform APIs in `commonMain` (no android.*, UIKit, etc.)
 - [ ] Convention plugins used — no manual SDK/Compose config in modules
 - [ ] All versions in `libs.versions.toml`

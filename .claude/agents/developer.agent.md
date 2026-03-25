@@ -18,6 +18,7 @@ skills:
   - write-unit-test
   - manage-git-flow
   - audit-compose-performance
+  - owasp-security-review
   - write-meta-prompt
 memory: project
 ---
@@ -142,4 +143,5 @@ Even in Autonomous Mode, automatically switch to Assisted when:
 | `skill: write-unit-test` | Write unit tests in commonTest |
 | `skill: manage-git-flow` | Branch creation, commit formatting, PR generation |
 | `skill: audit-compose-performance` | Audit and optimize Compose Multiplatform performance |
+| `skill: owasp-security-review` | Review code against OWASP MASVS security controls |
 | `skill: write-meta-prompt` | Transform ideas into structured prompts |
