@@ -12,6 +12,8 @@ import com.akole.dividox.feature.home.HomeScreen
 import com.akole.dividox.feature.home.HomeViewModel
 import com.akole.dividox.getPlatform
 import kotlinx.serialization.Serializable
+import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.parameter.parametersOf
 
 @Serializable
 data object HomeRoute
@@ -24,9 +26,9 @@ fun NavGraphBuilder.homeScreenNode(navController: NavController) {
     composable<HomeRoute> {
         val greeting = Greeting().greet()
         val platformName = getPlatform().name
-        val viewModel = androidx.lifecycle.viewmodel.compose.viewModel {
-            HomeViewModel(greeting = greeting, platformName = platformName)
-        }
+        val viewModel = koinViewModel<HomeViewModel>(
+            parameters = { parametersOf(greeting, platformName) },
+        )
         val state by collectViewState(viewModel.viewState)
 
         HomeScreen(

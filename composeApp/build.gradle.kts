@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.dividox.kmp.application)
     alias(libs.plugins.dividox.compose.multiplatform)
     alias(libs.plugins.dividox.kmp.ios)
+    alias(libs.plugins.dividox.kmp.di)
     alias(libs.plugins.dividox.kmp.test)
     alias(libs.plugins.dividox.detekt)
     alias(libs.plugins.kotlinxSerialization)

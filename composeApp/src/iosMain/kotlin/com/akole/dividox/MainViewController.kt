@@ -1,5 +1,9 @@
 package com.akole.dividox
 
 import androidx.compose.ui.window.ComposeUIViewController
+import com.akole.dividox.di.KoinInitializer
 
-fun MainViewController() = ComposeUIViewController { App() }
+fun MainViewController() = run {
+    KoinInitializer.init()
+    ComposeUIViewController { App() }
+}

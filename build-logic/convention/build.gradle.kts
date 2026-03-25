@@ -31,6 +31,10 @@ gradlePlugin {
             id = "com.akole.dividox.kmp.test"
             implementationClass = "KmpTestConventionPlugin"
         }
+        register("kmpDi") {
+            id = "com.akole.dividox.kmp.di"
+            implementationClass = "KmpDiConventionPlugin"
+        }
         register("detekt") {
             id = "com.akole.dividox.detekt"
             implementationClass = "DetektConventionPlugin"
