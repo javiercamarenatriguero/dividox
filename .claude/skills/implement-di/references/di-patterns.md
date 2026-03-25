@@ -1,5 +1,71 @@
 # Dependency Injection Patterns (Koin)
 
+## KoinInitializer
+
+### commonMain
+
+```kotlin
+object KoinInitializer {
+    fun init(config: KoinApplication.() -> Unit = {}) {
+        startKoin {
+            config()
+            modules(
+                appModule,
+                viewModelModule,
+                // add new modules here
+            )
+        }
+    }
+}
+```
+
+### androidMain — extension with Android context
+
+```kotlin
+fun KoinInitializer.init(application: Application) {
+    init {
+        androidLogger()
+        androidContext(application)
+    }
+}
+```
+
+### Android entry point (`DividoxApplication.kt`)
+
+```kotlin
+class DividoxApplication : Application() {
+    override fun onCreate() {
+        super.onCreate()
+        KoinInitializer.init(this)
+    }
+}
+```
+
+### Desktop entry point (`main.kt`)
+
+```kotlin
+fun main() {
+    KoinInitializer.init()
+    application {
+        Window(...) { App() }
+    }
+}
+```
+
+### iOS entry point (`MainViewController.kt`)
+
+```kotlin
+fun MainViewController() = run {
+    KoinInitializer.init()
+    ComposeUIViewController { App() }
+}
+```
+
+> ⚠️ iOS: use `run { }` so `init()` is called once when the controller is created,
+> not inside the Compose lambda (which recomposes).
+
+---
+
 ## Module Templates
 
 ### AppModule (Framework)
@@ -37,17 +103,34 @@ val repositoryModule = module {
 
 ```kotlin
 val viewModelModule = module {
+    // No constructor params — injected via get()
     viewModel {
-        FeatureViewModel(
-            useCase = get()
+        FeatureViewModel(useCase = get())
+    }
+
+    // With call-site params — injected via parametersOf()
+    viewModel { params ->
+        HomeViewModel(
+            greeting = params.get(),
+            platformName = params.get(),
         )
     }
 }
 ```
 
+### Consuming a parameterized ViewModel in Compose
+
+```kotlin
+val viewModel = koinViewModel<HomeViewModel>(
+    parameters = { parametersOf(greeting, platformName) }
+)
+```
+
+---
+
 ## Best Practices
 
-### Interface -> Implementation
+### Interface → Implementation
 Always bind the interface, not the implementation class.
 
 ```kotlin
@@ -73,6 +156,8 @@ single(named(Dispatcher.IO)) { Dispatchers.IO }
 | Use Case        | `factory`   | Stateless, cheap to create        |
 | ViewModel       | `viewModel` | Lifecycle-aware                   |
 | Dispatcher      | `single`    | Platform resource                 |
+
+---
 
 ## Testing with DI
 
