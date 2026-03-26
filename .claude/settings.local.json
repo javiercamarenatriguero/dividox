@@ -27,7 +27,17 @@
       "mcp__linear-server__create_document",
       "mcp__linear-server__save_project",
       "mcp__linear-server__list_issues",
-      "mcp__linear-server__list_documents"
+      "mcp__linear-server__list_documents",
+      "Skill(design-md)",
+      "Bash(claude mcp:*)",
+      "Skill(stitch-design)",
+      "mcp__stitch__list_projects",
+      "mcp__stitch__list_design_systems",
+      "mcp__stitch__get_screen"
     ]
-  }
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "stitch"
+  ]
 }
