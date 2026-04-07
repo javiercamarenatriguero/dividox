@@ -34,7 +34,15 @@
       "mcp__stitch__list_projects",
       "mcp__stitch__list_design_systems",
       "mcp__stitch__get_screen",
-      "Bash(./gradlew :composeApp:assembleDebug :composeApp:compileKotlinJvm :composeApp:compileKotlinIosSimulatorArm64)"
+      "Bash(./gradlew :composeApp:assembleDebug :composeApp:compileKotlinJvm :composeApp:compileKotlinIosSimulatorArm64)",
+      "Bash(mkdir -p .ai-context/agents .ai-context/skills)",
+      "Bash(cp -r .claude/agents/. .ai-context/agents/)",
+      "Bash(cp -r .claude/skills/. .ai-context/skills/)",
+      "Bash(rm -rf .claude/agents .claude/skills)",
+      "Bash(ln -s ../.ai-context/agents .claude/agents)",
+      "Bash(ln -s ../.ai-context/skills .claude/skills)",
+      "Bash(ln -s ../.ai-context/agents .github/agents)",
+      "Bash(ln -s ../.ai-context/skills .github/skills)"
     ]
   },
   "enableAllProjectMcpServers": true,
