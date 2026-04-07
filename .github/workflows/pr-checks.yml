@@ -2,7 +2,7 @@ name: PR Checks
 
 on:
   pull_request:
-    branches-ignore: ['hotfix/**', 'main']
+    branches: ['main', 'develop']
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
