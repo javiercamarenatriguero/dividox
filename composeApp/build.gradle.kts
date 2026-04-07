@@ -14,7 +14,7 @@ android {
     namespace = "com.akole.dividox"
     defaultConfig {
         applicationId = "com.akole.dividox"
-        versionCode = 1
+        versionCode = (project.findProperty("buildNumber") as String?)?.toIntOrNull() ?: 1
         versionName = "1.0"
     }
 }

@@ -33,7 +33,8 @@
       "Skill(stitch-design)",
       "mcp__stitch__list_projects",
       "mcp__stitch__list_design_systems",
-      "mcp__stitch__get_screen"
+      "mcp__stitch__get_screen",
+      "Bash(./gradlew :composeApp:assembleDebug :composeApp:compileKotlinJvm :composeApp:compileKotlinIosSimulatorArm64)"
     ]
   },
   "enableAllProjectMcpServers": true,
