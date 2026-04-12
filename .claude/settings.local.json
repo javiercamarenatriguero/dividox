@@ -42,7 +42,15 @@
       "Bash(ln -s ../.ai-context/agents .claude/agents)",
       "Bash(ln -s ../.ai-context/skills .claude/skills)",
       "Bash(ln -s ../.ai-context/agents .github/agents)",
-      "Bash(ln -s ../.ai-context/skills .github/skills)"
+      "Bash(ln -s ../.ai-context/skills .github/skills)",
+      "Bash(./gradlew :composeApp:assembleDebug --dry-run)",
+      "Bash(./gradlew :composeApp:assembleDebug -PbuildNumber=1)",
+      "Bash(./gradlew :composeApp:tasks --group=build)",
+      "Bash(./gradlew :composeApp:tasks)",
+      "Bash(./gradlew :composeApp:tasks --all)",
+      "Bash(grep -r \"FIREBASE\\\\|IOS_CERTIFICATE\\\\|KEYCHAIN\\\\|PROVISIONING\" /Users/camarej4/code/git/dividox/.github/workflows/*.yml)",
+      "Bash(firebase --version)",
+      "Bash(security find-identity:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "836293215181",
+    "project_id": "dividox-aca23",
+    "storage_bucket": "dividox-aca23.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:836293215181:android:6641e79fa99571cf75ba84",
+        "android_client_info": {
+          "package_name": "com.akole.dividox"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD3rihf42yOStFmc9QYuRJduObM9kTdZ18"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
