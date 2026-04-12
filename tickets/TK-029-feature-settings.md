@@ -7,6 +7,7 @@ Scaffold `:feature:settings`, implement the full Settings screen MVI with all su
 **User Stories:** DVX-US-023 · DVX-US-027 · DVX-US-028 · DVX-US-029 · DVX-US-030 · DVX-US-031 · DVX-US-032
 **PRD:** PRD-08
 **ADRs:** ADR-005, ADR-010, ADR-011
+**Stitch Design:** https://stitch.withgoogle.com/projects/10568397103146599411
 **Depends on:** TK-025, TK-028
 **Blocks:** —
 **Status:** Backlog

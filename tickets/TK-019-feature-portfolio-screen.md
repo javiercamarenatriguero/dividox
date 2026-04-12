@@ -7,6 +7,7 @@ Scaffold `:feature:portfolio`, implement the Portfolio (My Holdings) list screen
 **User Stories:** DVX-US-011 · DVX-US-012 · DVX-US-013
 **PRD:** PRD-03
 **ADRs:** ADR-010, ADR-011
+**Stitch Design:** https://stitch.withgoogle.com/projects/10568397103146599411
 **Depends on:** TK-018
 **Blocks:** TK-020
 **Status:** Backlog

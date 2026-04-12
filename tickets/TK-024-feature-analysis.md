@@ -7,6 +7,7 @@ Scaffold `:feature:analysis`, implement the Security Analysis screen MVI, and wi
 **User Stories:** DVX-US-020 · DVX-US-021 · DVX-US-022
 **PRD:** PRD-05
 **ADRs:** ADR-007, ADR-010, ADR-011
+**Stitch Design:** https://stitch.withgoogle.com/projects/10568397103146599411
 **Depends on:** TK-023
 **Blocks:** TK-025
 **Status:** Backlog

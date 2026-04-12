@@ -65,6 +65,12 @@ Shared Gradle configuration lives in `build-logic/convention/`. **Never configur
 - **Version management**: All versions go in `gradle/libs.versions.toml`. Convention plugins read versions from the catalog via `libs.findVersion()` / `libs.findLibrary()`.
 - **New convention plugin**: Create the class in `build-logic/convention/src/main/kotlin/`, register it in `build-logic/convention/build.gradle.kts`, and add a `dividox-*` entry in `gradle/libs.versions.toml` `[plugins]` section.
 
+## UI Design Kit
+
+Reusable Compose components that appear across two or more features belong in `:common:ui-resources`, not inside a feature module. Examples: `SecurityCard`, `SearchBar`, `TopBar`, `DisclaimerBanner`, `EmptyStateCard`. The design reference for all screens is the [Stitch project](https://stitch.withgoogle.com/projects/10568397103146599411).
+
+Feature-specific components (e.g. a card that only appears in one screen) stay inside their `:feature:*` module.
+
 ## Key Tech
 
 - Kotlin 2.3.20, Compose Multiplatform 1.10.2, AGP 9.1.0, Gradle 9.3.1

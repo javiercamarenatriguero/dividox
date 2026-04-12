@@ -7,6 +7,7 @@ Scaffold `:feature:search`, implement the Search screen MVI with 250ms debounce,
 **User Stories:** DVX-US-026
 **PRD:** PRD-07
 **ADRs:** ADR-010, ADR-011
+**Stitch Design:** https://stitch.withgoogle.com/projects/10568397103146599411
 **Depends on:** TK-025
 **Blocks:** TK-027
 **Status:** Backlog

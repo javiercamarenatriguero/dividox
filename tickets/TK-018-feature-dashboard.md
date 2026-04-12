@@ -7,6 +7,7 @@ Scaffold `:feature:dashboard`, implement the full Dashboard MVI (DashboardContra
 **User Stories:** DVX-US-005 · DVX-US-006 · DVX-US-007 · DVX-US-008 · DVX-US-009 · DVX-US-010
 **PRD:** PRD-02
 **ADRs:** ADR-005, ADR-006, ADR-007, ADR-010, ADR-011
+**Stitch Design:** https://stitch.withgoogle.com/projects/10568397103146599411
 **Depends on:** TK-017
 **Blocks:** TK-019
 **Status:** Backlog

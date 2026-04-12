@@ -7,6 +7,7 @@ Add the shared `SecurityCard` composable to `:common:ui-resources`, scaffold `:f
 **User Stories:** DVX-US-023 · DVX-US-024 · DVX-US-025
 **PRD:** PRD-06
 **ADRs:** ADR-010, ADR-011
+**Stitch Design:** https://stitch.withgoogle.com/projects/10568397103146599411
 **Depends on:** TK-024
 **Blocks:** TK-026, TK-029
 **Status:** Backlog
@@ -18,14 +19,17 @@ Add the shared `SecurityCard` composable to `:common:ui-resources`, scaffold `:f
 ### Phase 1: Architecture & Setup
 - [ ] **Create Git Branch** `feature/DVX-TK-025-feature-favorites` — `skill: manage-git-flow`
 
-### Phase 2: Shared SecurityCard Component
-- [ ] **Create `SecurityCard` composable** in `:common:ui-resources`
-  - Props: `logo, ticker, companyName, price, dailyChange, dailyChangePercent: Double, isFavourite, onFavouriteToggle, onClick, isInPortfolio: Boolean`
-  - Semantic colour: green for positive `dailyChangePercent`, red for negative
-  - Heart icon: solid (favourited) / outlined (not favourited); optional briefcase badge when `isInPortfolio`
-  - Location: `common/ui-resources/src/commonMain/kotlin/.../components/SecurityCard.kt`
+### Phase 2: Design Kit — Security & Search Components
+- [ ] **Extract shared components** from Stitch design to `:common:ui-resources`
+  - `SecurityCard` — logo + ticker + company name + price + daily change + heart toggle + optional portfolio badge
+    - Props: `logo, ticker, companyName, price, dailyChange, dailyChangePercent: Double, isFavourite, onFavouriteToggle, onClick, isInPortfolio: Boolean`
+    - Semantic colour: green for positive `dailyChangePercent`, red for negative
+    - Heart: solid (favourited) / outlined; optional briefcase badge when `isInPortfolio`
+  - `SearchBar` — text input with leading search icon, trailing clear (×) button, auto-focus support
+  - `DisclaimerBanner` — neutral "Prices delayed 15 minutes" footer bar (if not added in TK-024)
+  - Location: `common/ui-resources/src/commonMain/kotlin/.../components/`
   - **Verify:** `./gradlew :common:ui-resources:compileKotlinJvm`
-  - **Commit:** `DVX-TK-025 Add SecurityCard shared component`
+  - **Commit:** `DVX-TK-025 Add SecurityCard, SearchBar, and DisclaimerBanner design kit components`
 
 ### Phase 3: Scaffold
 - [ ] **Scaffold `:feature:favorites`**
@@ -40,7 +44,7 @@ Add the shared `SecurityCard` composable to `:common:ui-resources`, scaffold `:f
   - **Verify:** `./gradlew :feature:favorites:jvmTest`
   - **Commit:** `DVX-TK-025 Add FavoritesViewModel with unit tests`
 
-- [ ] **`FavoritesScreen`** — back + "Favorites" title · search bar · `SecurityCard` list · empty state · "Prices delayed 15 min" disclaimer
+- [ ] **`FavoritesScreen`** — back + "Favorites" title · `SearchBar` · `SecurityCard` list · `EmptyStateCard` · `DisclaimerBanner`
   - **Commit:** `DVX-TK-025 Add FavoritesScreen UI`
 
 ### Phase 5: Navigation + Koin
