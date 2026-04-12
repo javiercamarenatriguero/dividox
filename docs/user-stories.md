@@ -307,8 +307,10 @@ DiviDox is a Kotlin Multiplatform (KMP) app built with Compose Multiplatform, ta
 **so that** I can monitor candidates for future investment.
 
 **Acceptance Criteria:**
+- The Favorites screen is accessed via a "Favorites" row item in the Settings screen.
 - Each card shows: Company logo | Ticker | Company name | Spot Price | Daily Change (% + icon + colour).
 - A disclaimer "Prices are delayed by 15 minutes" is shown at the bottom.
+- A back button returns the user to the Settings screen.
 
 ---
 
@@ -419,3 +421,29 @@ DiviDox is a Kotlin Multiplatform (KMP) app built with Compose Multiplatform, ta
 **Acceptance Criteria:**
 - Requires a confirmation dialog before executing.
 - On confirmation, session is cleared and the app returns to the Login screen with back stack cleared.
+
+---
+
+## Session Management
+
+### DVX-US-033 · Persist Session Across App Restarts
+**As a** returning user,
+**I want to** remain signed in when I close and reopen the app,
+**so that** I don't have to log in every time I use DiviDox.
+
+**Acceptance Criteria:**
+- After a successful sign-in, closing and reopening the app takes the user directly to the Dashboard without re-authentication.
+- Session persistence survives cold starts (process death).
+- Session is maintained until the user explicitly signs out or the session is revoked by the server.
+
+---
+
+### DVX-US-034 · Automatic Redirect on Session Expiry
+**As a** user,
+**I want to** be automatically redirected to the login screen if my session expires or is revoked,
+**so that** my account remains secure without me having to intervene manually.
+
+**Acceptance Criteria:**
+- If the session token is expired and cannot be refreshed, the app navigates to the Login screen and clears the back stack.
+- A loading/splash state is shown on cold start while the app resolves session state — no screen flashes the Login screen before confirming the session.
+- On the next successful sign-in, the user returns to the Dashboard as normal.

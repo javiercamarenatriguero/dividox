@@ -2,7 +2,7 @@
 
 **Status:** Draft
 **Platform:** Android · iOS · Desktop (KMP)
-**User Stories:** DVX-US-001 · DVX-US-002 · DVX-US-003 · DVX-US-004
+**User Stories:** DVX-US-001 · DVX-US-002 · DVX-US-003 · DVX-US-004 · DVX-US-033 · DVX-US-034
 
 ---
 
@@ -77,6 +77,17 @@ Users need a secure and frictionless way to access their personal portfolio data
 | 2 | Provide an email input field for the registered account email. |
 | 3 | Provide a "Send Reset Link" primary button. |
 | 4 | On submission, always display a confirmation message regardless of whether the email exists (prevents user enumeration). |
+
+### FR-01-04 · Session Lifecycle
+
+| # | Requirement |
+|---|---|
+| 1 | On app cold start, show a loading/splash state while the app resolves the session — never flash the Login screen before the session check completes. |
+| 2 | If a valid session exists on cold start, navigate directly to Dashboard without re-authentication. |
+| 3 | If the session token is expired and the refresh token can renew it, renew silently and navigate to Dashboard. |
+| 4 | If the session token is expired and cannot be refreshed (refresh token revoked or missing), navigate to Login with back stack cleared. |
+| 5 | Session state is represented as `Loading → Authenticated(user)` or `Loading → Unauthenticated` — `Loading` is never exposed to the user beyond the splash screen. |
+| 6 | On sign-out (DVX-US-032), the session is fully cleared and `SessionState` emits `Unauthenticated`, triggering navigation to Login. |
 
 ---
 

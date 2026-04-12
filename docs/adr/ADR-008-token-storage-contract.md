@@ -171,5 +171,6 @@ override suspend fun signOut() {
 - [ADR-003](ADR-003-secure-token-session-storage.md): High-level storage strategy this ADR expands upon
 - [ADR-004](ADR-004-social-auth-provider-integration.md): Social auth launchers that produce the token saved here
 - [ADR-012](ADR-012-local-persistence-room-datastore.md): Room and DataStore usage strategy
-- DVX-12: Auth Data Layer implementation
-- DVX-17: Session Guard in RootNavGraph
+- [ADR-013](ADR-013-user-session-lifecycle.md): `SessionState` sealed interface and `ObserveSessionUseCase` — the public session representation built on top of this storage contract
+- TK-004: Auth Data Layer implementation
+- TK-005: Session lifecycle implementation (`SessionState`, `ObserveSessionUseCase`, token refresh)
