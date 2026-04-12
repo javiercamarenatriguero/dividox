@@ -7,6 +7,7 @@ Implement the three auth screens (Login, Sign Up, Forgot Password) as full MVI f
 **User Stories:** DVX-US-001 · DVX-US-002 · DVX-US-003 · DVX-US-004
 **PRD:** PRD-01
 **ADRs:** ADR-010, ADR-011
+**Stitch Design:** https://stitch.withgoogle.com/projects/10568397103146599411
 **Depends on:** TK-012
 **Blocks:** TK-014
 **Status:** Backlog

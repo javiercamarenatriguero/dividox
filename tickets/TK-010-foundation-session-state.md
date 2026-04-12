@@ -5,6 +5,7 @@
 Complete the navigation foundation started in DVX-1. The typed routes and Koin entry point are already in place; this ticket adds the `SessionState` sealed interface and a stub `ObserveSessionUseCase` (always emits `Unauthenticated`) to `:component:auth` domain, wires the `SessionState`-driven guard into `RootNavGraph` (Loading → SplashScreen, Unauthenticated → authGraph, Authenticated → mainGraph), and adds the `SplashScreen` composable. The stub is replaced with the real implementation in TK-012.
 
 **ADRs:** ADR-011, ADR-013
+**Stitch Design:** https://stitch.withgoogle.com/projects/10568397103146599411
 **Depends on:** TK-009
 **Blocks:** TK-011
 **Status:** Backlog
@@ -47,7 +48,7 @@ Complete the navigation foundation started in DVX-1. The typed routes and Koin e
   - **Verify:** `./gradlew :composeApp:jvmTest`
   - **Commit:** `DVX-TK-010 Wire SessionState guard in RootNavGraph`
 
-- [ ] **Add `SplashScreen` composable**
+- [ ] **Add `SplashScreen` composable** — follow Stitch design for logo placement and background colour
   - DiviDox logo centred on theme background; non-dismissable (BackHandler {})
   - **Commit:** `DVX-TK-010 Add SplashScreen composable`
 

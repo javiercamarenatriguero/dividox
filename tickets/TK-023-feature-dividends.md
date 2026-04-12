@@ -7,6 +7,7 @@ Scaffold `:feature:dividends`, implement the full Dividends screen MVI, and wire
 **User Stories:** DVX-US-016 · DVX-US-017 · DVX-US-018 · DVX-US-019
 **PRD:** PRD-04
 **ADRs:** ADR-010, ADR-011
+**Stitch Design:** https://stitch.withgoogle.com/projects/10568397103146599411
 **Depends on:** TK-022
 **Blocks:** TK-024
 **Status:** Backlog
