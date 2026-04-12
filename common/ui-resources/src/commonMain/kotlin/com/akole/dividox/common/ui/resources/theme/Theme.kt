@@ -10,9 +10,10 @@ fun DividoxTheme(
     content: @Composable () -> Unit,
 ) {
     val colorScheme = if (darkTheme) DividoxDarkColorScheme else DividoxLightColorScheme
+    val typography = buildDividoxTypography(rememberInterFontFamily())
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = DividoxTypography,
+        typography = typography,
         shapes = DividoxShapes,
         content = content,
     )
