@@ -1,7 +1,7 @@
 # ADR-002: Clean Architecture for Auth — :component vs :feature Split
 
 ## Status
-Proposed
+Accepted
 
 ## Context
 The project follows a multi-module architecture where:
@@ -19,13 +19,14 @@ Create **`:component:auth`** for data+domain and use the existing **`:feature:au
     ├── domain/
     │   ├── model/
     │   │   ├── AuthUser.kt
-    │   │   └── AuthProvider.kt       # enum: GOOGLE, APPLE, EMAIL
+    │   │   └── AuthProvider.kt       # enum: GOOGLE, EMAIL (APPLE deferred to post-v1)
     │   ├── repository/
     │   │   └── AuthRepository.kt     # interface
     │   └── usecase/
     │       ├── SignInWithGoogleUseCase.kt
-    │       ├── SignInWithAppleUseCase.kt
     │       ├── SignInWithEmailUseCase.kt
+    │       ├── SignUpWithEmailUseCase.kt
+    │       ├── ForgotPasswordUseCase.kt
     │       ├── SignOutUseCase.kt
     │       └── ObserveAuthStateUseCase.kt
     └── data/
@@ -41,6 +42,14 @@ Create **`:component:auth`** for data+domain and use the existing **`:feature:au
         │   ├── LoginContract.kt
         │   ├── LoginViewModel.kt
         │   └── LoginScreen.kt
+        ├── signup/
+        │   ├── SignUpContract.kt
+        │   ├── SignUpViewModel.kt
+        │   └── SignUpScreen.kt
+        ├── forgotpassword/
+        │   ├── ForgotPasswordContract.kt
+        │   ├── ForgotPasswordViewModel.kt
+        │   └── ForgotPasswordScreen.kt
         └── navigation/
             └── AuthNavigation.kt
 ```

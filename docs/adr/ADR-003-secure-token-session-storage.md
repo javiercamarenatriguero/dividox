@@ -1,7 +1,7 @@
 # ADR-003: Secure Token and Session Storage Strategy
 
 ## Status
-Proposed
+Accepted
 
 ## Context
 Firebase Auth SDKs handle token refresh automatically on Android and iOS. However, the app needs a way to:

@@ -1,7 +1,7 @@
 # ADR-006: :integration:security — Combining Portfolio and Market Data
 
 ## Status
-Proposed
+Accepted
 
 ## Context
 `:component:portfolio` holds static holding data (ticker, shares, purchase price).
@@ -65,12 +65,36 @@ class GetPortfolioWithQuotesUseCase(
 - **Negative**: Extra module layer; caching strategy must be considered (market data is live, holding data is static — different TTLs)
 - **Caching note**: `GetMultipleQuotesUseCase` should batch requests to avoid N+1 API calls
 
+## :integration:dividend
+
+The Dividend Activity screen (PRD-04) requires combining dividend payment history with portfolio holdings and upcoming market events. Create **`:integration:dividend`** as the orchestration layer:
+
+```
+:integration:dividend
+├── depends on :component:dividend
+├── depends on :component:portfolio
+├── depends on :component:market
+└── src/commonMain/kotlin/com/akole/dividox/integration/dividend/
+    ├── domain/
+    │   ├── model/
+    │   │   ├── DividendActivitySummary.kt  # lifetime, YTD, YoY, nextPayout, YoC
+    │   │   └── EnrichedPayment.kt          # DividendPayment + CompanyInfo + logo
+    │   └── usecase/
+    │       ├── GetDividendActivitySummaryUseCase.kt
+    │       ├── GetEnrichedUpcomingPaymentsUseCase.kt
+    │       └── GetEnrichedPaymentHistoryUseCase.kt
+    └── di/
+        └── DividendIntegrationModule.kt
+```
+
 ## Feature dependencies
 ```
 :feature:dashboard   → :integration:security + :component:watchlist
 :feature:portfolio   → :integration:security
-:feature:dividends   → :integration:security
+:feature:dividends   → :integration:dividend
+:feature:analysis    → :integration:security + :component:watchlist
 :feature:favorites   → :component:watchlist (no market data needed for list)
+:feature:search      → :component:market + :component:watchlist
 :feature:settings    → :component:settings
 :feature:auth        → :component:auth
 ```

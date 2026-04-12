@@ -1,7 +1,7 @@
 # ADR-007: Yahoo Finance as Market Data Provider
 
 ## Status
-Proposed
+Accepted
 
 ## Context
 `:component:market` needs a source for live stock prices, dividend information, and company data. We need to choose a provider that works across all KMP targets (Android, iOS, Desktop JVM) via HTTP.
@@ -59,6 +59,7 @@ val httpClient = HttpClient {
 - **Negative**: Unofficial API — Yahoo can change endpoints without notice; no SLA; rate limiting possible
 - **Mitigation**: Abstract behind `MarketDataSource` interface — swapping provider requires only a new `actual` or `MarketDataSourceImpl`, not domain changes
 - **Production note**: Evaluate migration to an official provider (FMP, Polygon) post-MVP if reliability is an issue
+- **UI requirement**: All screens displaying market data must show a "Prices are delayed by 15 minutes" disclaimer (PRD-05, PRD-06, PRD-07). This is a non-negotiable UX requirement given the unofficial API's data latency.
 
 ## Implementation Notes
 - All DTOs are internal to `:component:market` — never exposed to domain layer
