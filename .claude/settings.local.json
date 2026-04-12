@@ -57,7 +57,8 @@
       "WebFetch(domain:lh3.googleusercontent.com)",
       "WebFetch(domain:contribution.usercontent.google.com)",
       "Bash(gh pr:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(npx --yes @modelcontextprotocol/server-github --version)"
     ]
   },
   "enableAllProjectMcpServers": true,
