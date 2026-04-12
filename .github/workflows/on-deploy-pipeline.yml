@@ -64,7 +64,7 @@ jobs:
     with:
       build_number: ${{ needs.prepare.outputs.build_number }}
       commit_sha: ${{ github.sha }}
-      release_notes: ${{ inputs.release_notes != '' && inputs.release_notes || format('[{0}] Build #{1}', inputs.branch, needs.prepare.outputs.build_number) }}
+      release_notes: ${{ inputs.release_notes != '' && inputs.release_notes || format('[{0}] Build {1}', inputs.branch, needs.prepare.outputs.build_number) }}
     secrets:
       FIREBASE_APP_ID_ANDROID: ${{ secrets.FIREBASE_APP_ID_ANDROID }}
       FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
