@@ -14,9 +14,12 @@ Firebase Auth SDKs handle token refresh automatically on Android and iOS. Howeve
 
 For **Desktop JVM**: store the Firebase ID token in an encrypted file using `java.security.KeyStore` (AES/GCM). Refresh token via REST `securetoken.googleapis.com/v1/token`.
 
-Expose auth state to the app via `ObserveAuthStateUseCase` which returns `Flow<AuthUser?>`:
-- `null` → unauthenticated → navigate to Login
-- `AuthUser` → authenticated → navigate to Home
+Expose session state to the app via `ObserveSessionUseCase` which returns `Flow<SessionState>`:
+- `Loading` → session resolution in progress → show splash screen
+- `Authenticated(user)` → valid session → navigate to Dashboard
+- `Unauthenticated` → no valid session → navigate to Login
+
+See [ADR-013](ADR-013-user-session-lifecycle.md) for the full `SessionState` definition and token refresh policy.
 
 ## Alternatives Considered
 
@@ -41,5 +44,7 @@ Expose auth state to the app via `ObserveAuthStateUseCase` which returns `Flow<A
 
 ## Related
 - [ADR-002](ADR-002-clean-architecture-auth-module-split.md): Module Split
-- DVX-12: Auth Data Layer
-- DVX-17: Session Guard in RootNavGraph
+- [ADR-013](ADR-013-user-session-lifecycle.md): Session lifecycle, `SessionState`, and token refresh policy
+- TK-004: Auth Data Layer
+- TK-005: Session lifecycle implementation
+- TK-009: Session guard wired in RootNavGraph

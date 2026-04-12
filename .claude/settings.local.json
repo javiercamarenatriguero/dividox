@@ -55,7 +55,9 @@
       "Bash(grep ^name::*)",
       "mcp__stitch__list_screens",
       "WebFetch(domain:lh3.googleusercontent.com)",
-      "WebFetch(domain:contribution.usercontent.google.com)"
+      "WebFetch(domain:contribution.usercontent.google.com)",
+      "Bash(gh pr:*)",
+      "Bash(rm:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
