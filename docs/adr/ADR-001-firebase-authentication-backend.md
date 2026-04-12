@@ -1,10 +1,10 @@
 # ADR-001: Firebase as Authentication Backend for KMP
 
 ## Status
-Proposed
+Accepted
 
 ## Context
-Dividox needs a cross-platform authentication solution supporting Google Sign-In, Sign in with Apple, and Email/Password. The solution must work across Android, iOS, and Desktop (JVM) targets in a Kotlin Multiplatform project.
+Dividox needs a cross-platform authentication solution supporting Google Sign-In and Email/Password (Sign in with Apple is out of scope for v1 — see PRD-01). The solution must work across Android, iOS, and Desktop (JVM) targets in a Kotlin Multiplatform project.
 
 ## Decision
 Use **Firebase Authentication** as the single authentication backend, accessed via:
@@ -13,9 +13,9 @@ Use **Firebase Authentication** as the single authentication backend, accessed v
 - Firebase REST API (via Ktor) on Desktop JVM
 
 Firebase is chosen over alternatives (Auth0, Supabase, custom backend) because:
-1. Native SDKs exist for both Android and iOS with full social provider support
+1. Native SDKs exist for both Android and iOS with full Google Sign-In support
 2. Handles token refresh, session persistence, and secure storage natively
-3. Google Sign-In and Sign in with Apple are first-class providers
+3. Google Sign-In is a first-class provider; Apple Sign-In deferred to post-v1
 4. Free tier covers MVP scale
 5. Team familiarity
 

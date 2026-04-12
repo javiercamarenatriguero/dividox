@@ -1,7 +1,7 @@
 # ADR-009: Centralized Compose MaterialTheme in :common:ui-resources
 
 **Date:** 2026-03-25
-**Status:** Proposed
+**Status:** Accepted
 
 ## Context
 
@@ -27,7 +27,7 @@ Define a `DividoxTheme` composable in `:common:ui-resources` that wraps `Materia
         └── Theme.kt    — DividoxTheme composable (public API)
 ```
 
-`Theme.kt` detects the current mode via `isSystemInDarkTheme()` and selects the appropriate color scheme:
+`Theme.kt` detects the current mode via `isSystemInDarkTheme()` and selects the appropriate color scheme. Because `Font(Res.font.*)` is a `@Composable` invocation in Compose Multiplatform, the font family must be created inside the composable — it cannot be a top-level `val`:
 
 ```kotlin
 @Composable
@@ -36,14 +36,17 @@ fun DividoxTheme(
     content: @Composable () -> Unit,
 ) {
     val colorScheme = if (darkTheme) DividoxDarkColorScheme else DividoxLightColorScheme
+    val typography = buildDividoxTypography(rememberInterFontFamily())
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = DividoxTypography,
+        typography = typography,
         shapes = DividoxShapes,
         content = content,
     )
 }
 ```
+
+`rememberInterFontFamily()` loads **Inter Variable** (`InterVariable.ttf` / `InterVariable-Italic.ttf`, Inter v4.1) from `composeResources/font/` inside `:common:ui-resources`. `buildDividoxTypography(fontFamily)` constructs the full M3 scale from the provided family. Both are `@Composable` functions internal to the `theme` package.
 
 `App.kt` replaces the current `MaterialTheme { }` with `DividoxTheme { }`. No other call site should reference `MaterialTheme` directly as a wrapper — only as a consumer (`MaterialTheme.colorScheme`, `MaterialTheme.typography`, `MaterialTheme.shapes`).
 

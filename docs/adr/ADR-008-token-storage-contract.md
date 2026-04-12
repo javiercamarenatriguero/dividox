@@ -1,7 +1,7 @@
 # ADR-008: Token Storage Contract — Domain Abstraction and Per-Platform Encryption
 
 ## Status
-Proposed
+Accepted
 
 ## Context
 
@@ -154,9 +154,22 @@ override suspend fun signOut() {
 - Add `@VisibleForTesting` to `readToken()` in tests only via a test-scoped Koin override.
 - Desktop encryption implementation must use `SecureRandom` for IV generation — never a fixed IV.
 
+## Boundary with DataStore
+
+`SessionStorage` and `DataStore` serve different purposes and must not be conflated:
+
+| Concern | Storage |
+|---|---|
+| Firebase ID token / refresh token | `SessionStorage` (Firebase SDK / Desktop AES) |
+| User preferences (currency, biometric, notifications) | `DataStore<Preferences>` in `:component:settings` |
+| Non-sensitive cached data | `Room` in the relevant component |
+
+`EncryptedSharedPreferences` is **not used** anywhere in the project — `SessionStorage` covers encrypted credentials; `DataStore` covers preferences (which are non-sensitive).
+
 ## Related
 - [ADR-002](ADR-002-clean-architecture-auth-module-split.md): Module split that defines where `SessionStorage` lives
 - [ADR-003](ADR-003-secure-token-session-storage.md): High-level storage strategy this ADR expands upon
 - [ADR-004](ADR-004-social-auth-provider-integration.md): Social auth launchers that produce the token saved here
+- [ADR-012](ADR-012-local-persistence-room-datastore.md): Room and DataStore usage strategy
 - DVX-12: Auth Data Layer implementation
 - DVX-17: Session Guard in RootNavGraph
