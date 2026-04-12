@@ -36,4 +36,4 @@ jobs:
           token: ${{ secrets.FIREBASE_TOKEN }}
           groups: internal-testers
           file: composeApp-debug.apk
-          releaseNotes: ${{ inputs.release_notes != '' && inputs.release_notes || format('Build #{0} from {1}', inputs.build_number, inputs.commit_sha) }}
+          releaseNotes: ${{ inputs.release_notes != '' && inputs.release_notes || format('Build {0} from {1}', inputs.build_number, inputs.commit_sha) }}
