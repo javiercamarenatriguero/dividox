@@ -1,4 +1,4 @@
-name: On-Deploy Distribution
+name: On Distribute
 
 on:
   workflow_dispatch:
@@ -57,8 +57,8 @@ jobs:
           path: composeApp/build/outputs/apk/debug/*.apk
           retention-days: 1
 
-  distribute:
-    name: Distribute
+  distribute-android:
+    name: Distribute Android
     needs: [prepare, build]
     uses: ./.github/workflows/distribute-android-action.yml
     with:
@@ -68,3 +68,14 @@ jobs:
     secrets:
       FIREBASE_APP_ID_ANDROID: ${{ secrets.FIREBASE_APP_ID_ANDROID }}
       FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+
+  distribute-desktop:
+    name: Distribute Desktop
+    needs: [prepare, build]
+    uses: ./.github/workflows/distribute-desktop-action.yml
+    with:
+      build_number: ${{ needs.prepare.outputs.build_number }}
+      tag: "${{ inputs.branch }}-build-${{ needs.prepare.outputs.build_number }}"
+      release_notes: ${{ inputs.release_notes != '' && inputs.release_notes || format('[{0}] Build {1}', inputs.branch, needs.prepare.outputs.build_number) }}
+    permissions:
+      contents: write

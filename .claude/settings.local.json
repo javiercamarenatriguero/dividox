@@ -50,7 +50,9 @@
       "Bash(./gradlew :composeApp:tasks --all)",
       "Bash(grep -r \"FIREBASE\\\\|IOS_CERTIFICATE\\\\|KEYCHAIN\\\\|PROVISIONING\" /Users/camarej4/code/git/dividox/.github/workflows/*.yml)",
       "Bash(firebase --version)",
-      "Bash(security find-identity:*)"
+      "Bash(security find-identity:*)",
+      "Bash(xcode-select:*)",
+      "Bash(grep ^name::*)"
     ]
   },
   "enableAllProjectMcpServers": true,
