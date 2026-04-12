@@ -277,3 +277,100 @@ Output one markdown block per ticket. Do not output any preamble or commentary o
 ```
 
 ---
+
+### MP-005 · Implement Foundation — SessionState & RootNavGraph Guard
+
+Use this prompt to scaffold the `:common:auth` module, define the session state model, and wire the cold-start splash guard in `RootNavGraph`. This is a stub-first implementation: real Firebase Auth wiring comes later in the `:component:auth` ticket.
+
+```
+You are a KMP Staff Engineer for DiviDox, a Kotlin Multiplatform app built with Compose Multiplatform targeting Android, iOS, and Desktop (JVM).
+
+Tech stack: KMP + CMP · Koin · MVI · navigation-compose (typed routes)
+Convention plugins: dividox.kmp.library · dividox.kmp.ios · dividox.kmp.di · dividox.kmp.test · dividox.detekt
+
+Task: Implement the Foundation — SessionState & RootNavGraph Guard (TK-010).
+
+## What to build
+
+### 1. Gradle module: `:common:auth`
+- Create `common/auth/build.gradle.kts` applying:
+  `dividox.kmp.library`, `dividox.kmp.ios`, `dividox.kmp.di`, `dividox.kmp.test`, `dividox.detekt`
+- Add `jvm()` target explicitly.
+- `commonMain` dependency: `kotlinx-coroutines-core`
+- `commonTest` dependency: `kotlinx-coroutines-test`
+- Add `include(":common:auth")` to `settings.gradle.kts`.
+- Add `implementation(projects.common.auth)` to `:composeApp` `commonMain` dependencies.
+
+### 2. Domain models (commonMain)
+Package: `com.akole.dividox.common.auth.domain.model`
+
+- `AuthProvider.kt` — `enum class AuthProvider { GOOGLE, EMAIL }`
+- `AuthUser.kt` — `data class AuthUser(uid: String, email: String?, displayName: String?, provider: AuthProvider)`
+- `SessionState.kt` — sealed interface:
+  ```kotlin
+  sealed interface SessionState {
+      data object Loading : SessionState
+      data class Authenticated(val user: AuthUser) : SessionState
+      data object Unauthenticated : SessionState
+  }
+  ```
+
+### 3. Repository interface + stub
+Package: `com.akole.dividox.common.auth.domain.repository`
+
+- `AuthRepository.kt` — interface: `fun observeAuthState(): Flow<AuthUser?>`
+- `StubAuthRepository.kt` (internal) — always emits `flowOf(null)` (→ Unauthenticated always).
+
+### 4. Use case
+Package: `com.akole.dividox.common.auth.domain.usecase`
+
+- `ObserveSessionUseCase(repository: AuthRepository)`:
+  ```kotlin
+  operator fun invoke(): Flow<SessionState> =
+      repository.observeAuthState()
+          .map { user -> if (user != null) Authenticated(user) else Unauthenticated }
+          .onStart { emit(Loading) }
+  ```
+
+### 5. Koin module
+Package: `com.akole.dividox.common.auth.di`
+
+- `authModule`: bind `StubAuthRepository` as `AuthRepository`; factory `ObserveSessionUseCase`.
+- Register `authModule` in `KoinInitializer.init()` **before** `appModule`.
+
+### 6. SplashScreen composable
+`composeApp/.../navigation/SplashScreen.kt` — centered DiviDox wordmark using `MaterialTheme.typography.displayMedium`. Non-dismissable (no back handler).
+
+### 7. RootNavGraph guard
+Replace `SetupRootNavGraph` body with:
+```kotlin
+val observeSession: ObserveSessionUseCase = koinInject()
+val sessionState by observeSession().collectAsState(initial = SessionState.Loading)
+
+when (sessionState) {
+    SessionState.Loading        -> SplashScreen()
+    SessionState.Unauthenticated,
+    is SessionState.Authenticated -> NavHost(...) { /* existing nodes */ }
+}
+```
+Note: Until TK-011 adds real auth screens, both Unauthenticated and Authenticated show the main graph.
+
+### 8. Unit tests
+File: `common/auth/src/commonTest/.../ObserveSessionUseCaseTest.kt`
+
+Cover:
+- `emits Loading then Unauthenticated when no user is signed in`
+- `emits Loading then Authenticated when a user is signed in` (verify the `AuthUser` is propagated)
+- `first emission is always Loading`
+
+Use a `FakeAuthRepository` inner class; use `runTest` + `flow.toList()`.
+
+## Rules
+- Do NOT commit; leave all changes unstaged for review.
+- Do NOT add real Firebase Auth — keep StubAuthRepository.
+- Do NOT add a "Save" button or confirmation for session changes.
+- All new files go in `commonMain` (no platform-specific source sets needed).
+- Follow the existing package structure: `com.akole.dividox.common.auth.*`
+```
+
+---
