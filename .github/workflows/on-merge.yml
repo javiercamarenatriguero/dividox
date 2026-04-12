@@ -1,4 +1,4 @@
-name: Merge Pipeline
+name: On Merge
 
 on:
   push:
@@ -43,9 +43,6 @@ jobs:
 
       - name: Build Android
         run: ./gradlew :composeApp:assembleDebug -PbuildNumber=${{ needs.prepare.outputs.build_number }}
-
-      - name: Build Desktop
-        run: ./gradlew :composeApp:compileKotlinJvm
 
       - name: Upload Android APK
         uses: actions/upload-artifact@v4
@@ -120,6 +117,17 @@ jobs:
     secrets:
       FIREBASE_APP_ID_ANDROID: ${{ secrets.FIREBASE_APP_ID_ANDROID }}
       FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+
+  distribute-desktop:
+    name: Distribute Desktop
+    needs: [prepare, build, lint, test]
+    uses: ./.github/workflows/distribute-desktop-action.yml
+    with:
+      build_number: ${{ needs.prepare.outputs.build_number }}
+      tag: "build-${{ needs.prepare.outputs.build_number }}"
+      release_notes: "Build from commit ${{ github.sha }} — ${{ github.event.head_commit.message }}"
+    permissions:
+      contents: write
 
   distribute-ios:
     name: Distribute iOS
