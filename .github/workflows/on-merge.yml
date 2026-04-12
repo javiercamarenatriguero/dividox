@@ -132,7 +132,7 @@ jobs:
   distribute-ios:
     name: Distribute iOS
     runs-on: macos-latest
-    continue-on-error: true
+    if: false
     needs: [prepare, build, lint, test]
     steps:
       - uses: actions/checkout@v4
