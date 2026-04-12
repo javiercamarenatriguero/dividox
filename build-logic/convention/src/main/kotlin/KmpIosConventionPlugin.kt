@@ -14,6 +14,7 @@ class KmpIosConventionPlugin : Plugin<Project> {
                     iosTarget.binaries.framework {
                         baseName = "ComposeApp"
                         isStatic = true
+                        binaryOption("bundleId", "com.akole.dividox.Dividox")
                     }
                 }
             }

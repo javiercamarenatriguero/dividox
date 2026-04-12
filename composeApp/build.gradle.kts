@@ -1,3 +1,4 @@
+import com.android.build.api.dsl.ApplicationExtension
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 
 plugins {
@@ -8,9 +9,10 @@ plugins {
     alias(libs.plugins.dividox.kmp.test)
     alias(libs.plugins.dividox.detekt)
     alias(libs.plugins.kotlinxSerialization)
+    alias(libs.plugins.googleServices)
 }
 
-android {
+extensions.configure<ApplicationExtension> {
     namespace = "com.akole.dividox"
     defaultConfig {
         applicationId = "com.akole.dividox"
@@ -36,6 +38,11 @@ kotlin {
             implementation(libs.kotlinx.coroutinesSwing)
         }
     }
+}
+
+dependencies {
+    add("androidMainImplementation", platform(libs.firebase.bom))
+    add("androidMainImplementation", libs.firebase.analytics)
 }
 
 compose.desktop {
