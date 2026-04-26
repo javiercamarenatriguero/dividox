@@ -7,6 +7,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import com.akole.dividox.common.auth.domain.model.SessionState
 import com.akole.dividox.common.auth.domain.usecase.ObserveSessionUseCase
+import com.akole.dividox.feature.splash.SplashScreen
 import org.koin.compose.koinInject
 
 @Composable
