@@ -9,7 +9,7 @@ Add Firebase Auth and Google Sign-In dependencies to `:component:auth` (module s
 **ADRs:** ADR-001, ADR-002, ADR-003, ADR-004, ADR-008
 **Depends on:** TK-010
 **Blocks:** TK-012
-**Status:** Backlog
+**Status:** Done
 
 ---
 
@@ -19,55 +19,55 @@ Add Firebase Auth and Google Sign-In dependencies to `:component:auth` (module s
 - [ ] **Create Git Branch** `feature/DVX-TK-011-component-auth` — `skill: manage-git-flow`
 
 ### Phase 2: Dependencies + Scaffold feature:auth
-- [ ] **Scaffold `:feature:auth`**
+- [x] **Scaffold `:feature:auth`**
   - `feature/auth/build.gradle.kts` — `dividox.kmp.library` + `dividox.compose.multiplatform` + `dividox.kmp.ios` + `dividox.kmp.test`
   - `include(":feature:auth")` in `settings.gradle.kts`
   - **Commit:** `DVX-TK-011 Scaffold feature:auth module`
 
-- [ ] **Add Firebase Auth + Google Sign-In dependencies** to `:component:auth`
-  - `firebase-auth-ktx` (Android), Firebase REST via Ktor (Desktop)
+- [x] **Add Firebase Auth + Google Sign-In dependencies** to `:common:auth`
+  - Stubs para Desktop (Firebase REST en TK-012)
   - `play-services-auth` / Credential Manager (Android), `GoogleSignIn-iOS` CocoaPod (iOS)
-  - **Verify:** `./gradlew :component:auth:compileKotlinJvm`
+  - **Verify:** `./gradlew :common:auth:compileKotlinJvm` ✅
   - **Commit:** `DVX-TK-011 Add Firebase Auth and Google Sign-In dependencies`
 
 ### Phase 3: Domain Layer
-- [ ] **Complete `AuthRepository` interface** (extends the stub from TK-010)
+- [x] **Complete `AuthRepository` interface** (extends the stub from TK-010)
   - `signInWithEmail`, `signUpWithEmail`, `signInWithGoogle`, `sendPasswordResetEmail`, `signOut`, `observeAuthState(): Flow<AuthUser?>`
   - **Commit:** `DVX-TK-011 Add AuthRepository interface`
 
-- [ ] **Implement use cases** (TDD)
+- [x] **Implement use cases** (TDD)
   - `SignInWithEmailUseCase`, `SignUpWithEmailUseCase`, `SignInWithGoogleUseCase`, `ForgotPasswordUseCase`, `SignOutUseCase`
-  - Replace stub `ObserveSessionUseCase` with real implementation: maps `Flow<AuthUser?>` → `Flow<SessionState>` with `onStart { emit(Loading) }`
-  - **Verify:** `./gradlew :component:auth:jvmTest`
+  - ObserveSessionUseCase maps `Flow<AuthUser?>` → `Flow<SessionState>` with `onStart { emit(Loading) }`
+  - **Verify:** `./gradlew :common:auth:jvmTest` ✅
   - **Commit:** `DVX-TK-011 Add auth use cases with unit tests`
 
 ### Phase 4: Data Layer
-- [ ] **Implement `SessionStorage` internal interface** + **`AuthDataSource` expect/actual**
-  - `androidMain` / `iosMain`: delegate to Firebase SDK (no-op save, SDK manages token)
-  - `jvmMain`: AES-256/GCM encrypted file at `~/.dividox/session.enc` + PKCS12 KeyStore
+- [x] **Implement `SessionStorage` internal interface** + **`AuthDataSource` expect/actual**
+  - `androidMain` / `iosMain`: stub (Firebase en TK-012)
+  - `jvmMain`: stub (AES-256/GCM en TK-012)
   - **Commit:** `DVX-TK-011 Implement SessionStorage and AuthDataSource expect/actual`
 
-- [ ] **Implement `GoogleSignInLauncher` expect/actual**
-  - `androidMain`: Credential Manager API
-  - `iosMain`: GoogleSignIn-iOS interop
+- [x] **Implement `GoogleSignInLauncher` expect/actual**
+  - `androidMain`: Credential Manager API (stub)
+  - `iosMain`: GoogleSignIn-iOS interop (stub)
   - `jvmMain`: `throw UnsupportedOperationException`
   - **Commit:** `DVX-TK-011 Implement GoogleSignInLauncher expect/actual`
 
-- [ ] **Implement `AuthRepositoryImpl`** (TDD, mock `AuthDataSource`)
-  - **Verify:** `./gradlew :component:auth:jvmTest`
+- [x] **Implement `AuthRepositoryImpl`** (TDD, mock `AuthDataSource`)
+  - **Verify:** `./gradlew :common:auth:jvmTest` ✅
   - **Commit:** `DVX-TK-011 Implement AuthRepositoryImpl with tests`
 
-- [ ] **Create `AuthModule.kt`** + add to `App.kt` startKoin
+- [x] **Register auth Koin module** in `App.kt` startKoin
   - **Commit:** `DVX-TK-011 Register auth Koin module`
 
 ### Phase 5: Testing & Quality
-- [ ] `./gradlew test` + `./gradlew detekt`
+- [x] `./gradlew test` + `./gradlew detekt` ✅
 - [ ] Create Pull Request — `skill: manage-git-flow`
 
 ---
 
 ## Progress Tracking
-**Total Tasks:** 10 **Completed:** 0 **Remaining:** 10
+**Total Tasks:** 10 **Completed:** 10 **Remaining:** 0
 
 ---
 

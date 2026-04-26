@@ -29,8 +29,10 @@ kotlin {
             implementation(projects.common.auth)
             implementation(projects.common.mvi)
             implementation(projects.common.uiResources)
+            implementation(projects.feature.auth)
             implementation(projects.feature.details)
             implementation(projects.feature.home)
+            implementation(projects.feature.splash)
             implementation(libs.androidx.navigation.compose)
             implementation(libs.kotlinx.serialization.core)
         }
@@ -41,10 +43,7 @@ kotlin {
     }
 }
 
-dependencies {
-    add("androidMainImplementation", platform(libs.firebase.bom))
-    add("androidMainImplementation", libs.firebase.analytics)
-}
+// Firebase dependencies — reserved for TK-012
 
 compose.desktop {
     application {

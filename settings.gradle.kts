@@ -26,6 +26,7 @@ dependencyResolutionManagement {
             }
         }
         mavenCentral()
+        maven("https://dl.google.com/dl/android/maven2")
     }
 }
 
@@ -37,5 +38,7 @@ include(":composeApp")
 include(":common:auth")
 include(":common:mvi")
 include(":common:ui-resources")
+include(":feature:auth")
 include(":feature:home")
 include(":feature:details")
+include(":feature:splash")
