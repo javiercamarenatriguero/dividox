@@ -45,8 +45,9 @@ jobs:
         env:
           KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
-          echo "$KEYSTORE_BASE64" | base64 --decode > ~/.android/dividox.keystore
-          chmod 600 ~/.android/dividox.keystore
+          mkdir -p gradle/keystore
+          echo "$KEYSTORE_BASE64" | base64 --decode > gradle/keystore/release.jks
+          chmod 600 gradle/keystore/release.jks
 
       - name: Build Android
         run: ./gradlew :composeApp:assembleRelease -PbuildNumber=${{ needs.prepare.outputs.build_number }}
