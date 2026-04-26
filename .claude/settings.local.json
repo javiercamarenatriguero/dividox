@@ -86,7 +86,18 @@
       "Bash(./gradlew :common:auth:tasks --group build)",
       "Bash(./gradlew :common:auth:compileKotlinIosSimulatorArm64 :feature:splash:compileKotlinIosSimulatorArm64)",
       "Bash(./gradlew :common:auth:compileKotlinIosSimulatorArm64)",
-      "Bash(./gradlew :composeApp:run)"
+      "Bash(./gradlew :composeApp:run)",
+      "Bash(keytool *)",
+      "Bash(xargs cat *)",
+      "Bash(find *)",
+      "Bash(./gradlew :composeApp:compileDebugKotlin --dry-run)",
+      "Bash(./gradlew :composeApp:compileDebugKotlin)",
+      "Bash(./gradlew :composeApp:validateSigningDebug)",
+      "Bash(./gradlew :composeApp:minifyReleaseWithR8)",
+      "Bash(cp ~/.android/dividox.keystore /Users/camarej4/code/git/dividox/gradle/keystore/debug.jks)",
+      "Bash(cp ~/.android/dividox.keystore /Users/camarej4/code/git/dividox/gradle/keystore/release.jks)",
+      "Bash(./gradlew :composeApp:assembleRelease)",
+      "Bash(git commit *)"
     ]
   },
   "enableAllProjectMcpServers": true,

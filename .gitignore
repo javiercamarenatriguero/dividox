@@ -17,3 +17,8 @@ captures
 !*.xcworkspace/contents.xcworkspacedata
 **/xcshareddata/WorkspaceSettings.xcsettings
 node_modules/
+
+# Keystores (project-local signing credentials)
+gradle/keystore/*.jks
+gradle/keystore/*.keystore
+!gradle/keystore/.gitkeep

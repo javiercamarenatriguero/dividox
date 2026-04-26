@@ -35,5 +35,5 @@ jobs:
           appId: ${{ secrets.FIREBASE_APP_ID_ANDROID }}
           token: ${{ secrets.FIREBASE_TOKEN }}
           groups: internal-testers
-          file: composeApp-debug.apk
+          file: composeApp-release.apk
           releaseNotes: ${{ inputs.release_notes != '' && inputs.release_notes || format('Build {0} from {1}', inputs.build_number, inputs.commit_sha) }}

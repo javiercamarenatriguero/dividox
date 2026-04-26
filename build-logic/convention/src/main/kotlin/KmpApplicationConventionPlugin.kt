@@ -38,11 +38,45 @@ class KmpApplicationConventionPlugin : Plugin<Project> {
                         excludes += "/META-INF/{AL2.0,LGPL2.1}"
                     }
                 }
-                buildTypes {
-                    getByName("release") {
-                        isMinifyEnabled = false
-                    }
-                }
+                configureSigningConfig(this@with, this)
+                configureBuildTypes()
+            }
+        }
+    }
+
+    private fun configureSigningConfig(project: Project, ext: ApplicationExtension) {
+        val properties = project.rootProject.properties
+        ext.signingConfigs {
+            getByName("debug") {
+                keyAlias = properties["DEBUG_KEY_ALIAS"] as String
+                keyPassword = properties["DEBUG_KEY_PASSWORD"] as String
+                storeFile = project.file(properties["DEBUG_STORE_FILE"] as String)
+                storePassword = properties["DEBUG_STORE_PASSWORD"] as String
+            }
+            create("release") {
+                keyAlias = properties["RELEASE_KEY_ALIAS"] as String
+                keyPassword = properties["RELEASE_KEY_PASSWORD"] as String
+                storeFile = project.file(properties["RELEASE_STORE_FILE"] as String)
+                storePassword = properties["RELEASE_STORE_PASSWORD"] as String
+            }
+        }
+    }
+
+    private fun ApplicationExtension.configureBuildTypes() {
+        buildTypes {
+            getByName("debug") {
+                isMinifyEnabled = false
+                isDebuggable = true
+                signingConfig = signingConfigs.getByName("debug")
+            }
+            getByName("release") {
+                isMinifyEnabled = true
+                isDebuggable = false
+                proguardFiles(
+                    getDefaultProguardFile("proguard-android-optimize.txt"),
+                    "proguard-rules.pro"
+                )
+                signingConfig = signingConfigs.getByName("release")
             }
         }
     }
