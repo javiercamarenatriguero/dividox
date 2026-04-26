@@ -62,7 +62,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: android-apk
-          path: composeApp/build/outputs/apk/release/*.apk
+          path: composeApp/build/outputs/apk/release/composeApp-release.apk
           retention-days: 1
 
   distribute-android:
