@@ -9,12 +9,17 @@ import com.akole.dividox.common.mvi.collectViewState
 import com.akole.dividox.feature.auth.login.LoginContract.LoginSideEffect
 import com.akole.dividox.feature.auth.login.LoginScreen
 import com.akole.dividox.feature.auth.login.LoginViewModel
-import com.akole.dividox.feature.auth.navigation.LoginRoute
-import com.akole.dividox.feature.auth.navigation.SignUpRoute
 import com.akole.dividox.feature.auth.register.SignUpContract.SignUpSideEffect
 import com.akole.dividox.feature.auth.register.SignUpScreen
 import com.akole.dividox.feature.auth.register.SignUpViewModel
+import kotlinx.serialization.Serializable
 import org.koin.compose.viewmodel.koinViewModel
+
+@Serializable
+data object LoginRoute
+
+@Serializable
+data object SignUpRoute
 
 fun NavController.navigateToLogin(navOptions: NavOptions? = null) {
     this.navigate(LoginRoute, navOptions)
@@ -24,10 +29,7 @@ fun NavController.navigateToSignUp(navOptions: NavOptions? = null) {
     this.navigate(SignUpRoute, navOptions)
 }
 
-fun NavGraphBuilder.loginScreenNode(
-    onNavigateToSignUp: () -> Unit,
-    onNavigateToHome: () -> Unit,
-) {
+fun NavGraphBuilder.loginScreenNode(navController: NavController) {
     composable<LoginRoute> {
         val viewModel = koinViewModel<LoginViewModel>()
         val state by collectViewState(viewModel.viewState)
@@ -38,18 +40,15 @@ fun NavGraphBuilder.loginScreenNode(
             sideEffects = viewModel.sideEffect,
             onNavigation = { navigation ->
                 when (navigation) {
-                    LoginSideEffect.Navigation.NavigateToSignUp -> onNavigateToSignUp()
-                    LoginSideEffect.Navigation.NavigateToHome -> onNavigateToHome()
+                    LoginSideEffect.Navigation.NavigateToSignUp ->
+                        navController.navigateToSignUp()
                 }
             },
         )
     }
 }
 
-fun NavGraphBuilder.signUpScreenNode(
-    onNavigateToLogin: () -> Unit,
-    onNavigateToHome: () -> Unit,
-) {
+fun NavGraphBuilder.signUpScreenNode(navController: NavController) {
     composable<SignUpRoute> {
         val viewModel = koinViewModel<SignUpViewModel>()
         val state by collectViewState(viewModel.viewState)
@@ -60,8 +59,8 @@ fun NavGraphBuilder.signUpScreenNode(
             sideEffects = viewModel.sideEffect,
             onNavigation = { navigation ->
                 when (navigation) {
-                    SignUpSideEffect.Navigation.NavigateToLogin -> onNavigateToLogin()
-                    SignUpSideEffect.Navigation.NavigateToHome -> onNavigateToHome()
+                    SignUpSideEffect.Navigation.NavigateToLogin ->
+                        navController.popBackStack()
                 }
             },
         )

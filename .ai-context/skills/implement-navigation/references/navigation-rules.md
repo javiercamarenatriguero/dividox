@@ -39,8 +39,9 @@
 - **NEVER** pass `NavController` to ViewModels
 - **NEVER** use hardcoded string routes like `"home/details/{id}"`
 - **NEVER** navigate from inside a ViewModel — emit a side effect instead
-- **NEVER** define routes in feature modules — co-locate in `[Feature]Navigation.kt`
+- **NEVER** define routes inside a feature module — `[Feature]Navigation.kt` files always live in `composeApp/navigation/`, not inside `feature/*`
 - **NEVER** collect side effects in the ScreenNode — the Screen does that via `CollectSideEffect`
+- **NEVER** pass `onNavigateTo...` lambdas from `RootNavGraph` into a ScreenNode — navigation logic belongs inside the node itself, which receives `NavController` and handles all routing internally
 
 ## Dependencies
 

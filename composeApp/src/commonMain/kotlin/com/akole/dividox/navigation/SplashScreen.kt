@@ -1,24 +1,15 @@
 package com.akole.dividox.navigation
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.compose.composable
+import com.akole.dividox.feature.splash.SplashScreen
+import kotlinx.serialization.Serializable
 
-@Composable
-fun SplashScreen() {
-    // TODO: TK-013 Add BackHandler() to prevent back nav from splash
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = "DiviDox",
-            style = MaterialTheme.typography.displayMedium,
-            color = MaterialTheme.colorScheme.primary,
-        )
+@Serializable
+data object SplashRoute
+
+fun NavGraphBuilder.splashScreenNode() {
+    composable<SplashRoute> {
+        SplashScreen()
     }
 }

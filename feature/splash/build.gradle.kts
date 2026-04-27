@@ -13,9 +13,9 @@ kotlin {
         commonMain.dependencies {
             implementation(project(":common:ui-resources"))
             implementation(libs.compose.foundation)
+            implementation(libs.kotlinx.coroutines.core)
         }
         commonTest.dependencies {
-            implementation(libs.kotlinx.coroutines.test)
         }
     }
 }

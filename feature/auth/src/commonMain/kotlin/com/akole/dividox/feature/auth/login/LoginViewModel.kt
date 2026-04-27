@@ -49,9 +49,9 @@ class LoginViewModel(
         viewModelScope.launch {
             updateViewState { copy(isLoading = true, error = null) }
             signInWithEmail(viewState.value.email, viewState.value.password)
-                .onSuccess { viewModelScope.emitSideEffect(LoginSideEffect.Navigation.NavigateToHome) }
-                .onFailure { updateViewState { copy(error = it.message) } }
-            updateViewState { copy(isLoading = false) }
+                .onFailure { updateViewState { copy(isLoading = false, error = it.message) } }
+            // On success: keep isLoading=true — ObserveSessionUseCase fires Authenticated
+            // which triggers RootNavGraph to switch to the home graph.
         }
     }
 }

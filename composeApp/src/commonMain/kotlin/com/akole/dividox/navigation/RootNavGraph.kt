@@ -1,55 +1,61 @@
 package com.akole.dividox.navigation
 
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.navigation.NavHostController
-import androidx.navigation.NavOptions
 import androidx.navigation.compose.NavHost
-import androidx.navigation.navOptions
 import com.akole.dividox.common.auth.domain.model.SessionState
 import com.akole.dividox.common.auth.domain.usecase.ObserveSessionUseCase
-import com.akole.dividox.feature.auth.navigation.LoginRoute
-import com.akole.dividox.feature.auth.navigation.SignUpRoute
-import com.akole.dividox.feature.splash.SplashScreen
+import kotlinx.coroutines.delay
 import org.koin.compose.koinInject
+
+private const val SPLASH_DURATION_MS = 2000L
 
 @Composable
 fun SetupRootNavGraph(navController: NavHostController) {
     val observeSession: ObserveSessionUseCase = koinInject()
-    val sessionState by observeSession().collectAsState(initial = SessionState.Loading)
+    val sessionState by remember { observeSession() }.collectAsState(initial = SessionState.Loading)
+    var splashReady by remember { mutableStateOf(false) }
 
-    when (sessionState) {
-        SessionState.Loading -> SplashScreen()
-        SessionState.Unauthenticated -> {
-            NavHost(navController = navController, startDestination = LoginRoute) {
-                loginScreenNode(
-                    onNavigateToSignUp = { navController.navigateToSignUp() },
-                    onNavigateToHome = {
-                        navController.navigateToHome(
-                            navOptions = navOptions {
-                                popUpTo(LoginRoute) { inclusive = true }
-                            },
-                        )
-                    },
-                )
-                signUpScreenNode(
-                    onNavigateToLogin = { navController.popBackStack() },
-                    onNavigateToHome = {
-                        navController.navigateToHome(
-                            navOptions = navOptions {
-                                popUpTo(SignUpRoute) { inclusive = true }
-                            },
-                        )
-                    },
-                )
+    LaunchedEffect(Unit) {
+        delay(SPLASH_DURATION_MS)
+        splashReady = true
+    }
+
+    LaunchedEffect(sessionState, splashReady) {
+        if (!splashReady || sessionState == SessionState.Loading) return@LaunchedEffect
+        when (sessionState) {
+            is SessionState.Authenticated -> navController.navigate(HomeRoute) {
+                popUpTo(0) { inclusive = true }
+                launchSingleTop = true
             }
-        }
-        is SessionState.Authenticated -> {
-            NavHost(navController = navController, startDestination = HomeRoute) {
-                homeScreenNode(navController)
-                detailScreenNode(navController)
+            SessionState.Unauthenticated -> navController.navigate(LoginRoute) {
+                popUpTo(0) { inclusive = true }
+                launchSingleTop = true
             }
+            SessionState.Loading -> Unit
         }
+    }
+
+    NavHost(
+        navController = navController,
+        startDestination = SplashRoute,
+        enterTransition = { slideInHorizontally { it } },
+        exitTransition = { slideOutHorizontally { -it } },
+        popEnterTransition = { slideInHorizontally { -it } },
+        popExitTransition = { slideOutHorizontally { it } },
+    ) {
+        splashScreenNode()
+        loginScreenNode(navController)
+        signUpScreenNode(navController)
+        homeScreenNode(navController)
+        detailScreenNode(navController)
     }
 }

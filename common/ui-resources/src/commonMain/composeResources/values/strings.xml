@@ -1,4 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Dividox</string>
+    <string name="app_name">DiviDox</string>
+    <string name="auth_already_have_account">Already have an account?</string>
+    <string name="auth_brand_name">DiviDox</string>
+    <string name="auth_cancel">Cancel</string>
+    <string name="auth_create_account">Create Account</string>
+    <string name="auth_divider_or_connect_with">or connect with</string>
+    <string name="auth_dont_have_account">Don't have an account?</string>
+    <string name="auth_email">Email</string>
+    <string name="auth_forgot_password">Forgot Password?</string>
+    <string name="auth_forgot_password_description">Enter your email address to receive a password reset link.</string>
+    <string name="auth_full_name">Full Name</string>
+    <string name="auth_join_subtitle">Join DiviDox and start tracking your dividends.</string>
+    <string name="auth_password">Password</string>
+    <string name="auth_reset_password">Reset Password</string>
+    <string name="auth_send_reset_link">Send Reset Link</string>
+    <string name="auth_sign_in">Sign In</string>
+    <string name="auth_sign_up">Sign Up</string>
+    <string name="auth_tagline">Track your dividends. Grow your wealth.</string>
+    <string name="auth_terms_agreement">I agree to the Terms of Service and Privacy Policy</string>
+    <string name="ui_google_sign_in">Sign in with Google</string>
+    <string name="ui_hide_password">Hide password</string>
+    <string name="ui_navigate_back">Navigate back</string>
+    <string name="ui_show_password">Show password</string>
 </resources>

@@ -28,7 +28,6 @@ interface SignUpContract {
     sealed interface SignUpSideEffect : SideEffect {
         sealed interface Navigation : SignUpSideEffect {
             data object NavigateToLogin : Navigation
-            data object NavigateToHome : Navigation
         }
     }
 }
