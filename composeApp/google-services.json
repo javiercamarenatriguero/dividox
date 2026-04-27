@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "836293215181-88ga6o8if3n8i6j75rk2dfa8didkhosm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.akole.dividox",
+            "certificate_hash": "f46776cc2cbdf4c5549b3f50bee5a24e0efd75d1"
+          }
+        },
+        {
           "client_id": "836293215181-ba3sl7lmkbu08ogl5esrvmp0ks4cuagk.apps.googleusercontent.com",
           "client_type": 3
         }
