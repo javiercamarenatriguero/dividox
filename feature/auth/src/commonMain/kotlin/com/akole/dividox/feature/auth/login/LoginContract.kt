@@ -26,7 +26,7 @@ interface LoginContract {
     sealed interface LoginSideEffect : SideEffect {
         sealed interface Navigation : LoginSideEffect {
             data object NavigateToSignUp : Navigation
+            data class NavigateToForgotPassword(val email: String) : Navigation
         }
-        data class ShowForgotPasswordDialog(val email: String) : LoginSideEffect
     }
 }

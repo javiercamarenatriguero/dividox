@@ -9,6 +9,7 @@
     <string name="auth_dont_have_account">Don't have an account?</string>
     <string name="auth_email">Email</string>
     <string name="auth_forgot_password">Forgot Password?</string>
+    <string name="auth_forgot_password_confirmation">If an account exists with that email, a reset link has been sent.</string>
     <string name="auth_forgot_password_description">Enter your email address to receive a password reset link.</string>
     <string name="auth_full_name">Full Name</string>
     <string name="auth_join_subtitle">Join DiviDox and start tracking your dividends.</string>

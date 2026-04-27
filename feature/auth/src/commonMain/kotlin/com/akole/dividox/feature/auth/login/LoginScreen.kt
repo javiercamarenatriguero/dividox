@@ -16,16 +16,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -58,26 +53,10 @@ fun LoginScreen(
     sideEffects: Flow<LoginSideEffect>,
     onNavigation: (LoginSideEffect.Navigation) -> Unit,
 ) {
-    var showForgotPasswordDialog by remember { mutableStateOf(false) }
-    var forgotPasswordFieldValue by remember { mutableStateOf("") }
-
     CollectSideEffect(sideEffects) { effect ->
         when (effect) {
             is LoginSideEffect.Navigation -> onNavigation(effect)
-            is LoginSideEffect.ShowForgotPasswordDialog -> {
-                forgotPasswordFieldValue = effect.email
-                showForgotPasswordDialog = true
-            }
         }
-    }
-
-    if (showForgotPasswordDialog) {
-        ForgotPasswordDialog(
-            email = forgotPasswordFieldValue,
-            onEmailChanged = { forgotPasswordFieldValue = it },
-            onConfirm = { showForgotPasswordDialog = false },
-            onDismiss = { showForgotPasswordDialog = false },
-        )
     }
 
     Scaffold(
@@ -196,45 +175,6 @@ fun LoginScreen(
             }
         }
     }
-}
-
-@Composable
-private fun ForgotPasswordDialog(
-    email: String,
-    onEmailChanged: (String) -> Unit,
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit,
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(UiRes.string.auth_reset_password)) },
-        text = {
-            Column {
-                Text(
-                    text = stringResource(UiRes.string.auth_forgot_password_description),
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                AppTextField(
-                    value = email,
-                    onValueChange = onEmailChanged,
-                    placeholder = stringResource(UiRes.string.auth_email),
-                    leadingIcon = Icons.Default.Email,
-                    keyboardType = KeyboardType.Email,
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text(stringResource(UiRes.string.auth_send_reset_link))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(UiRes.string.auth_cancel))
-            }
-        },
-    )
 }
 
 @Preview

@@ -55,6 +55,7 @@ fun SetupRootNavGraph(navController: NavHostController) {
         splashScreenNode()
         loginScreenNode(navController)
         signUpScreenNode(navController)
+        forgotPasswordScreenNode(navController)
         homeScreenNode(navController)
         detailScreenNode(navController)
     }

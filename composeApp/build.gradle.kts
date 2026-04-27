@@ -51,6 +51,11 @@ kotlin {
             implementation(libs.androidx.navigation.compose)
             implementation(libs.kotlinx.serialization.core)
         }
+        androidMain.dependencies {
+            implementation(libs.androidx.credentials)
+            implementation(libs.androidx.credentials.play.services.auth)
+            implementation(libs.googleid)
+        }
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutinesSwing)

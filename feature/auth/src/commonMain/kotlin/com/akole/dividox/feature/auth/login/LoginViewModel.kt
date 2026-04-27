@@ -2,7 +2,7 @@ package com.akole.dividox.feature.auth.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.akole.dividox.common.auth.domain.usecase.ForgotPasswordUseCase
+import com.akole.dividox.common.auth.data.GoogleSignInLauncher
 import com.akole.dividox.common.auth.domain.usecase.SignInWithEmailUseCase
 import com.akole.dividox.common.auth.domain.usecase.SignInWithGoogleUseCase
 import com.akole.dividox.common.mvi.viewmodel.MVI
@@ -21,9 +21,8 @@ import kotlinx.coroutines.launch
 
 class LoginViewModel(
     private val signInWithEmail: SignInWithEmailUseCase,
-    @Suppress("UnusedPrivateMember")
     private val signInWithGoogle: SignInWithGoogleUseCase,
-    private val forgotPassword: ForgotPasswordUseCase,
+    private val googleSignInLauncher: GoogleSignInLauncher,
 ) : ViewModel(),
     MVI<LoginViewState, LoginViewEvent, LoginSideEffect> by mvi(LoginViewState()) {
 
@@ -32,11 +31,9 @@ class LoginViewModel(
             is OnEmailChanged -> updateViewState { copy(email = viewEvent.email) }
             is OnPasswordChanged -> updateViewState { copy(password = viewEvent.password) }
             OnSignInClicked -> signIn()
-            OnGoogleSignInClicked -> {
-                // TODO(TK-013): Google IdToken flow — requires platform-specific launcher
-            }
+            OnGoogleSignInClicked -> signInWithGoogle()
             OnForgotPasswordClicked -> viewModelScope.emitSideEffect(
-                LoginSideEffect.ShowForgotPasswordDialog(viewState.value.email),
+                LoginSideEffect.Navigation.NavigateToForgotPassword(viewState.value.email),
             )
             OnSignUpClicked -> viewModelScope.emitSideEffect(
                 LoginSideEffect.Navigation.NavigateToSignUp,
@@ -50,8 +47,22 @@ class LoginViewModel(
             updateViewState { copy(isLoading = true, error = null) }
             signInWithEmail(viewState.value.email, viewState.value.password)
                 .onFailure { updateViewState { copy(isLoading = false, error = it.message) } }
-            // On success: keep isLoading=true — ObserveSessionUseCase fires Authenticated
-            // which triggers RootNavGraph to switch to the home graph.
+        }
+    }
+
+    private fun signInWithGoogle() {
+        viewModelScope.launch {
+            updateViewState { copy(isLoading = true, error = null) }
+            runCatching { googleSignInLauncher.launchSignIn() }
+                .onSuccess { idToken ->
+                    if (idToken != null) {
+                        signInWithGoogle(idToken)
+                            .onFailure { updateViewState { copy(isLoading = false, error = it.message) } }
+                    } else {
+                        updateViewState { copy(isLoading = false) }
+                    }
+                }
+                .onFailure { updateViewState { copy(isLoading = false, error = it.message) } }
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.akole.dividox.di
 
+import com.akole.dividox.feature.auth.forgotpassword.ForgotPasswordViewModel
 import com.akole.dividox.feature.auth.login.LoginViewModel
 import com.akole.dividox.feature.auth.register.SignUpViewModel
 import com.akole.dividox.feature.home.HomeViewModel
@@ -15,6 +16,7 @@ val viewModelModule: Module = module {
             platformName = params.get(),
         )
     }
-    viewModelOf(::LoginViewModel)
+    viewModel { LoginViewModel(get(), get(), get()) }
     viewModelOf(::SignUpViewModel)
+    viewModelOf(::ForgotPasswordViewModel)
 }

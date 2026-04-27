@@ -34,6 +34,7 @@ fun AppTextField(
     placeholder: String,
     leadingIcon: ImageVector,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
     isPassword: Boolean = false,
     keyboardType: KeyboardType = KeyboardType.Text,
     imeAction: ImeAction = ImeAction.Next,
@@ -56,6 +57,7 @@ fun AppTextField(
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
+        enabled = enabled,
         placeholder = { Text(placeholder) },
         leadingIcon = {
             Icon(imageVector = leadingIcon, contentDescription = null)
