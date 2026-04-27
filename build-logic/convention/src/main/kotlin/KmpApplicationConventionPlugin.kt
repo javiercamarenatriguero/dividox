@@ -47,17 +47,23 @@ class KmpApplicationConventionPlugin : Plugin<Project> {
     private fun configureSigningConfig(project: Project, ext: ApplicationExtension) {
         val properties = project.rootProject.properties
         ext.signingConfigs {
-            getByName("debug") {
-                keyAlias = properties["DEBUG_KEY_ALIAS"] as String
-                keyPassword = properties["DEBUG_KEY_PASSWORD"] as String
-                storeFile = project.file(properties["DEBUG_STORE_FILE"] as String)
-                storePassword = properties["DEBUG_STORE_PASSWORD"] as String
+            val debugStore = project.file(properties["DEBUG_STORE_FILE"] as? String ?: "")
+            if (debugStore.exists()) {
+                getByName("debug") {
+                    keyAlias = properties["DEBUG_KEY_ALIAS"] as String
+                    keyPassword = properties["DEBUG_KEY_PASSWORD"] as String
+                    storeFile = debugStore
+                    storePassword = properties["DEBUG_STORE_PASSWORD"] as String
+                }
             }
-            create("release") {
-                keyAlias = properties["RELEASE_KEY_ALIAS"] as String
-                keyPassword = properties["RELEASE_KEY_PASSWORD"] as String
-                storeFile = project.file(properties["RELEASE_STORE_FILE"] as String)
-                storePassword = properties["RELEASE_STORE_PASSWORD"] as String
+            val releaseStore = project.file(properties["RELEASE_STORE_FILE"] as? String ?: "")
+            if (releaseStore.exists()) {
+                create("release") {
+                    keyAlias = properties["RELEASE_KEY_ALIAS"] as String
+                    keyPassword = properties["RELEASE_KEY_PASSWORD"] as String
+                    storeFile = releaseStore
+                    storePassword = properties["RELEASE_STORE_PASSWORD"] as String
+                }
             }
         }
     }
@@ -76,7 +82,7 @@ class KmpApplicationConventionPlugin : Plugin<Project> {
                     getDefaultProguardFile("proguard-android-optimize.txt"),
                     "proguard-rules.pro"
                 )
-                signingConfig = signingConfigs.getByName("release")
+                signingConfig = signingConfigs.findByName("release")
             }
         }
     }
