@@ -30,6 +30,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.akole.dividox.common.mvi.CollectSideEffect
+import com.akole.dividox.feature.auth.isGoogleSignInSupported
 import dividox.common.ui_resources.generated.resources.Res as UiRes
 import dividox.common.ui_resources.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
@@ -144,17 +145,21 @@ fun LoginScreen(
                 enabled = state.email.isNotBlank() && state.password.isNotBlank(),
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            if (isGoogleSignInSupported) {
+                Spacer(modifier = Modifier.height(24.dp))
 
-            SectionDivider(text = stringResource(UiRes.string.auth_divider_or_connect_with))
+                SectionDivider(text = stringResource(UiRes.string.auth_divider_or_connect_with))
 
-            Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
-            SocialSignInButton(
-                onClick = { onEvent(LoginViewEvent.OnGoogleSignInClicked) },
-            )
+                SocialSignInButton(
+                    onClick = { onEvent(LoginViewEvent.OnGoogleSignInClicked) },
+                )
 
-            Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(32.dp))
+            } else {
+                Spacer(modifier = Modifier.height(32.dp))
+            }
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,

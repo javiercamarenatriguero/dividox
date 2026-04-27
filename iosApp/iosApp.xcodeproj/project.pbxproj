@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		33F9DF22A84A2E40EC8A7276 /* Pods_iosApp.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 65E2664E890F411E421A6593 /* Pods_iosApp.framework */; };
-		999883B32F86D2A300D34357 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 999883B22F86D2A300D34357 /* FirebaseCore */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -51,7 +50,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				999883B32F86D2A300D34357 /* FirebaseCore in Frameworks */,
 				33F9DF22A84A2E40EC8A7276 /* Pods_iosApp.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -104,7 +102,6 @@
 			buildConfigurationList = D79CD13E29491C955A945513 /* Build configuration list for PBXNativeTarget "iosApp" */;
 			buildPhases = (
 				8BA482BB4453D1D4E991330C /* [CP] Check Pods Manifest.lock */,
-				98877DA7B55D28C32D863C02 /* Compile Kotlin Framework */,
 				F39B3C52EF53FAE0082017DA /* Sources */,
 				9C589A597521E03AC10794CA /* Frameworks */,
 				9FA5F085E602CAA3B699FAC0 /* Resources */,
@@ -120,7 +117,6 @@
 			);
 			name = iosApp;
 			packageProductDependencies = (
-				999883B22F86D2A300D34357 /* FirebaseCore */,
 			);
 			productName = iosApp;
 			productReference = 82FF7675B6D3D923CE10CADC /* Dividox.app */;
@@ -151,7 +147,6 @@
 			mainGroup = 276C4FF136F240244DDD3236;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				999883B02F86CDE400D34357 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = C4D9DA32C3F145ABA07DD4BC /* Products */;
@@ -212,25 +207,6 @@
 			shellPath = /bin/sh;
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
-		};
-		98877DA7B55D28C32D863C02 /* Compile Kotlin Framework */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "Compile Kotlin Framework";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "if [ \"YES\" = \"$OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED\" ]; then\n  echo \"Skipping Gradle build task invocation due to OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED environment variable set to \\\"YES\\\"\"\n  exit 0\nfi\ncd \"$SRCROOT/..\"\n./gradlew :composeApp:embedAndSignAppleFrameworkForXcode\n";
 		};
 		B84998FE3504436C00EC37DB /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -466,24 +442,6 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCRemoteSwiftPackageReference section */
-		999883B02F86CDE400D34357 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 12.12.0;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		999883B22F86D2A300D34357 /* FirebaseCore */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 999883B02F86CDE400D34357 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseCore;
-		};
-/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 76863FD4C6009AAC807C65AD /* Project object */;
 }

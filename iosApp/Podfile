@@ -3,4 +3,6 @@ use_frameworks!
 
 target 'iosApp' do
   pod 'composeApp', :path => '../composeApp'
+  pod 'FirebaseAuth', '~> 11.0'
+  pod 'GoogleSignIn', '~> 8.0'
 end
