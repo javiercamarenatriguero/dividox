@@ -10,6 +10,7 @@ plugins {
     alias(libs.plugins.dividox.detekt)
     alias(libs.plugins.kotlinxSerialization)
     alias(libs.plugins.googleServices)
+    alias(libs.plugins.dividox.kmp.cocoapods)
 }
 
 extensions.configure<ApplicationExtension> {
@@ -23,6 +24,20 @@ extensions.configure<ApplicationExtension> {
 
 kotlin {
     jvm()
+
+    cocoapods {
+        summary = "Dividox KMP app"
+        homepage = "https://dividox.app"
+        version = "1.0"
+        // Min version
+        ios.deploymentTarget = "14.0"
+        framework {
+            baseName = "ComposeApp"
+            isStatic = true
+        }
+        pod("FirebaseAuth") { version = "~> 11.0" }
+        podfile = project.file("../iosApp/Podfile")
+    }
 
     sourceSets {
         commonMain.dependencies {
@@ -42,8 +57,6 @@ kotlin {
         }
     }
 }
-
-// Firebase dependencies — reserved for TK-012
 
 compose.desktop {
     application {

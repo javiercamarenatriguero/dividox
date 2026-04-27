@@ -9,7 +9,7 @@ import kotlin.test.assertTrue
 class SignOutUseCaseTest {
 
     @Test
-    fun invokesRepositorySignOut() = runTest {
+    fun `invokes repository sign out`() = runTest {
         // GIVEN
         val repository = FakeAuthRepository()
         val useCase = SignOutUseCase(repository)
@@ -23,7 +23,7 @@ class SignOutUseCaseTest {
     }
 
     @Test
-    fun returnsFailureWhenRepositoryThrowsException() = runTest {
+    fun `returns failure when repository throws exception`() = runTest {
         // GIVEN
         val repository = FailingAuthRepository()
         val useCase = SignOutUseCase(repository)

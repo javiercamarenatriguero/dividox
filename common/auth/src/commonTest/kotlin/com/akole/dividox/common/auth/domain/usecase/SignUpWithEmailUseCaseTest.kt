@@ -9,15 +9,13 @@ import kotlin.test.assertTrue
 class SignUpWithEmailUseCaseTest {
 
     @Test
-    fun invokesRepositorySignUpWithEmailWithCorrectParameters() = runTest {
+    fun `invokes repository with correct email and password`() = runTest {
         // GIVEN
         val repository = FakeAuthRepository()
         val useCase = SignUpWithEmailUseCase(repository)
-        val email = "newuser@example.com"
-        val password = "securePassword123"
 
         // WHEN
-        val result = useCase(email, password)
+        val result = useCase("newuser@example.com", "securePassword123")
 
         // THEN
         assertTrue(result.isSuccess)
@@ -25,7 +23,7 @@ class SignUpWithEmailUseCaseTest {
     }
 
     @Test
-    fun returnsFailureWhenRepositoryThrowsException() = runTest {
+    fun `returns failure when repository throws exception`() = runTest {
         // GIVEN
         val repository = FailingAuthRepository()
         val useCase = SignUpWithEmailUseCase(repository)
