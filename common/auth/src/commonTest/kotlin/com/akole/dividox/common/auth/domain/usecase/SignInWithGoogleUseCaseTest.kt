@@ -9,14 +9,13 @@ import kotlin.test.assertTrue
 class SignInWithGoogleUseCaseTest {
 
     @Test
-    fun invokesRepositorySignInWithGoogleWithIdToken() = runTest {
+    fun `invokes repository with correct id token`() = runTest {
         // GIVEN
         val repository = FakeAuthRepository()
         val useCase = SignInWithGoogleUseCase(repository)
-        val idToken = "google_id_token_xyz"
 
         // WHEN
-        val result = useCase(idToken)
+        val result = useCase("google_id_token_xyz")
 
         // THEN
         assertTrue(result.isSuccess)
@@ -24,7 +23,7 @@ class SignInWithGoogleUseCaseTest {
     }
 
     @Test
-    fun returnsFailureWhenRepositoryThrowsException() = runTest {
+    fun `returns failure when repository throws exception`() = runTest {
         // GIVEN
         val repository = FailingAuthRepository()
         val useCase = SignInWithGoogleUseCase(repository)

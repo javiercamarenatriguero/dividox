@@ -39,5 +39,9 @@ gradlePlugin {
             id = "com.akole.dividox.detekt"
             implementationClass = "DetektConventionPlugin"
         }
+        register("kmpCocoapods") {
+            id = "com.akole.dividox.kmp.cocoapods"
+            implementationClass = "KmpCocoapodsConventionPlugin"
+        }
     }
 }

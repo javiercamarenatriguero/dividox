@@ -6,9 +6,9 @@ import com.akole.dividox.common.auth.domain.model.AuthUser
  * Platform-specific authentication data source for Firebase and native SDKs.
  * - Android: delegates to Firebase Authentication SDK
  * - iOS: delegates to Firebase Authentication via Kotlin/Native interop
- * - Desktop: stub implementation (full Firebase REST in TK-012)
+ * - Desktop: Firebase REST with proactive token refresh (TK-012)
  */
-expect class AuthDataSource {
+expect class AuthDataSource() {
     /**
      * Signs in user with Firebase email/password authentication.
      * @param email User email
