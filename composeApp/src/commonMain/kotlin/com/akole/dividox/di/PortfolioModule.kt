@@ -14,11 +14,6 @@ import org.koin.core.module.Module
 import org.koin.core.module.dsl.factoryOf
 import org.koin.dsl.module
 
-/**
- * Koin DI module for portfolio component.
- * Wires datasource, repository, and all usecases for managing user holdings.
- * Consumes [GetCurrentUserIdUseCase] from appModule to isolate data per user.
- */
 val portfolioModule: Module = module {
     single<PortfolioDataSource> {
         FirestorePortfolioDataSource(userId = get<GetCurrentUserIdUseCase>()())

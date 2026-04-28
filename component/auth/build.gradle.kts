@@ -27,6 +27,9 @@ kotlin {
             implementation(libs.firebase.auth)
             implementation(libs.kotlinx.coroutines.play.services)
         }
+        jvmMain.dependencies {
+            implementation(libs.firebase.kotlin.auth)
+        }
         commonTest.dependencies {
             implementation(libs.kotlinx.coroutines.test)
         }

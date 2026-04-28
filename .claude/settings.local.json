@@ -170,7 +170,22 @@
       "Bash(./gradlew :component:portfolio:compileKotlinJvm :composeApp:compileKotlinJvm)",
       "Bash(./gradlew :component:portfolio:dependencies --configuration jvmRuntimeClasspath)",
       "Bash(python3 *)",
-      "Bash(./gradlew :composeApp:compileKotlinIosArm64 :composeApp:compileDebugKotlinAndroid :composeApp:compileKotlinJvm :component:auth:jvmTest :component:portfolio:jvmTest :feature:auth:jvmTest)"
+      "Bash(./gradlew :composeApp:compileKotlinIosArm64 :composeApp:compileDebugKotlinAndroid :composeApp:compileKotlinJvm :component:auth:jvmTest :component:portfolio:jvmTest :feature:auth:jvmTest)",
+      "Bash(./gradlew :composeApp:compileKotlinIosArm64 :composeApp:compileDebugKotlinAndroid :composeApp:compileKotlinJvm)",
+      "WebFetch(domain:dev.gitlive.co)",
+      "WebFetch(domain:firebase.google.com)",
+      "WebFetch(domain:ktor.io)",
+      "WebFetch(domain:console.firebase.google.com)",
+      "WebFetch(domain:square.github.io)",
+      "Bash(./gradlew :composeApp:compileKotlinAndroid :component:auth:compileKotlinAndroid :component:portfolio:compileKotlinAndroid)",
+      "Bash(./gradlew :composeApp:compileDebugKotlinAndroid :component:auth:compileKotlinAndroid :component:portfolio:compileKotlinAndroid)",
+      "Bash(./gradlew :composeApp:compileDebugKotlinAndroid :component:auth:compileDebugKotlinAndroid :component:portfolio:compileDebugKotlinAndroid)",
+      "Bash(./gradlew :composeApp:compileKotlinIosSimulatorArm64 :component:auth:compileKotlinIosSimulatorArm64 :component:portfolio:compileKotlinIosSimulatorArm64)",
+      "Bash(./gradlew :composeApp:compileKotlinJvm :composeApp:compileDebugKotlinAndroid :composeApp:compileKotlinIosSimulatorArm64)",
+      "Bash(./gradlew :composeApp:compileKotlinJvm :composeApp:compileDebugKotlinAndroid :composeApp:compileKotlinIosSimulatorArm64 :component:auth:jvmTest)",
+      "Bash(./gradlew :composeApp:jvmRun)",
+      "Bash(kill %1)",
+      "Bash(timeout 25 ./gradlew :composeApp:jvmRun --stacktrace)"
     ]
   },
   "enableAllProjectMcpServers": true,
