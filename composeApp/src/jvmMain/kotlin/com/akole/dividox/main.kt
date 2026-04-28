@@ -10,6 +10,7 @@ import dev.gitlive.firebase.FirebaseOptions
 import dev.gitlive.firebase.initialize
 import dividox.common.ui_resources.generated.resources.Res
 import dividox.common.ui_resources.generated.resources.ic_dividox
+import java.util.Properties
 import org.jetbrains.compose.resources.painterResource
 
 fun main() {
@@ -27,6 +28,16 @@ fun main() {
 }
 
 private fun initFirebaseJvm() {
+    val props = Properties()
+    Thread.currentThread().contextClassLoader
+        ?.getResourceAsStream("firebase.properties")
+        ?.use(props::load)
+        ?: error("firebase.properties not found in classpath — run ./gradlew :composeApp:jvmProcessResources first")
+
+    fun require(key: String): String =
+        props.getProperty(key)?.takeIf { it.isNotEmpty() }
+            ?: error("$key missing or empty in firebase.properties")
+
     FirebasePlatform.initializeFirebasePlatform(object : FirebasePlatform() {
         private val storage = HashMap<String, String>()
         override fun store(key: String, value: String) { storage[key] = value }
@@ -37,11 +48,11 @@ private fun initFirebaseJvm() {
     Firebase.initialize(
         context = Application(),
         options = FirebaseOptions(
-            applicationId = "1:836293215181:android:6641e79fa99571cf75ba84",
-            apiKey = "AIzaSyD3rihf42yOStFmc9QYuRJduObM9kTdZ18",
-            projectId = "dividox-aca23",
-            gcmSenderId = "836293215181",
-            storageBucket = "dividox-aca23.firebasestorage.app",
+            applicationId = require("applicationId"),
+            apiKey = require("apiKey"),
+            projectId = require("projectId"),
+            gcmSenderId = props.getProperty("gcmSenderId"),
+            storageBucket = props.getProperty("storageBucket"),
         ),
     )
 }
