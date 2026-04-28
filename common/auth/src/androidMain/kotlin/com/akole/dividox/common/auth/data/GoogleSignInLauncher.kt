@@ -1,7 +1,10 @@
 package com.akole.dividox.common.auth.data
 
 actual class GoogleSignInLauncher {
-    actual suspend fun launchSignIn(): String? {
-        throw UnsupportedOperationException("Google Sign-In launcher not implemented for Android")
+
+    actual suspend fun launchSignIn(): String? = signInProvider?.invoke()
+
+    companion object {
+        var signInProvider: (suspend () -> String?)? = null
     }
 }

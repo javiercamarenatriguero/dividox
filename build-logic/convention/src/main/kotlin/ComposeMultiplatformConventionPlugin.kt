@@ -19,6 +19,7 @@ class ComposeMultiplatformConventionPlugin : Plugin<Project> {
             extensions.configure<KotlinMultiplatformExtension> {
                 sourceSets.apply {
                     commonMain.dependencies {
+                        implementation(libs.findLibrary("compose-animation").get())
                         implementation(libs.findLibrary("compose-runtime").get())
                         implementation(libs.findLibrary("compose-foundation").get())
                         implementation(libs.findLibrary("compose-material3").get())

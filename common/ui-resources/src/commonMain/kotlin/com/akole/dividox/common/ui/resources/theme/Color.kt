@@ -7,7 +7,7 @@ import androidx.compose.ui.graphics.Color
 // ─── Light tokens ────────────────────────────────────────────────────────────
 // Source: .stitch/DESIGN.md · DiviDox Finance · Stitch asset f6fd49b3589b42809306d7cdea72c58d
 
-private val light_primary = Color(0xFF005AB4)
+private val light_primary = Color(0xFF304169)
 private val light_onPrimary = Color(0xFFFFFFFF)
 private val light_primaryContainer = Color(0xFF0873DF)
 private val light_onPrimaryContainer = Color(0xFFFEFCFF)

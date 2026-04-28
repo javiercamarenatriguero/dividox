@@ -36,6 +36,7 @@ kotlin {
             isStatic = true
         }
         pod("FirebaseAuth") { version = "~> 11.0" }
+        pod("GoogleSignIn") { version = "~> 8.0" }
         podfile = project.file("../iosApp/Podfile")
     }
 
@@ -50,6 +51,11 @@ kotlin {
             implementation(projects.feature.splash)
             implementation(libs.androidx.navigation.compose)
             implementation(libs.kotlinx.serialization.core)
+        }
+        androidMain.dependencies {
+            implementation(libs.androidx.credentials)
+            implementation(libs.androidx.credentials.play.services.auth)
+            implementation(libs.googleid)
         }
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)

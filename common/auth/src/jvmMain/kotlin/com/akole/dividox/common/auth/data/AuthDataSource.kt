@@ -3,7 +3,10 @@ package com.akole.dividox.common.auth.data
 import com.akole.dividox.common.auth.domain.model.AuthProvider
 import com.akole.dividox.common.auth.domain.model.AuthUser
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withTimeoutOrNull
 import java.net.HttpURLConnection
 import java.net.URL
@@ -25,6 +28,7 @@ import java.net.URLEncoder
 actual class AuthDataSource actual constructor() {
 
     private val storage: JvmSessionStorage = JvmSessionStorage()
+    private val authState: MutableStateFlow<JvmSessionData?> = MutableStateFlow(storage.load())
 
     /** Signs in an existing user with [email] and [password] via the REST sign-in endpoint. */
     actual suspend fun signInWithEmail(email: String, password: String): AuthUser {
@@ -32,7 +36,7 @@ actual class AuthDataSource actual constructor() {
             endpoint = "accounts:signInWithPassword",
             body = """{"email":"${email.escaped()}","password":"${password.escaped()}","returnSecureToken":true}""",
         )
-        return parseSessionAndSave(response, AuthProvider.EMAIL).toAuthUser()
+        return parseSessionAndSave(response, AuthProvider.EMAIL).also { authState.value = it }.toAuthUser()
     }
 
     /** Creates a new account with [email] and [password] via the REST sign-up endpoint. */
@@ -41,7 +45,7 @@ actual class AuthDataSource actual constructor() {
             endpoint = "accounts:signUp",
             body = """{"email":"${email.escaped()}","password":"${password.escaped()}","returnSecureToken":true}""",
         )
-        return parseSessionAndSave(response, AuthProvider.EMAIL).toAuthUser()
+        return parseSessionAndSave(response, AuthProvider.EMAIL).also { authState.value = it }.toAuthUser()
     }
 
     /**
@@ -55,7 +59,7 @@ actual class AuthDataSource actual constructor() {
             endpoint = "accounts:signInWithIdp",
             body = """{"postBody":"$postBody","requestUri":"http://localhost","returnSecureToken":true}""",
         )
-        return parseSessionAndSave(response, AuthProvider.GOOGLE).toAuthUser()
+        return parseSessionAndSave(response, AuthProvider.GOOGLE).also { authState.value = it }.toAuthUser()
     }
 
     /** Sends a password-reset e-mail to [email] via the `sendOobCode` endpoint. */
@@ -69,6 +73,7 @@ actual class AuthDataSource actual constructor() {
     /** Clears the persisted session from [JvmSessionStorage], effectively signing out the user. */
     actual suspend fun signOut() {
         storage.clear()
+        authState.value = null
     }
 
     /**
@@ -78,9 +83,12 @@ actual class AuthDataSource actual constructor() {
      * before emitting. Emits `null` when no valid session is found.
      */
     actual fun observeAuthState(): Flow<AuthUser?> = flow {
-        val session = storage.load() ?: run { emit(null); return@flow }
-        val refreshed = refreshIfNeeded(session)
-        emit(refreshed?.toAuthUser())
+        val current = authState.value
+        if (current != null) {
+            val refreshed = refreshIfNeeded(current)
+            if (refreshed !== current) authState.value = refreshed
+        }
+        emitAll(authState.map { it?.toAuthUser() })
     }
 
     /**

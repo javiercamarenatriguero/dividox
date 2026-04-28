@@ -12,7 +12,28 @@
           "package_name": "com.akole.dividox"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "836293215181-38m5tkjqkf52id535o269ud5jhsrkb88.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.akole.dividox",
+            "certificate_hash": "162ea346c79d0759e49b9c010bccf52db189f26b"
+          }
+        },
+        {
+          "client_id": "836293215181-88ga6o8if3n8i6j75rk2dfa8didkhosm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.akole.dividox",
+            "certificate_hash": "f46776cc2cbdf4c5549b3f50bee5a24e0efd75d1"
+          }
+        },
+        {
+          "client_id": "836293215181-ba3sl7lmkbu08ogl5esrvmp0ks4cuagk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyD3rihf42yOStFmc9QYuRJduObM9kTdZ18"
@@ -20,7 +41,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "836293215181-ba3sl7lmkbu08ogl5esrvmp0ks4cuagk.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "836293215181-n1qhfmch81016biacmnq1ogm0ku6oota.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.akole.dividox.Dividox"
+              }
+            }
+          ]
         }
       }
     }

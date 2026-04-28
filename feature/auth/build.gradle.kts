@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.dividox.kmp.ios)
     alias(libs.plugins.dividox.kmp.test)
     alias(libs.plugins.dividox.detekt)
+    alias(libs.plugins.kotlinxSerialization)
 }
 
 kotlin {
@@ -12,7 +13,11 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(project(":common:auth"))
+            implementation(project(":common:mvi"))
+            implementation(project(":common:ui-resources"))
+            implementation(compose.materialIconsExtended)
             implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kotlinx.serialization.core)
         }
         commonTest.dependencies {
             implementation(libs.kotlinx.coroutines.test)

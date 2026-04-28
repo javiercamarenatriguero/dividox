@@ -34,6 +34,49 @@ Kotlin Multiplatform · Compose Multiplatform · Firebase Auth · Firestore · Y
 * [/iosApp](./iosApp/iosApp) contains iOS applications. Even if you’re sharing your UI with Compose Multiplatform,
   you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
 
+## Architecture
+
+The project follows a layered modular architecture with strict dependency rules — each layer can only depend on layers below it.
+
+```mermaid
+graph TD
+    App(["app\nEntry point · DI · Navigation"])
+
+    subgraph INT["integration"]
+        direction LR
+        I1(["module"]) ~~~ I2(["module"])
+    end
+
+    subgraph FEAT["feature"]
+        direction LR
+        F1(["module"]) ~~~ F2(["module"]) ~~~ F3(["module"]) ~~~ F4(["module"])
+    end
+
+    subgraph COMP["component"]
+        direction LR
+        C1(["module"]) ~~~ C2(["module"]) ~~~ C3(["module"])
+    end
+
+    subgraph COM["common"]
+        direction LR
+        CM1(["module"]) ~~~ CM2(["module"])
+    end
+
+    App --> INT
+    App --> FEAT
+    INT --> FEAT
+    FEAT --> COMP
+    COMP --> COM
+    FEAT --> COM
+```
+
+### Rules
+
+- `app` depends on everything.
+- `feature` modules are isolated — they do not depend on each other.
+- `common` modules have no internal dependencies.
+- All modules target Android, iOS, and Desktop via Kotlin Multiplatform.
+
 ### Build and Run Android Application
 
 To build and run the development version of the Android app, use the run configuration from the run widget

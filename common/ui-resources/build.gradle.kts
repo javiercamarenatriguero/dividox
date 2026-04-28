@@ -11,4 +11,11 @@ compose.resources {
 
 kotlin {
     jvm()
+
+    sourceSets {
+        commonMain.dependencies {
+            implementation(compose.materialIconsExtended)
+            implementation(libs.kotlinx.datetime)
+        }
+    }
 }
