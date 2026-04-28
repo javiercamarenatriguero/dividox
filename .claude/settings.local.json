@@ -218,7 +218,8 @@
       "Bash(./gradlew :component:market:compileCommonMainKotlinMetadata :component:market:compileDebugKotlinAndroid :component:market:compileKotlinIosArm64 :component:market:compileKotlinJvm)",
       "Bash(./gradlew :component:market:compileCommonMainKotlinMetadata :component:market:compileDebugKotlinAndroid :component:market:compileKotlinIosArm64 :component:market:compileKotlinJvm :composeApp:compileDebugKotlin :composeApp:compileKotlinJvm)",
       "Bash(./gradlew :component:market:jvmTest --info)",
-      "Bash(./gradlew :component:market:jvmTest --rerun)"
+      "Bash(./gradlew :component:market:jvmTest --rerun)",
+      "Bash(gh run *)"
     ]
   },
   "enableAllProjectMcpServers": true,
