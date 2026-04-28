@@ -48,6 +48,7 @@ kotlin {
             implementation(projects.common.mvi)
             implementation(projects.common.uiResources)
             implementation(projects.component.portfolio)
+            implementation(projects.component.market)
             implementation(projects.feature.auth)
             implementation(projects.feature.details)
             implementation(projects.feature.home)

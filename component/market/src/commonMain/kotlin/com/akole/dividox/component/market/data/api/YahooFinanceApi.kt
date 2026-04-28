@@ -9,7 +9,7 @@ import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 
-internal class YahooFinanceApi(private val client: HttpClient) {
+class YahooFinanceApi(private val client: HttpClient) {
 
     suspend fun getChart(ticker: String, range: String = "1d", interval: String = "1d"): ChartResponseDto =
         client.get("https://query1.finance.yahoo.com/v8/finance/chart/$ticker") {

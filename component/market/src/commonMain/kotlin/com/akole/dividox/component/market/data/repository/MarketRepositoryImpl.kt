@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 import kotlin.time.Clock
 
-internal class MarketRepositoryImpl(
+class MarketRepositoryImpl(
     private val api: YahooFinanceApi,
     private val ioDispatcher: CoroutineDispatcher,
 ) : MarketRepository {
