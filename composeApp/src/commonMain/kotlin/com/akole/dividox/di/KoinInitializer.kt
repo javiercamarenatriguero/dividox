@@ -11,6 +11,7 @@ object KoinInitializer {
             modules(
                 appModule,
                 portfolioModule,
+                marketModule,
                 viewModelModule,
             )
         }

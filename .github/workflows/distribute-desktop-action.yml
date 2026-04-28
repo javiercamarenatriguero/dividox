@@ -13,6 +13,17 @@ on:
       tag:
         required: true
         type: string
+    secrets:
+      FIREBASE_APPLICATION_ID:
+        required: true
+      FIREBASE_API_KEY:
+        required: true
+      FIREBASE_PROJECT_ID:
+        required: true
+      FIREBASE_GCM_SENDER_ID:
+        required: false
+      FIREBASE_STORAGE_BUCKET:
+        required: false
 
 jobs:
   build-macos:
@@ -33,6 +44,12 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Package DMG
+        env:
+          FIREBASE_APPLICATION_ID: ${{ secrets.FIREBASE_APPLICATION_ID }}
+          FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_GCM_SENDER_ID: ${{ secrets.FIREBASE_GCM_SENDER_ID }}
+          FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
         run: ./gradlew :composeApp:packageDmg -PbuildNumber=${{ inputs.build_number }}
 
       - name: Upload DMG artifact
@@ -60,6 +77,12 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Package DEB
+        env:
+          FIREBASE_APPLICATION_ID: ${{ secrets.FIREBASE_APPLICATION_ID }}
+          FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_GCM_SENDER_ID: ${{ secrets.FIREBASE_GCM_SENDER_ID }}
+          FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
         run: ./gradlew :composeApp:packageDeb -PbuildNumber=${{ inputs.build_number }}
 
       - name: Upload DEB artifact

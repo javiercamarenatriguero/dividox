@@ -1,4 +1,5 @@
 import com.android.build.api.dsl.ApplicationExtension
+import java.util.Properties
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 
 plugins {
@@ -44,9 +45,11 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(projects.component.auth)
+            implementation(projects.common.network)
             implementation(projects.common.mvi)
             implementation(projects.common.uiResources)
             implementation(projects.component.portfolio)
+            implementation(projects.component.market)
             implementation(projects.feature.auth)
             implementation(projects.feature.details)
             implementation(projects.feature.home)
@@ -59,12 +62,52 @@ kotlin {
             implementation(libs.androidx.credentials.play.services.auth)
             implementation(libs.googleid)
         }
-        jvmMain.dependencies {
-            implementation(compose.desktop.currentOs)
-            implementation(libs.kotlinx.coroutinesSwing)
-            implementation(libs.firebase.kotlin.auth)
+        jvmMain {
+            dependencies {
+                implementation(compose.desktop.currentOs)
+                implementation(libs.kotlinx.coroutinesSwing)
+                implementation(libs.firebase.kotlin.auth)
+            }
+            resources.srcDir(layout.buildDirectory.dir("generated/firebase"))
         }
     }
+}
+
+val generateFirebaseConfig by tasks.registering {
+    val outputDir = layout.buildDirectory.dir("generated/firebase")
+    val localPropsFile = rootProject.file("local.properties")
+    if (localPropsFile.exists()) inputs.file(localPropsFile)
+    inputs.property("applicationId", System.getenv("FIREBASE_APPLICATION_ID") ?: "")
+    inputs.property("apiKey", System.getenv("FIREBASE_API_KEY") ?: "")
+    inputs.property("projectId", System.getenv("FIREBASE_PROJECT_ID") ?: "")
+    inputs.property("gcmSenderId", System.getenv("FIREBASE_GCM_SENDER_ID") ?: "")
+    inputs.property("storageBucket", System.getenv("FIREBASE_STORAGE_BUCKET") ?: "")
+    outputs.dir(outputDir)
+
+    doLast {
+        val localProps = Properties()
+        if (localPropsFile.exists()) localPropsFile.inputStream().use(localProps::load)
+
+        fun resolve(propKey: String, envKey: String): String =
+            System.getenv(envKey)?.takeIf { it.isNotEmpty() }
+                ?: localProps.getProperty(propKey, "")
+
+        outputDir.get().asFile.also { it.mkdirs() }
+            .resolve("firebase.properties")
+            .writeText(
+                buildString {
+                    appendLine("applicationId=${resolve("firebase.desktop.applicationId", "FIREBASE_APPLICATION_ID")}")
+                    appendLine("apiKey=${resolve("firebase.desktop.apiKey", "FIREBASE_API_KEY")}")
+                    appendLine("projectId=${resolve("firebase.desktop.projectId", "FIREBASE_PROJECT_ID")}")
+                    appendLine("gcmSenderId=${resolve("firebase.desktop.gcmSenderId", "FIREBASE_GCM_SENDER_ID")}")
+                    append("storageBucket=${resolve("firebase.desktop.storageBucket", "FIREBASE_STORAGE_BUCKET")}")
+                },
+            )
+    }
+}
+
+tasks.named("jvmProcessResources") {
+    dependsOn(generateFirebaseConfig)
 }
 
 compose.desktop {

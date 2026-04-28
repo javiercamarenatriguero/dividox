@@ -7,55 +7,53 @@ Scaffold `:component:market`, add Ktor dependencies and configure `YahooFinanceC
 **ADRs:** ADR-005, ADR-007
 **Depends on:** TK-013
 **Blocks:** TK-017
-**Status:** Backlog
+**Status:** In Progress
 
 ---
 
 ## Subtasks
 
 ### Phase 1: Architecture & Setup
-- [ ] **Create Git Branch** `feature/DVX-TK-015-component-market` — `skill: manage-git-flow`
+- [x] **Create Git Branch** `feature/DVX-TK-015-component-market` — `skill: manage-git-flow`
 
 ### Phase 2: Scaffold + Ktor Setup
-- [ ] **Scaffold `:component:market`**
+- [x] **Scaffold `:component:market`**
   - `component/market/build.gradle.kts` — `dividox.kmp.library` + `dividox.kmp.test`
   - `include(":component:market")` in `settings.gradle.kts`
   - **Commit:** `DVX-TK-015 Scaffold component:market module`
 
-- [ ] **Add Ktor dependencies**
+- [x] **Add Ktor dependencies** via `:common:network` module
   - `ktor-client-core`, `ktor-client-content-negotiation`, `ktor-serialization-kotlinx-json`
   - Engines: `ktor-client-okhttp` (Android/JVM), `ktor-client-darwin` (iOS)
-  - **Commit:** `DVX-TK-015 Add Ktor dependencies to component:market`
+  - **Commit:** `DVX-TK-015 Add common:network module with HttpClientFactory`
 
-- [ ] **Configure `YahooFinanceClient`**
-  - `ContentNegotiation` (kotlinx.serialization), `HttpTimeout` 10s, `defaultRequest` base URL `https://query1.finance.yahoo.com`
-  - Location: `component/market/src/commonMain/kotlin/.../data/api/YahooFinanceClient.kt`
-  - **Verify:** `./gradlew :component:market:compileKotlinJvm`
-  - **Commit:** `DVX-TK-015 Configure YahooFinanceClient`
+- [x] **Configure `YahooFinanceApi`**
+  - `ContentNegotiation` (kotlinx.serialization), `HttpTimeout` 10s, `User-Agent` header
+  - Location: `component/market/src/commonMain/.../data/api/YahooFinanceApi.kt`
+  - **Note:** Uses `v8/finance/chart` exclusively — `v7/quote` (paid) and `v10/quoteSummary` (crumb required) were curl-verified as inaccessible and dropped
+  - **Commit:** `DVX-TK-015 Move market Koin module to app, use HttpClientFactory from common:network`
 
 ### Phase 3: Domain Layer (TDD)
-- [ ] **Domain models:** `StockQuote(ticker, price, change, changePercent, currency, lastUpdated)`, `DividendInfo(ticker, yield, annualPayout, payoutRatio, fiveYearGrowth, exDividendDate)`, `CompanyInfo(ticker, name, exchange, logoUrl)`, `ChartPeriod` enum (`ONE_DAY, ONE_WEEK, ONE_MONTH, YTD, ONE_YEAR, ALL`), `PricePoint(timestamp: Instant, close: Double)`
-- [ ] **`MarketRepository` interface:** `getStockQuote`, `getMultipleQuotes`, `getDividendInfo`, `getCompanyInfo`, `getDividendHistory`, `getPriceHistory(ticker, period): Flow<List<PricePoint>>`
-- [ ] **Use cases + tests:** `GetStockQuoteUseCase`, `GetMultipleQuotesUseCase`, `GetDividendInfoUseCase`, `GetCompanyInfoUseCase`, `GetDividendHistoryUseCase`, `GetPriceHistoryUseCase`, `SearchSecuritiesUseCase`
-  - **Verify:** `./gradlew :component:market:jvmTest`
-  - **Commit:** `DVX-TK-015 Add market domain layer with tests`
+- [x] **Domain models:** `StockQuote(ticker, price, change, changePercent, currency, lastUpdated)`, `DividendInfo(ticker, yield, annualPayout, payoutRatio, fiveYearGrowth, exDividendDate)`, `CompanyInfo(ticker, name, exchange, logoUrl)`, `ChartPeriod` enum (`ONE_DAY, ONE_WEEK, ONE_MONTH, YTD, ONE_YEAR, ALL`), `PricePoint(timestamp: Instant, close: Double)`, `MarketError` sealed class
+- [x] **`MarketRepository` interface:** `getStockQuote`, `getMultipleQuotes`, `getDividendInfo`, `getCompanyInfo`, `getDividendHistory`, `getPriceHistory(ticker, period): Flow<List<PricePoint>>`, `searchSecurities`
+- [x] **Use cases + tests:** `GetStockQuoteUseCase`, `GetMultipleQuotesUseCase`, `GetDividendInfoUseCase`, `GetCompanyInfoUseCase`, `GetDividendHistoryUseCase`, `GetPriceHistoryUseCase`, `SearchSecuritiesUseCase`
+  - **Verify:** `./gradlew :component:market:jvmTest` — 32 tests passing
 
 ### Phase 4: Data Layer
-- [ ] **Internal DTOs** (all `@Serializable`, all `internal`) for Yahoo Finance JSON responses
-- [ ] **`YahooFinanceApi`** — Ktor calls for quote, batch quote, dividend summary, dividend history, price chart, search
-- [ ] **`MarketRepositoryImpl`** — in-memory cache: quotes 60s TTL, dividend info 1h TTL (TDD, mock API)
-  - **Verify:** `./gradlew :component:market:jvmTest`
-- [ ] **`MarketModule.kt`** + add to `App.kt` startKoin
-  - **Commit:** `DVX-TK-015 Implement market data layer with Yahoo Finance and Koin module`
+- [x] **Internal DTOs** (`ChartResponseDto` with `events.dividends` map, `SearchResponseDto`) — all `@Serializable internal`
+- [x] **`YahooFinanceApi`** — `getChart`, `getChartWithEvents` (delivers dividend events + longName/exchangeName), `search`
+- [x] **`MarketRepositoryImpl`** — in-memory cache (quotes 60s TTL, dividend/company 1h TTL), parallel `async` for `getMultipleQuotes`, tested with `ktor-client-mock`
+- [x] **`MarketDiModule.kt`** in `composeApp/di/` + wired into `KoinInitializer`
 
 ### Phase 5: Testing & Quality
-- [ ] `./gradlew test` + `./gradlew detekt`
-- [ ] Create Pull Request — `skill: manage-git-flow`
+- [x] 32 tests passing: use case tests (`FakeMarketRepository`) + `MarketRepositoryImplTest` (`MockEngine`)
+- [x] `./gradlew detekt` — clean
+- [ ] Commit refactoring changes + Create Pull Request
 
 ---
 
 ## Progress Tracking
-**Total Tasks:** 7 **Completed:** 0 **Remaining:** 7
+**Total Tasks:** 7 **Completed:** 6 **Remaining:** 1 (PR)
 
 ---
 
@@ -63,3 +61,5 @@ Scaffold `:component:market`, add Ktor dependencies and configure `YahooFinanceC
 - All DTOs are `internal` — domain models never expose Yahoo Finance field names
 - "Prices delayed 15 minutes" disclaimer is a UI requirement on every market-data screen (ADR-007)
 - `SearchSecuritiesUseCase` is included here for reuse by Portfolio and Search features
+- `v8/finance/chart` with `events=dividends` is the only reliable public endpoint — delivers StockQuote, CompanyInfo (longName, exchangeName), and DividendInfo (dividend events map)
+- `MarketRepositoryImpl` is public (takes `HttpClient`) so Koin in `:composeApp` can wire it without accessing internal `YahooFinanceApi`

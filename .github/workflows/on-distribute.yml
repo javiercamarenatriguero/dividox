@@ -84,9 +84,15 @@ jobs:
     name: Distribute Desktop
     needs: [prepare, build]
     uses: ./.github/workflows/distribute-desktop-action.yml
+    permissions:
+      contents: write
     with:
       build_number: ${{ needs.prepare.outputs.build_number }}
       tag: "${{ inputs.branch }}-build-${{ needs.prepare.outputs.build_number }}"
       release_notes: ${{ inputs.release_notes != '' && inputs.release_notes || format('[{0}] Build {1}', inputs.branch, needs.prepare.outputs.build_number) }}
-    permissions:
-      contents: write
+    secrets:
+      FIREBASE_APPLICATION_ID: ${{ secrets.FIREBASE_DESKTOP_APPLICATION_ID }}
+      FIREBASE_API_KEY: ${{ secrets.FIREBASE_DESKTOP_API_KEY }}
+      FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_DESKTOP_PROJECT_ID }}
+      FIREBASE_GCM_SENDER_ID: ${{ secrets.FIREBASE_DESKTOP_GCM_SENDER_ID }}
+      FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_DESKTOP_STORAGE_BUCKET }}
