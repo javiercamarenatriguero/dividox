@@ -1,6 +1,7 @@
 package com.akole.dividox.component.market.data.repository
 
 import com.akole.dividox.component.market.data.api.YahooFinanceApi
+import io.ktor.client.HttpClient
 import com.akole.dividox.component.market.data.mapper.toCompanyInfo
 import com.akole.dividox.component.market.data.mapper.toDividendInfo
 import com.akole.dividox.component.market.data.mapper.toPricePoints
@@ -13,6 +14,8 @@ import com.akole.dividox.component.market.domain.model.PricePoint
 import com.akole.dividox.component.market.domain.model.StockQuote
 import com.akole.dividox.component.market.domain.repository.MarketRepository
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
@@ -20,9 +23,11 @@ import kotlinx.coroutines.withContext
 import kotlin.time.Clock
 
 class MarketRepositoryImpl(
-    private val api: YahooFinanceApi,
+    httpClient: HttpClient,
     private val ioDispatcher: CoroutineDispatcher,
 ) : MarketRepository {
+
+    private val api = YahooFinanceApi(httpClient)
 
     // TTL: 60s for quotes, 1h for dividend/company info
     private val quoteCache = mutableMapOf<String, Pair<StockQuote, Long>>()
@@ -40,19 +45,27 @@ class MarketRepositoryImpl(
         }.mapError()
     }
 
-    override suspend fun getMultipleQuotes(tickers: List<String>): Result<List<StockQuote>> = withContext(ioDispatcher) {
-        runCatching {
-            val dto = api.getBatchQuotes(tickers)
-            dto.quoteResponse.result?.map { it.toStockQuote() } ?: emptyList()
-        }.mapError()
-    }
+    override suspend fun getMultipleQuotes(tickers: List<String>): Result<List<StockQuote>> =
+        withContext(ioDispatcher) {
+            runCatching {
+                coroutineScope {
+                    tickers.map { ticker -> async { api.getChart(ticker) } }
+                        .map { deferred ->
+                            val dto = deferred.await()
+                            val meta = dto.chart.result?.firstOrNull()?.meta
+                            meta?.toStockQuote()
+                        }
+                        .filterNotNull()
+                }
+            }.mapError()
+        }
 
     override suspend fun getDividendInfo(ticker: String): Result<DividendInfo> = withContext(ioDispatcher) {
         val cached = dividendCache[ticker]
         if (cached != null && !isExpired(cached.second, DIVIDEND_TTL_MS)) return@withContext Result.success(cached.first)
         runCatching {
-            val dto = api.getQuoteSummary(ticker)
-            val result = dto.quoteSummary.result?.firstOrNull()
+            val dto = api.getChartWithEvents(ticker)
+            val result = dto.chart.result?.firstOrNull()
                 ?: throw MarketError.NotFound(ticker)
             result.toDividendInfo(ticker).also { dividendCache[ticker] = it to Clock.System.now().toEpochMilliseconds() }
         }.mapError()
@@ -62,8 +75,8 @@ class MarketRepositoryImpl(
         val cached = companyCache[ticker]
         if (cached != null && !isExpired(cached.second, DIVIDEND_TTL_MS)) return@withContext Result.success(cached.first)
         runCatching {
-            val dto = api.getQuoteSummary(ticker)
-            val result = dto.quoteSummary.result?.firstOrNull()
+            val dto = api.getChartWithEvents(ticker)
+            val result = dto.chart.result?.firstOrNull()
                 ?: throw MarketError.NotFound(ticker)
             result.toCompanyInfo(ticker).also { companyCache[ticker] = it to Clock.System.now().toEpochMilliseconds() }
         }.mapError()
@@ -71,10 +84,9 @@ class MarketRepositoryImpl(
 
     override suspend fun getDividendHistory(ticker: String): Result<List<DividendInfo>> = withContext(ioDispatcher) {
         runCatching {
-            @Suppress("UNUSED_VARIABLE")
             val dto = api.getChartWithEvents(ticker)
-            // Return simplified list — real history parsing from events map
-            emptyList<DividendInfo>()
+            val result = dto.chart.result?.firstOrNull() ?: return@runCatching emptyList()
+            listOf(result.toDividendInfo(ticker))
         }.mapError()
     }
 
@@ -89,7 +101,6 @@ class MarketRepositoryImpl(
     override suspend fun searchSecurities(query: String): Result<List<StockQuote>> = withContext(ioDispatcher) {
         runCatching {
             val dto = api.search(query)
-            // Return search results mapped to minimal StockQuote stubs
             dto.quotes?.filter { it.quoteType == "EQUITY" }?.map { quote ->
                 StockQuote(
                     ticker = quote.symbol,

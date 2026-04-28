@@ -45,6 +45,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(projects.component.auth)
+            implementation(projects.common.network)
             implementation(projects.common.mvi)
             implementation(projects.common.uiResources)
             implementation(projects.component.portfolio)

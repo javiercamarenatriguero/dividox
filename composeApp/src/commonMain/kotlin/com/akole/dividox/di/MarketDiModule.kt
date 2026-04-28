@@ -2,7 +2,6 @@ package com.akole.dividox.di
 
 import com.akole.dividox.common.network.HttpClientConfig
 import com.akole.dividox.common.network.HttpClientFactory
-import com.akole.dividox.component.market.data.api.YahooFinanceApi
 import com.akole.dividox.component.market.data.repository.MarketRepositoryImpl
 import com.akole.dividox.component.market.domain.repository.MarketRepository
 import com.akole.dividox.component.market.domain.usecase.GetCompanyInfoUseCase
@@ -26,10 +25,9 @@ val marketModule: Module = module {
             ),
         ).build()
     }
-    single { YahooFinanceApi(get()) }
     single<MarketRepository> {
         MarketRepositoryImpl(
-            api = get(),
+            httpClient = get(),
             ioDispatcher = Dispatchers.Default,
         )
     }
