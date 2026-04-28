@@ -36,15 +36,17 @@ kotlin {
             isStatic = true
         }
         pod("FirebaseAuth") { version = "~> 11.0" }
+        pod("FirebaseFirestore") { version = "~> 11.0" }
         pod("GoogleSignIn") { version = "~> 8.0" }
         podfile = project.file("../iosApp/Podfile")
     }
 
     sourceSets {
         commonMain.dependencies {
-            implementation(projects.common.auth)
+            implementation(projects.component.auth)
             implementation(projects.common.mvi)
             implementation(projects.common.uiResources)
+            implementation(projects.component.portfolio)
             implementation(projects.feature.auth)
             implementation(projects.feature.details)
             implementation(projects.feature.home)
@@ -60,6 +62,7 @@ kotlin {
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutinesSwing)
+            implementation(libs.firebase.kotlin.auth)
         }
     }
 }

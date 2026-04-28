@@ -2,7 +2,7 @@ package com.akole.dividox.feature.auth.forgotpassword
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.akole.dividox.common.auth.domain.usecase.ForgotPasswordUseCase
+import com.akole.dividox.component.auth.domain.usecase.ForgotPasswordUseCase
 import com.akole.dividox.common.mvi.viewmodel.MVI
 import com.akole.dividox.common.mvi.viewmodel.mvi
 import com.akole.dividox.feature.auth.forgotpassword.ForgotPasswordContract.ForgotPasswordSideEffect

@@ -3,7 +3,7 @@
 package com.akole.dividox
 
 import cocoapods.GoogleSignIn.GIDSignIn
-import com.akole.dividox.common.auth.data.GoogleSignInLauncher
+import com.akole.dividox.component.auth.data.GoogleSignInLauncher
 import kotlinx.coroutines.suspendCancellableCoroutine
 import platform.UIKit.UIApplication
 import kotlin.coroutines.resume

@@ -11,8 +11,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
-import com.akole.dividox.common.auth.domain.model.SessionState
-import com.akole.dividox.common.auth.domain.usecase.ObserveSessionUseCase
+import com.akole.dividox.component.auth.domain.model.SessionState
+import com.akole.dividox.component.auth.domain.usecase.ObserveSessionUseCase
 import kotlinx.coroutines.delay
 import org.koin.compose.koinInject
 

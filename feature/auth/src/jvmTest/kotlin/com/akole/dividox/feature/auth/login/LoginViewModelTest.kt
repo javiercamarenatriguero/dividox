@@ -1,10 +1,10 @@
 package com.akole.dividox.feature.auth.login
 
-import com.akole.dividox.common.auth.data.GoogleSignInLauncher
-import com.akole.dividox.common.auth.domain.model.AuthUser
-import com.akole.dividox.common.auth.domain.repository.AuthRepository
-import com.akole.dividox.common.auth.domain.usecase.SignInWithEmailUseCase
-import com.akole.dividox.common.auth.domain.usecase.SignInWithGoogleUseCase
+import com.akole.dividox.component.auth.data.GoogleSignInLauncher
+import com.akole.dividox.component.auth.domain.model.AuthUser
+import com.akole.dividox.component.auth.domain.repository.AuthRepository
+import com.akole.dividox.component.auth.domain.usecase.SignInWithEmailUseCase
+import com.akole.dividox.component.auth.domain.usecase.SignInWithGoogleUseCase
 import com.akole.dividox.feature.auth.login.LoginContract.LoginSideEffect
 import com.akole.dividox.feature.auth.login.LoginContract.LoginViewEvent
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -171,6 +171,7 @@ private class FakeLoginRepository : AuthRepository {
         Result.success<Unit>(Unit).also { signInWithGoogleCalled = true }
     override suspend fun sendPasswordResetEmail(email: String) = Result.success(Unit)
     override suspend fun signOut() = Result.success(Unit)
+    override fun getCurrentUserId(): String? = null
 }
 
 private class FailingLoginRepository : AuthRepository {
@@ -185,6 +186,7 @@ private class FailingLoginRepository : AuthRepository {
         Result.failure(IllegalStateException("Reset failed"))
     override suspend fun signOut(): Result<Unit> =
         Result.failure(IllegalStateException("Sign out failed"))
+    override fun getCurrentUserId(): String? = null
 }
 
 private class FakeGoogleSignInLauncher(private val idToken: String?) : GoogleSignInLauncher() {

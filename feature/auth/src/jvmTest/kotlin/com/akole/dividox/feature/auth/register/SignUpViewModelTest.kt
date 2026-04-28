@@ -1,8 +1,8 @@
 package com.akole.dividox.feature.auth.register
 
-import com.akole.dividox.common.auth.domain.model.AuthUser
-import com.akole.dividox.common.auth.domain.repository.AuthRepository
-import com.akole.dividox.common.auth.domain.usecase.SignUpWithEmailUseCase
+import com.akole.dividox.component.auth.domain.model.AuthUser
+import com.akole.dividox.component.auth.domain.repository.AuthRepository
+import com.akole.dividox.component.auth.domain.usecase.SignUpWithEmailUseCase
 import com.akole.dividox.feature.auth.register.SignUpContract.SignUpSideEffect
 import com.akole.dividox.feature.auth.register.SignUpContract.SignUpViewEvent
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -141,6 +141,7 @@ private class FakeSignUpRepository : AuthRepository {
     override suspend fun signInWithGoogle(idToken: String) = Result.success(Unit)
     override suspend fun sendPasswordResetEmail(email: String) = Result.success(Unit)
     override suspend fun signOut() = Result.success(Unit)
+    override fun getCurrentUserId(): String? = null
 }
 
 private class FailingSignUpRepository : AuthRepository {
@@ -155,4 +156,5 @@ private class FailingSignUpRepository : AuthRepository {
         Result.failure(IllegalStateException("Reset failed"))
     override suspend fun signOut(): Result<Unit> =
         Result.failure(IllegalStateException("Sign out failed"))
+    override fun getCurrentUserId(): String? = null
 }
