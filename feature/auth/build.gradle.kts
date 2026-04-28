@@ -12,7 +12,7 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            implementation(project(":common:auth"))
+            implementation(project(":component:auth"))
             implementation(project(":common:mvi"))
             implementation(project(":common:ui-resources"))
             implementation(compose.materialIconsExtended)

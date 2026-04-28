@@ -1,8 +1,8 @@
 package com.akole.dividox.feature.auth.forgotpassword
 
-import com.akole.dividox.common.auth.domain.model.AuthUser
-import com.akole.dividox.common.auth.domain.repository.AuthRepository
-import com.akole.dividox.common.auth.domain.usecase.ForgotPasswordUseCase
+import com.akole.dividox.component.auth.domain.model.AuthUser
+import com.akole.dividox.component.auth.domain.repository.AuthRepository
+import com.akole.dividox.component.auth.domain.usecase.ForgotPasswordUseCase
 import com.akole.dividox.feature.auth.forgotpassword.ForgotPasswordContract.ForgotPasswordSideEffect
 import com.akole.dividox.feature.auth.forgotpassword.ForgotPasswordContract.ForgotPasswordViewEvent
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -100,6 +100,7 @@ private class FakeForgotPasswordRepository : AuthRepository {
     override suspend fun signInWithGoogle(idToken: String) = Result.success(Unit)
     override suspend fun sendPasswordResetEmail(email: String) = Result.success(Unit)
     override suspend fun signOut() = Result.success(Unit)
+    override fun getCurrentUserId(): String? = null
 }
 
 private class FailingForgotPasswordRepository : AuthRepository {
@@ -114,4 +115,5 @@ private class FailingForgotPasswordRepository : AuthRepository {
         Result.failure(IllegalStateException("Reset failed"))
     override suspend fun signOut(): Result<Unit> =
         Result.failure(IllegalStateException("Sign out failed"))
+    override fun getCurrentUserId(): String? = null
 }

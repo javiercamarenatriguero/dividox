@@ -1,6 +1,6 @@
 package com.akole.dividox.di
 
-import com.akole.dividox.common.auth.domain.usecase.GetCurrentUserIdUseCase
+import com.akole.dividox.component.auth.domain.usecase.GetCurrentUserIdUseCase
 import com.akole.dividox.component.portfolio.data.datasource.FirestorePortfolioDataSource
 import com.akole.dividox.component.portfolio.data.datasource.PortfolioDataSource
 import com.akole.dividox.component.portfolio.data.repository.PortfolioRepositoryImpl

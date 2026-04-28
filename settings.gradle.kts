@@ -35,7 +35,7 @@ plugins {
 }
 
 include(":composeApp")
-include(":common:auth")
+include(":component:auth")
 include(":common:mvi")
 include(":common:ui-resources")
 include(":component:portfolio")

@@ -161,7 +161,12 @@
       "Bash(./gradlew :component:portfolio:linkDebugTestIosSimulatorArm64)",
       "Bash(./gradlew :component:portfolio:detekt :component:portfolio:jvmTest)",
       "Bash(./gradlew :component:portfolio:jvmTest --rerun)",
-      "Bash(./gradlew :common:auth:jvmTest :component:portfolio:jvmTest --rerun)"
+      "Bash(./gradlew :common:auth:jvmTest :component:portfolio:jvmTest --rerun)",
+      "Bash(sed -i '' 's|include\\(\":common:auth\"\\)|include\\(\":component:auth\"\\)|' /Users/camarej4/code/git/dividox/settings.gradle.kts)",
+      "Bash(sed -i '' 's|project\\(\":common:auth\"\\)|project\\(\":component:auth\"\\)|' /Users/camarej4/code/git/dividox/feature/auth/build.gradle.kts)",
+      "Bash(sed -i '' 's|projects\\\\.common\\\\.auth|projects.component.auth|' /Users/camarej4/code/git/dividox/composeApp/build.gradle.kts)",
+      "Bash(./gradlew :component:auth:jvmTest :component:portfolio:jvmTest :feature:auth:jvmTest --rerun)",
+      "Bash(./gradlew :composeApp:compileKotlinIosArm64 :composeApp:compileDebugKotlinAndroid :component:auth:jvmTest :component:portfolio:jvmTest :feature:auth:jvmTest)"
     ]
   },
   "enableAllProjectMcpServers": true,

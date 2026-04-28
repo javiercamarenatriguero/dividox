@@ -43,7 +43,7 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            implementation(projects.common.auth)
+            implementation(projects.component.auth)
             implementation(projects.common.mvi)
             implementation(projects.common.uiResources)
             implementation(projects.component.portfolio)
