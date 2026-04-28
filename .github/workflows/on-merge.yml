@@ -139,6 +139,12 @@ jobs:
       release_notes: "Build from commit ${{ github.sha }} — ${{ github.event.head_commit.message }}"
     permissions:
       contents: write
+    secrets:
+      FIREBASE_APPLICATION_ID: ${{ secrets.FIREBASE_DESKTOP_APPLICATION_ID }}
+      FIREBASE_API_KEY: ${{ secrets.FIREBASE_DESKTOP_API_KEY }}
+      FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_DESKTOP_PROJECT_ID }}
+      FIREBASE_GCM_SENDER_ID: ${{ secrets.FIREBASE_DESKTOP_GCM_SENDER_ID }}
+      FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_DESKTOP_STORAGE_BUCKET }}
 
   distribute-ios:
     name: Distribute iOS
