@@ -84,6 +84,8 @@ jobs:
     name: Distribute Desktop
     needs: [prepare, build]
     uses: ./.github/workflows/distribute-desktop-action.yml
+    permissions:
+      contents: write
     with:
       build_number: ${{ needs.prepare.outputs.build_number }}
       tag: "${{ inputs.branch }}-build-${{ needs.prepare.outputs.build_number }}"
