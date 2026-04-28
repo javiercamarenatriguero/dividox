@@ -166,7 +166,11 @@
       "Bash(sed -i '' 's|project\\(\":common:auth\"\\)|project\\(\":component:auth\"\\)|' /Users/camarej4/code/git/dividox/feature/auth/build.gradle.kts)",
       "Bash(sed -i '' 's|projects\\\\.common\\\\.auth|projects.component.auth|' /Users/camarej4/code/git/dividox/composeApp/build.gradle.kts)",
       "Bash(./gradlew :component:auth:jvmTest :component:portfolio:jvmTest :feature:auth:jvmTest --rerun)",
-      "Bash(./gradlew :composeApp:compileKotlinIosArm64 :composeApp:compileDebugKotlinAndroid :component:auth:jvmTest :component:portfolio:jvmTest :feature:auth:jvmTest)"
+      "Bash(./gradlew :composeApp:compileKotlinIosArm64 :composeApp:compileDebugKotlinAndroid :component:auth:jvmTest :component:portfolio:jvmTest :feature:auth:jvmTest)",
+      "Bash(./gradlew :component:portfolio:compileKotlinJvm :composeApp:compileKotlinJvm)",
+      "Bash(./gradlew :component:portfolio:dependencies --configuration jvmRuntimeClasspath)",
+      "Bash(python3 *)",
+      "Bash(./gradlew :composeApp:compileKotlinIosArm64 :composeApp:compileDebugKotlinAndroid :composeApp:compileKotlinJvm :component:auth:jvmTest :component:portfolio:jvmTest :feature:auth:jvmTest)"
     ]
   },
   "enableAllProjectMcpServers": true,
