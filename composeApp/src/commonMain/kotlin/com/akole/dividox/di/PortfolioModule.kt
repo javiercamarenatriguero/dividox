@@ -1,5 +1,7 @@
 package com.akole.dividox.di
 
+import com.akole.dividox.common.auth.domain.usecase.GetCurrentUserIdUseCase
+import com.akole.dividox.component.portfolio.data.datasource.FirestorePortfolioDataSource
 import com.akole.dividox.component.portfolio.data.datasource.PortfolioDataSource
 import com.akole.dividox.component.portfolio.data.repository.PortfolioRepositoryImpl
 import com.akole.dividox.component.portfolio.domain.repository.PortfolioRepository
@@ -15,17 +17,16 @@ import org.koin.dsl.module
 /**
  * Koin DI module for portfolio component.
  * Wires datasource, repository, and all usecases for managing user holdings.
- * Uses authenticated user's uid from Firebase Auth for data isolation.
+ * Consumes [GetCurrentUserIdUseCase] from appModule to isolate data per user.
  */
 val portfolioModule: Module = module {
     single<PortfolioDataSource> {
-        val userId = getCurrentUserId()
-        createPortfolioDataSource(userId = userId)
+        FirestorePortfolioDataSource(userId = get<GetCurrentUserIdUseCase>()())
     }
     single<PortfolioRepository> {
         PortfolioRepositoryImpl(
             dataSource = get(),
-            ioDispatcher = Dispatchers.IO,
+            ioDispatcher = Dispatchers.Default,
         )
     }
     factoryOf(::GetPortfolioUseCase)
@@ -33,12 +34,3 @@ val portfolioModule: Module = module {
     factoryOf(::UpdateHoldingUseCase)
     factoryOf(::RemoveHoldingUseCase)
 }
-
-/**
- * Get current authenticated user's uid from Firebase Auth.
- * Ensures portfolio data is isolated per user.
- *
- * @return Firebase Auth uid of logged-in user
- * @throws Exception if no user is authenticated
- */
-internal expect fun getCurrentUserId(): String

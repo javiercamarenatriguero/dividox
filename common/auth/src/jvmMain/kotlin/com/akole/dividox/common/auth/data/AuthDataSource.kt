@@ -76,6 +76,9 @@ actual class AuthDataSource actual constructor() {
         authState.value = null
     }
 
+    /** Returns UID of currently authenticated user from in-memory session state, or null. */
+    actual fun getCurrentUserId(): String? = authState.value?.uid
+
     /**
      * Emits the current [AuthUser] once based on the persisted session in [JvmSessionStorage].
      *

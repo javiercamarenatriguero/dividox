@@ -16,6 +16,7 @@ composeHotReload = "1.0.0"
 composeMultiplatform = "1.10.3"
 detekt = "1.23.8"
 firebase-bom = "33.7.0"
+firebase-kotlin-sdk = "2.4.0"
 googleServices = "4.4.4"
 junit = "4.13.2"
 kotlin = "2.3.20"
@@ -53,6 +54,8 @@ compose-uiToolingPreview = { module = "org.jetbrains.compose.ui:ui-tooling-previ
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebase-bom" }
 firebase-auth = { group = "com.google.firebase", name = "firebase-auth" }
 firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore" }
+firebase-kotlin-auth = { module = "dev.gitlive:firebase-auth", version.ref = "firebase-kotlin-sdk" }
+firebase-kotlin-firestore = { module = "dev.gitlive:firebase-firestore", version.ref = "firebase-kotlin-sdk" }
 kotlinx-coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-play-services", version.ref = "kotlinx-coroutines" }
 
 # Gradle plugins (for build-logic)

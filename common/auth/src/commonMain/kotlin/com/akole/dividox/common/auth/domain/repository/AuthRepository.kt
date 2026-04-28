@@ -48,4 +48,10 @@ interface AuthRepository {
      * @return Success with Unit or failure
      */
     suspend fun signOut(): Result<Unit>
+
+    /**
+     * Returns the UID of the currently authenticated user, or null if unauthenticated.
+     * @return UID string or null
+     */
+    fun getCurrentUserId(): String?
 }

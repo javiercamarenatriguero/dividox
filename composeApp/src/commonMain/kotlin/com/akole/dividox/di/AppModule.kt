@@ -4,6 +4,7 @@ import com.akole.dividox.common.auth.createAuthRepository
 import com.akole.dividox.common.auth.data.GoogleSignInLauncher
 import com.akole.dividox.common.auth.domain.repository.AuthRepository
 import com.akole.dividox.common.auth.domain.usecase.ForgotPasswordUseCase
+import com.akole.dividox.common.auth.domain.usecase.GetCurrentUserIdUseCase
 import com.akole.dividox.common.auth.domain.usecase.ObserveSessionUseCase
 import com.akole.dividox.common.auth.domain.usecase.SignInWithEmailUseCase
 import com.akole.dividox.common.auth.domain.usecase.SignInWithGoogleUseCase
@@ -16,6 +17,7 @@ import org.koin.dsl.module
 val appModule: Module = module {
     single<AuthRepository> { createAuthRepository() }
     single { GoogleSignInLauncher() }
+    factoryOf(::GetCurrentUserIdUseCase)
     factoryOf(::ObserveSessionUseCase)
     factoryOf(::SignInWithEmailUseCase)
     factoryOf(::SignUpWithEmailUseCase)

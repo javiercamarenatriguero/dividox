@@ -42,6 +42,8 @@ internal class FakeAuthRepository(private val user: AuthUser? = null) : AuthRepo
         signOutCalled = true
         return Result.success(Unit)
     }
+
+    override fun getCurrentUserId(): String? = user?.uid
 }
 
 /**
@@ -64,4 +66,6 @@ internal class FailingAuthRepository : AuthRepository {
 
     override suspend fun signOut(): Result<Unit> =
         Result.failure(IllegalStateException("Sign out failed"))
+
+    override fun getCurrentUserId(): String? = null
 }

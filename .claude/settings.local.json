@@ -147,7 +147,21 @@
       "Bash(./gradlew :composeApp:build)",
       "Bash(./gradlew :composeApp:jvmTest -q)",
       "Bash(./gradlew :component:portfolio:jvmTest :composeApp:jvmTest -q)",
-      "Bash(./gradlew :component:portfolio:jvmTest :composeApp:jvmTest)"
+      "Bash(./gradlew :component:portfolio:jvmTest :composeApp:jvmTest)",
+      "Bash(./gradlew :component:portfolio:iosSimulatorArm64MainKlibMetadata -q)",
+      "Bash(./gradlew :component:portfolio:iosSimulatorArm64MainKlibMetadata)",
+      "Bash(./gradlew :composeApp:iosSimulatorArm64MainKlibMetadata -q)",
+      "Bash(./gradlew :composeApp:iosSimulatorArm64MainKlibMetadata)",
+      "Bash(./gradlew :composeApp:compileKotlinIosSimulatorArm64 -q)",
+      "Bash(./gradlew :component:portfolio:compileKotlinIosArm64)",
+      "Bash(./gradlew :composeApp:compileKotlinIosArm64)",
+      "Bash(./gradlew :composeApp:compileKotlinAndroid)",
+      "Bash(./gradlew :composeApp:compileKotlinIosArm64 :composeApp:compileDebugKotlinAndroid)",
+      "Bash(./gradlew :component:portfolio:detekt :component:portfolio:allTests)",
+      "Bash(./gradlew :component:portfolio:linkDebugTestIosSimulatorArm64)",
+      "Bash(./gradlew :component:portfolio:detekt :component:portfolio:jvmTest)",
+      "Bash(./gradlew :component:portfolio:jvmTest --rerun)",
+      "Bash(./gradlew :common:auth:jvmTest :component:portfolio:jvmTest --rerun)"
     ]
   },
   "enableAllProjectMcpServers": true,

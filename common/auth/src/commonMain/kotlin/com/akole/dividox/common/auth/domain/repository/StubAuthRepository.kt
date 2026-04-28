@@ -11,4 +11,5 @@ class StubAuthRepository : AuthRepository {
     override suspend fun signInWithGoogle(idToken: String): Result<Unit> = Result.failure(NotImplementedError())
     override suspend fun sendPasswordResetEmail(email: String): Result<Unit> = Result.failure(NotImplementedError())
     override suspend fun signOut(): Result<Unit> = Result.failure(NotImplementedError())
+    override fun getCurrentUserId(): String? = null
 }

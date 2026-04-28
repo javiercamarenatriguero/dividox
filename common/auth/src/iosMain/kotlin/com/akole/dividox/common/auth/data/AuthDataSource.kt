@@ -69,6 +69,9 @@ actual class AuthDataSource actual constructor() {
         FIRAuth.auth().signOut(null)
     }
 
+    /** Returns UID of currently authenticated user, or null if unauthenticated. */
+    actual fun getCurrentUserId(): String? = FIRAuth.auth().currentUser()?.uid()
+
     /**
      * Emits the current [AuthUser] whenever the Firebase auth state changes.
      * Emits `null` when the user is signed out.

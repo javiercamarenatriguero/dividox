@@ -52,4 +52,10 @@ expect class AuthDataSource() {
      * @return Flow emitting current user or null when unauthenticated
      */
     fun observeAuthState(): kotlinx.coroutines.flow.Flow<AuthUser?>
+
+    /**
+     * Returns UID of currently authenticated user without a network call.
+     * @return UID string or null when unauthenticated
+     */
+    fun getCurrentUserId(): String?
 }

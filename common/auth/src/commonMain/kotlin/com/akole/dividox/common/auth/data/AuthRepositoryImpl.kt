@@ -47,4 +47,6 @@ class AuthRepositoryImpl(
     } catch (e: Exception) {
         Result.failure(e)
     }
+
+    override fun getCurrentUserId(): String? = dataSource.getCurrentUserId()
 }
