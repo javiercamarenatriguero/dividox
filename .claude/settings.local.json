@@ -126,7 +126,11 @@
       "Bash(awk '{for\\(i=NF-4;i<=NF;i++\\) printf \"%s \",$i; print \"\"}')",
       "Bash(kill -9 2296)",
       "Bash(./gradlew :common:auth:compileKotlinJvm --info)",
-      "Bash(awk -F'\"' '{sum+=$2} END {print \"Total JVM tests:\", sum}')"
+      "Bash(awk -F'\"' '{sum+=$2} END {print \"Total JVM tests:\", sum}')",
+      "Bash(./gradlew help *)",
+      "Bash(./gradlew :composeApp:jvmTest --dry-run)",
+      "Bash(./gradlew :composeApp:compileKotlinJvm)",
+      "Bash(./gradlew :composeApp:compileKotlinIosSimulatorArm64)"
     ]
   },
   "enableAllProjectMcpServers": true,
