@@ -139,7 +139,15 @@
       "Bash(./gradlew :component:portfolio:detekt -q)",
       "Bash(./gradlew :component:portfolio:detekt)",
       "Bash(./gradlew :component:portfolio:lint -q)",
-      "Bash(./gradlew :component:portfolio:lint)"
+      "Bash(./gradlew :component:portfolio:lint)",
+      "Bash(./gradlew :component:portfolio:build)",
+      "Bash(./gradlew :component:portfolio:detekt :component:portfolio:lint -q)",
+      "Bash(./gradlew :component:portfolio:detekt :component:portfolio:lint)",
+      "Bash(./gradlew :composeApp:build -q)",
+      "Bash(./gradlew :composeApp:build)",
+      "Bash(./gradlew :composeApp:jvmTest -q)",
+      "Bash(./gradlew :component:portfolio:jvmTest :composeApp:jvmTest -q)",
+      "Bash(./gradlew :component:portfolio:jvmTest :composeApp:jvmTest)"
     ]
   },
   "enableAllProjectMcpServers": true,

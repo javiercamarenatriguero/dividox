@@ -1,5 +1,7 @@
 package com.akole.dividox.component.portfolio.domain.model
 
+import kotlin.jvm.JvmInline
+
 /**
  * Type-safe wrapper for holding IDs. Ensures non-blank string values.
  *

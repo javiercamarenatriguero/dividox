@@ -21,11 +21,12 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.koin.core)
         }
         androidMain.dependencies {
             implementation(project.dependencies.platform(libs.firebase.bom))
+            implementation(libs.firebase.firestore)
             implementation(libs.kotlinx.coroutines.play.services)
-            // implementation(libs.firebase.firestore) — add after adding to libs.versions.toml
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
