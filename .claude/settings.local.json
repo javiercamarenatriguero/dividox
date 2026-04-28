@@ -130,7 +130,16 @@
       "Bash(./gradlew help *)",
       "Bash(./gradlew :composeApp:jvmTest --dry-run)",
       "Bash(./gradlew :composeApp:compileKotlinJvm)",
-      "Bash(./gradlew :composeApp:compileKotlinIosSimulatorArm64)"
+      "Bash(./gradlew :composeApp:compileKotlinIosSimulatorArm64)",
+      "Bash(./gradlew :component:portfolio:build -q)",
+      "Bash(./gradlew :component:portfolio:commonTest -q --no-header)",
+      "Bash(./gradlew :component:portfolio:jvmTest -q)",
+      "Bash(./gradlew :component:portfolio:jvmTest)",
+      "Bash(./gradlew :component:portfolio:compileTestKotlinJvm)",
+      "Bash(./gradlew :component:portfolio:detekt -q)",
+      "Bash(./gradlew :component:portfolio:detekt)",
+      "Bash(./gradlew :component:portfolio:lint -q)",
+      "Bash(./gradlew :component:portfolio:lint)"
     ]
   },
   "enableAllProjectMcpServers": true,
