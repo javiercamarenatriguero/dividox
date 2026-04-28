@@ -1,0 +1,35 @@
+plugins {
+    alias(libs.plugins.dividox.kmp.library)
+    alias(libs.plugins.dividox.kmp.ios)
+    alias(libs.plugins.dividox.kmp.test)
+    alias(libs.plugins.dividox.detekt)
+    alias(libs.plugins.kotlinxSerialization)
+}
+
+kotlin {
+    jvm()
+
+    sourceSets {
+        commonMain.dependencies {
+            implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.koin.core)
+            implementation(libs.firebase.kotlin.firestore)
+            implementation(libs.kotlinx.serialization.core)
+            implementation(libs.kotlinx.datetime)
+        }
+        androidMain.dependencies {
+            implementation(project.dependencies.platform(libs.firebase.bom))
+        }
+        commonTest.dependencies {
+            implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutines.test)
+        }
+        jvmTest.dependencies {
+            implementation(libs.kotlinx.coroutines.test)
+        }
+    }
+}
+
+android {
+    namespace = "com.akole.dividox.component.watchlist"
+}
