@@ -51,6 +51,7 @@ kotlin {
             implementation(projects.component.portfolio)
             implementation(projects.component.market)
             implementation(projects.component.watchlist)
+            implementation(projects.integration.security)
             implementation(projects.feature.auth)
             implementation(projects.feature.details)
             implementation(projects.feature.home)
