@@ -18,6 +18,7 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(libs.kotlinx.coroutines.test)
+            implementation(libs.kotlinx.datetime)
         }
         jvmTest.dependencies {
             implementation(libs.kotlinx.coroutines.test)
