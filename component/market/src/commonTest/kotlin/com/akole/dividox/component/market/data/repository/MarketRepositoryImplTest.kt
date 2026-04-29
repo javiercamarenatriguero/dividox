@@ -25,7 +25,7 @@ class MarketRepositoryImplTest {
     private fun buildRepoWithResponses(vararg responses: Pair<String, String>): MarketRepositoryImpl {
         val queue = responses.toMutableList()
         val engine = MockEngine {
-            val (_, body) = queue.removeFirst()
+            val (_, body) = queue.removeAt(0)
             respond(body, HttpStatusCode.OK, headersOf("Content-Type", ContentType.Application.Json.toString()))
         }
         val client = HttpClient(engine) {
