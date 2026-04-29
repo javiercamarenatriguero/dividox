@@ -44,6 +44,20 @@ import androidx.compose.ui.unit.dp
 import com.akole.dividox.common.mvi.CollectSideEffect
 import com.akole.dividox.common.ui.resources.theme.DividoxTheme
 import com.akole.dividox.common.ui.resources.theme.spacing
+import dividox.common.ui_resources.generated.resources.Res
+import dividox.common.ui_resources.generated.resources.action_view_all
+import dividox.common.ui_resources.generated.resources.cd_remove_from_favourites
+import dividox.common.ui_resources.generated.resources.currency_eur
+import dividox.common.ui_resources.generated.resources.currency_usd
+import dividox.common.ui_resources.generated.resources.disclaimer_prices_delayed
+import dividox.common.ui_resources.generated.resources.favourites_empty_hint
+import dividox.common.ui_resources.generated.resources.metric_dividends
+import dividox.common.ui_resources.generated.resources.metric_total_gain
+import dividox.common.ui_resources.generated.resources.metric_total_value
+import dividox.common.ui_resources.generated.resources.metric_yield
+import dividox.common.ui_resources.generated.resources.section_dashboard
+import dividox.common.ui_resources.generated.resources.section_favourites
+import org.jetbrains.compose.resources.stringResource
 import com.akole.dividox.feature.dashboard.DashboardContract.DashboardSideEffect
 import com.akole.dividox.feature.dashboard.DashboardContract.DashboardViewEvent
 import com.akole.dividox.feature.dashboard.DashboardContract.DashboardViewState
@@ -82,7 +96,7 @@ private fun DashboardContent(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Dashboard",
+                        text = stringResource(Res.string.section_dashboard),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold,
                     )
@@ -168,7 +182,7 @@ private fun CurrencyToggleButton(
         ),
     ) {
         Text(
-            text = if (showInEur) "EUR" else "USD",
+            text = if (showInEur) stringResource(Res.string.currency_eur) else stringResource(Res.string.currency_usd),
             style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.SemiBold,
         )
@@ -234,12 +248,12 @@ private fun MetricsBlock(
             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
         ) {
             MetricCard(
-                label = "Total Value",
+                label = stringResource(Res.string.metric_total_value),
                 value = if (isEmpty) "${currencySymbol}0.00" else "$currencySymbol${"%.2f".format(summary!!.totalValue)}",
                 modifier = Modifier.weight(1f),
             )
             MetricCard(
-                label = "Total Gain",
+                label = stringResource(Res.string.metric_total_gain),
                 value = if (isEmpty) "0.00%" else "${"%.2f".format(summary!!.totalGainPercent)}%",
                 valueColor = if (!isEmpty && summary!!.totalGainPercent >= 0) {
                     Color(0xFF2E7D32)
@@ -257,12 +271,12 @@ private fun MetricsBlock(
             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
         ) {
             MetricCard(
-                label = "Yield",
+                label = stringResource(Res.string.metric_yield),
                 value = if (isEmpty) "0.00%" else "${"%.2f".format(summary!!.totalYield)}%",
                 modifier = Modifier.weight(1f),
             )
             MetricCard(
-                label = "Dividends",
+                label = stringResource(Res.string.metric_dividends),
                 value = if (isEmpty) "${currencySymbol}0.00" else "$currencySymbol${"%.2f".format(summary!!.dividendsCollected)}",
                 modifier = Modifier.weight(1f),
             )
@@ -320,14 +334,14 @@ private fun FavouritesSection(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "Favourites",
+                text = stringResource(Res.string.section_favourites),
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold,
             )
             if (watchlist.isNotEmpty()) {
                 TextButton(onClick = onViewAllClicked) {
                     Text(
-                        text = "VIEW ALL",
+                        text = stringResource(Res.string.action_view_all),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.primary,
@@ -340,7 +354,7 @@ private fun FavouritesSection(
 
         if (watchlist.isEmpty()) {
             Text(
-                text = "No favourites yet. Search for a security to add one.",
+                text = stringResource(Res.string.favourites_empty_hint),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(vertical = MaterialTheme.spacing.small),
@@ -424,7 +438,7 @@ private fun WatchlistEntryRow(
             ) {
                 Icon(
                     imageVector = Icons.Default.Favorite,
-                    contentDescription = "Remove from favourites",
+                    contentDescription = stringResource(Res.string.cd_remove_from_favourites),
                     tint = MaterialTheme.colorScheme.error,
                     modifier = Modifier.size(MaterialTheme.spacing.iconSmall),
                 )
@@ -438,7 +452,7 @@ private fun WatchlistEntryRow(
 @Composable
 private fun DisclaimerText(modifier: Modifier = Modifier) {
     Text(
-        text = "Prices delayed 15 minutes",
+        text = stringResource(Res.string.disclaimer_prices_delayed),
         style = MaterialTheme.typography.labelSmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         textAlign = TextAlign.Center,

@@ -24,4 +24,16 @@
     <string name="ui_hide_password">Hide password</string>
     <string name="ui_navigate_back">Navigate back</string>
     <string name="ui_show_password">Show password</string>
+    <string name="section_dashboard">Dashboard</string>
+    <string name="currency_usd">USD</string>
+    <string name="currency_eur">EUR</string>
+    <string name="metric_total_value">Total Value</string>
+    <string name="metric_total_gain">Total Gain</string>
+    <string name="metric_yield">Yield</string>
+    <string name="metric_dividends">Dividends</string>
+    <string name="section_favourites">Favourites</string>
+    <string name="action_view_all">VIEW ALL</string>
+    <string name="favourites_empty_hint">No favourites yet. Search for a security to add one.</string>
+    <string name="cd_remove_from_favourites">Remove from favourites</string>
+    <string name="disclaimer_prices_delayed">Prices delayed 15 minutes</string>
 </resources>
