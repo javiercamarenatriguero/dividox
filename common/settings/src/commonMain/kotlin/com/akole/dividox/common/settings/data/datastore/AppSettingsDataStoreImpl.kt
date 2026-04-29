@@ -10,7 +10,7 @@ import com.akole.dividox.common.ui.resources.Currency
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-internal class AppSettingsDataStoreImpl(
+class AppSettingsDataStoreImpl(
     private val dataStore: DataStore<Preferences>,
 ) : AppSettingsDataStore {
 

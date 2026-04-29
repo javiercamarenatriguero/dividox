@@ -50,13 +50,13 @@ fun NavGraphBuilder.mainGraphNode(rootNavController: NavController) {
     composable<MainGraphRoute> {
         val innerNavController = rememberNavController()
         val navBackStackEntry by innerNavController.currentBackStackEntryAsState()
-        val currentRoute = navBackStackEntry?.destination?.route
 
+        val currentRoute = navBackStackEntry?.destination?.route
         val selectedTab = when {
-            currentRoute?.contains("DashboardRoute") == true -> BottomTab.DASHBOARD
-            currentRoute?.contains("PortfolioRoute") == true -> BottomTab.PORTFOLIO
-            currentRoute?.contains("DividendsRoute") == true -> BottomTab.DIVIDENDS
-            currentRoute?.contains("SettingsRoute") == true -> BottomTab.SETTINGS
+            currentRoute == DashboardRoute::class.qualifiedName -> BottomTab.DASHBOARD
+            currentRoute == PortfolioRoute::class.qualifiedName -> BottomTab.PORTFOLIO
+            currentRoute == DividendsRoute::class.qualifiedName -> BottomTab.DIVIDENDS
+            currentRoute == SettingsRoute::class.qualifiedName -> BottomTab.SETTINGS
             else -> BottomTab.DASHBOARD
         }
 

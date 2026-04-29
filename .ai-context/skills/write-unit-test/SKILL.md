@@ -7,6 +7,44 @@ description: Guide for writing unit tests for ViewModels, UseCases, and Extensio
 
 This skill provides guidance and templates for writing unit tests in the Dividox KMP project.
 
+## Test Source Sets
+
+| Source set | When to use | Mocking strategy |
+|---|---|---|
+| `jvmTest` | ViewModels, UseCases, DataStore implementations | **MockK** (`mockk`, `coEvery`, `verify`) |
+| `commonTest` | Pure domain logic that must run on all platforms | **Fakes** (manual implementations of interfaces) |
+
+> ⚠️ `io.mockk:mockk` is **JVM-only**. It cannot be used in `commonTest`. Always put MockK-based tests in `jvmTest`.
+
+To add MockK to a module's `jvmTest`:
+```kotlin
+// build.gradle.kts
+kotlin {
+    sourceSets {
+        jvmTest.dependencies {
+            implementation(libs.mockk)
+        }
+    }
+}
+```
+
+### When to use Fakes instead of MockK
+Use a hand-written Fake when the test must live in `commonTest` (shared across platforms) or when the fake needs stateful behaviour (e.g. a `MutableStateFlow` that reacts to calls):
+
+```kotlin
+class FakeAppSettingsDataStore : AppSettingsDataStore {
+    private val _settings = MutableStateFlow(AppSettings())
+
+    override fun observe(): Flow<AppSettings> = _settings
+
+    override suspend fun setCurrency(currency: Currency) {
+        _settings.update { it.copy(currency = currency) }
+    }
+}
+```
+
+---
+
 ## Standard Patterns
 
 ### Naming Convention

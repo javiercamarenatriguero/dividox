@@ -1,6 +1,7 @@
 package com.akole.dividox.common.ui.resources.components
 
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
@@ -19,7 +20,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import dividox.common.ui_resources.generated.resources.Res
 import dividox.common.ui_resources.generated.resources.ui_navigate_back
-import kotlinx.datetime.LocalDate
 import kotlin.time.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
@@ -32,6 +32,7 @@ fun DividoxTopAppBar(
     modifier: Modifier = Modifier,
     showDate: Boolean = false,
     onBack: (() -> Unit)? = null,
+    actions: @Composable RowScope.() -> Unit = {},
 ) {
     TopAppBar(
         title = {
@@ -71,6 +72,7 @@ fun DividoxTopAppBar(
                 }
             }
         },
+        actions = actions,
         modifier = modifier,
     )
 }

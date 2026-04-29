@@ -52,7 +52,36 @@ class FeatureViewModelTest {
 }
 ```
 
-## Use Case Test Template
+## Use Case Test Template (jvmTest — MockK)
+
+```kotlin
+class ObserveAppSettingsUseCaseTest {
+
+    private val mockDataStore = mockk<AppSettingsDataStore>(relaxed = true)
+    private lateinit var sut: ObserveAppSettingsUseCase
+
+    @BeforeTest
+    fun setup() {
+        sut = ObserveAppSettingsUseCase(mockDataStore)
+    }
+
+    @Test
+    fun `SHOULD return flow from datastore WHEN invoked`() = runTest {
+        // GIVEN
+        val expected = AppSettings(currency = Currency.USD)
+        every { mockDataStore.observe() } returns flowOf(expected)
+
+        // WHEN
+        val result = sut().first()
+
+        // THEN
+        assertEquals(expected, result)
+        verify { mockDataStore.observe() }
+    }
+}
+```
+
+## Use Case Test Template (commonTest — Fake)
 
 ```kotlin
 class GetDataUseCaseTest {
