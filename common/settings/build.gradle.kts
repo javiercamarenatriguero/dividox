@@ -11,9 +11,11 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(projects.common.uiResources)
-            implementation(libs.koin.core)
             implementation(libs.kotlinx.coroutines.core)
-            implementation(libs.datastore.preferences.core)
+            implementation(libs.datastore.preferences)
+        }
+        commonTest.dependencies {
+            implementation(libs.kotlinx.coroutines.test)
         }
     }
 }
