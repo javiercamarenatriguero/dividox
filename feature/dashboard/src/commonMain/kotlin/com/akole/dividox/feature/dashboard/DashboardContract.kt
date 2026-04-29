@@ -3,6 +3,7 @@ package com.akole.dividox.feature.dashboard
 import com.akole.dividox.common.mvi.SideEffect
 import com.akole.dividox.common.mvi.ViewEvent
 import com.akole.dividox.common.mvi.ViewState
+import com.akole.dividox.common.ui.resources.Currency
 import com.akole.dividox.integration.security.domain.model.EnrichedWatchlistEntry
 import com.akole.dividox.integration.security.domain.model.PortfolioSummary
 
@@ -13,7 +14,7 @@ interface DashboardContract {
         val summary: PortfolioSummary? = null,
         val watchlist: List<EnrichedWatchlistEntry> = emptyList(),
         val selectedPeriod: ChartPeriod = ChartPeriod.ONE_MONTH,
-        val showInEur: Boolean = false,
+        val currency: Currency = Currency.EUR,
         val error: String? = null,
     ) : ViewState
 

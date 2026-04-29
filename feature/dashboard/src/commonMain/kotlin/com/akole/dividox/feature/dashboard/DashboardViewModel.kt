@@ -4,6 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.akole.dividox.common.mvi.viewmodel.MVI
 import com.akole.dividox.common.mvi.viewmodel.mvi
+import com.akole.dividox.common.settings.domain.usecase.ObserveAppSettingsUseCase
+import com.akole.dividox.common.settings.domain.usecase.SetCurrencyUseCase
+import com.akole.dividox.common.ui.resources.Currency
 import com.akole.dividox.component.watchlist.domain.usecase.RemoveFromWatchlistUseCase
 import com.akole.dividox.feature.dashboard.DashboardContract.DashboardSideEffect
 import com.akole.dividox.feature.dashboard.DashboardContract.DashboardViewEvent
@@ -22,17 +25,20 @@ class DashboardViewModel(
     private val getPortfolioSummary: GetPortfolioSummaryUseCase,
     private val getEnrichedWatchlist: GetEnrichedWatchlistUseCase,
     private val removeFromWatchlist: RemoveFromWatchlistUseCase,
+    private val observeAppSettings: ObserveAppSettingsUseCase,
+    private val setCurrency: SetCurrencyUseCase,
 ) : ViewModel(),
     MVI<DashboardViewState, DashboardViewEvent, DashboardSideEffect> by mvi(DashboardViewState()) {
 
     init {
         observeData()
+        observeSettings()
     }
 
     override fun onViewEvent(viewEvent: DashboardViewEvent) {
         when (viewEvent) {
             is PeriodSelected -> updateViewState { copy(selectedPeriod = viewEvent.period) }
-            CurrencyToggled -> updateViewState { copy(showInEur = !showInEur) }
+            CurrencyToggled -> toggleCurrency()
             is FavouriteToggled -> removeFavourite(viewEvent.ticker)
             is SecurityClicked -> viewModelScope.emitSideEffect(
                 DashboardSideEffect.Navigation.NavigateToSecurity(viewEvent.ticker),
@@ -58,6 +64,21 @@ class DashboardViewModel(
             }.collect { newState ->
                 updateViewState { newState }
             }
+        }
+    }
+
+    private fun observeSettings() {
+        viewModelScope.launch {
+            observeAppSettings().collect { settings ->
+                updateViewState { copy(currency = settings.currency) }
+            }
+        }
+    }
+
+    private fun toggleCurrency() {
+        viewModelScope.launch {
+            val next = if (viewState.value.currency == Currency.EUR) Currency.USD else Currency.EUR
+            setCurrency(next)
         }
     }
 

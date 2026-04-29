@@ -1,5 +1,9 @@
 package com.akole.dividox.feature.dashboard
 
+import com.akole.dividox.common.settings.domain.model.AppSettings
+import com.akole.dividox.common.settings.domain.usecase.ObserveAppSettingsUseCase
+import com.akole.dividox.common.settings.domain.usecase.SetCurrencyUseCase
+import com.akole.dividox.common.ui.resources.Currency
 import com.akole.dividox.component.watchlist.domain.model.WatchlistEntry
 import com.akole.dividox.feature.dashboard.DashboardContract.DashboardSideEffect
 import com.akole.dividox.feature.dashboard.DashboardContract.DashboardViewEvent
@@ -18,10 +22,9 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
+import kotlin.test.assertFalse
 import kotlin.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -42,12 +45,16 @@ class DashboardViewModelTest {
     private val getPortfolioSummary: GetPortfolioSummaryUseCase = mockk()
     private val getEnrichedWatchlist: GetEnrichedWatchlistUseCase = mockk()
     private val removeFromWatchlist: RemoveFromWatchlistUseCase = mockk()
+    private val observeAppSettings: ObserveAppSettingsUseCase = mockk()
+    private val setCurrency: SetCurrencyUseCase = mockk()
 
     @BeforeTest
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         every { getPortfolioSummary() } returns emptyFlow()
         every { getEnrichedWatchlist() } returns emptyFlow()
+        every { observeAppSettings() } returns flowOf(AppSettings())
+        coEvery { setCurrency(any()) } just Runs
     }
 
     @AfterTest
@@ -59,6 +66,8 @@ class DashboardViewModelTest {
         getPortfolioSummary = getPortfolioSummary,
         getEnrichedWatchlist = getEnrichedWatchlist,
         removeFromWatchlist = removeFromWatchlist,
+        observeAppSettings = observeAppSettings,
+        setCurrency = setCurrency,
     )
 
     // ─── Initial state ────────────────────────────────────────────────────────
@@ -122,6 +131,34 @@ class DashboardViewModelTest {
         assertEquals("MSFT", vm.viewState.value.watchlist.first().entry.tickerId)
     }
 
+    // ─── Settings observation ─────────────────────────────────────────────────
+
+    @Test
+    fun `SHOULD reflect EUR currency WHEN settings emit EUR GIVEN initial state`() = runTest {
+        // GIVEN
+        every { observeAppSettings() } returns flowOf(AppSettings(currency = Currency.EUR))
+
+        // WHEN
+        val vm = viewModel()
+        advanceUntilIdle()
+
+        // THEN
+        assertEquals(Currency.EUR, vm.viewState.value.currency)
+    }
+
+    @Test
+    fun `SHOULD reflect USD currency WHEN settings emit USD GIVEN persisted preference`() = runTest {
+        // GIVEN
+        every { observeAppSettings() } returns flowOf(AppSettings(currency = Currency.USD))
+
+        // WHEN
+        val vm = viewModel()
+        advanceUntilIdle()
+
+        // THEN
+        assertEquals(Currency.USD, vm.viewState.value.currency)
+    }
+
     // ─── PeriodSelected ───────────────────────────────────────────────────────
 
     @Test
@@ -160,29 +197,33 @@ class DashboardViewModelTest {
     // ─── CurrencyToggled ──────────────────────────────────────────────────────
 
     @Test
-    fun `SHOULD set showInEur true WHEN CurrencyToggled GIVEN showInEur was false`() {
+    fun `SHOULD call setCurrency with USD WHEN CurrencyToggled GIVEN current currency is EUR`() = runTest {
         // GIVEN
+        every { observeAppSettings() } returns flowOf(AppSettings(currency = Currency.EUR))
         val vm = viewModel()
-        assertFalse(vm.viewState.value.showInEur)
+        advanceUntilIdle()
 
         // WHEN
         vm.onViewEvent(DashboardViewEvent.CurrencyToggled)
+        advanceUntilIdle()
 
         // THEN
-        assertTrue(vm.viewState.value.showInEur)
+        coVerify { setCurrency(Currency.USD) }
     }
 
     @Test
-    fun `SHOULD set showInEur false WHEN CurrencyToggled twice GIVEN initial state`() {
+    fun `SHOULD call setCurrency with EUR WHEN CurrencyToggled GIVEN current currency is USD`() = runTest {
         // GIVEN
+        every { observeAppSettings() } returns flowOf(AppSettings(currency = Currency.USD))
         val vm = viewModel()
+        advanceUntilIdle()
 
         // WHEN
         vm.onViewEvent(DashboardViewEvent.CurrencyToggled)
-        vm.onViewEvent(DashboardViewEvent.CurrencyToggled)
+        advanceUntilIdle()
 
         // THEN
-        assertFalse(vm.viewState.value.showInEur)
+        coVerify { setCurrency(Currency.EUR) }
     }
 
     // ─── FavouriteToggled ─────────────────────────────────────────────────────

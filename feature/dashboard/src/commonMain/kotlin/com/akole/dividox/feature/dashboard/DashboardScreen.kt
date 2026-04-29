@@ -23,7 +23,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -32,7 +31,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,6 +41,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.akole.dividox.common.mvi.CollectSideEffect
 import com.akole.dividox.common.ui.resources.Currency
+import com.akole.dividox.common.ui.resources.components.DividoxTopAppBar
 import com.akole.dividox.common.ui.resources.format.formatPercent
 import com.akole.dividox.common.ui.resources.format.formatPercentSigned
 import com.akole.dividox.common.ui.resources.format.formatPrice
@@ -79,7 +78,6 @@ fun DashboardScreen(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DashboardContent(
     state: DashboardViewState,
@@ -87,17 +85,11 @@ private fun DashboardContent(
 ) {
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = stringResource(Res.string.section_dashboard),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                },
+            DividoxTopAppBar(
+                title = stringResource(Res.string.section_dashboard),
                 actions = {
                     CurrencyToggleButton(
-                        showInEur = state.showInEur,
+                        currency = state.currency,
                         onClick = { onEvent(DashboardViewEvent.CurrencyToggled) },
                     )
                 },
@@ -132,7 +124,7 @@ private fun DashboardContent(
 
                 MetricsBlock(
                     summary = state.summary,
-                    showInEur = state.showInEur,
+                    currency = state.currency,
                 )
 
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
@@ -162,7 +154,7 @@ private fun DashboardContent(
 
 @Composable
 private fun CurrencyToggleButton(
-    showInEur: Boolean,
+    currency: Currency,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -176,7 +168,11 @@ private fun CurrencyToggleButton(
         ),
     ) {
         Text(
-            text = if (showInEur) stringResource(Res.string.currency_eur) else stringResource(Res.string.currency_usd),
+            text = if (currency == Currency.EUR) {
+                stringResource(Res.string.currency_eur)
+            } else {
+                stringResource(Res.string.currency_usd)
+            },
             style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.SemiBold,
         )
@@ -230,10 +226,9 @@ private fun PeriodSelectorRow(
 @Composable
 private fun MetricsBlock(
     summary: PortfolioSummary?,
-    showInEur: Boolean,
+    currency: Currency,
     modifier: Modifier = Modifier,
 ) {
-    val currency = if (showInEur) Currency.EUR else Currency.USD
     val isEmpty = summary == null || summary.totalValue == 0.0
 
     Column(modifier = modifier.fillMaxWidth()) {
@@ -502,7 +497,7 @@ private fun DashboardScreenWithDataPreview() {
                     dividendsCollected = 788.40,
                 ),
                 selectedPeriod = ChartPeriod.ONE_MONTH,
-                showInEur = false,
+                currency = Currency.USD,
             ),
             onEvent = {},
         )
