@@ -1,5 +1,6 @@
 package com.akole.dividox.di
 
+import com.akole.dividox.integration.security.di.securityIntegrationModule
 import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
 
@@ -13,6 +14,7 @@ object KoinInitializer {
                 portfolioModule,
                 marketModule,
                 watchlistModule,
+                securityIntegrationModule,
                 viewModelModule,
             )
         }
