@@ -31,51 +31,51 @@ value backed by DataStore.
 - [x] **Create Git Branch** `feature/TK-027-common-settings`
 
 ### Phase 2: Version Catalog + Module Scaffold
-- [ ] **Add DataStore to `libs.versions.toml`**
+- [x] **Add DataStore to `libs.versions.toml`**
   - `datastore = "1.1.4"` version + `datastore-preferences-core` library
   - **Commit:** `DVX-TK-027 Add DataStore to version catalog`
 
-- [ ] **Scaffold `common/settings/build.gradle.kts`**
+- [x] **Scaffold `common/settings/build.gradle.kts`**
   - Plugins: `dividox.kmp.library`, `dividox.kmp.ios`, `dividox.kmp.test`, `dividox.detekt`
   - `include(":common:settings")` in `settings.gradle.kts`
   - **Verify:** `./gradlew :common:settings:compileKotlinJvm`
   - **Commit:** `DVX-TK-027 Scaffold common:settings module`
 
 ### Phase 3: Domain Layer
-- [ ] **`AppSettings.kt`** — `data class AppSettings(val currency: Currency = Currency.EUR)`
-- [ ] **`AppSettingsDataStore.kt`** — interface with `observe(): Flow<AppSettings>` and `setCurrency()`
-- [ ] **`ObserveAppSettingsUseCase.kt`** — delegates to datastore
-- [ ] **`SetCurrencyUseCase.kt`** — delegates to datastore
+- [x] **`AppSettings.kt`** — `data class AppSettings(val currency: Currency = Currency.EUR)`
+- [x] **`AppSettingsDataStore.kt`** — interface with `observe(): Flow<AppSettings>` and `setCurrency()`
+- [x] **`ObserveAppSettingsUseCase.kt`** — delegates to datastore
+- [x] **`SetCurrencyUseCase.kt`** — delegates to datastore
   - **Commit:** `DVX-TK-027 Add settings domain layer`
 
 ### Phase 4: Data Layer
-- [ ] **`DataStoreFactory.kt`** — `expect fun dataStorePath()` + `createDataStore()` in commonMain
-- [ ] **`DataStoreFactory.android.kt`** — actual uses `KoinPlatform` to get `Context`
-- [ ] **`DataStoreFactory.ios.kt`** — actual uses NSDocumentDirectory
-- [ ] **`DataStoreFactory.jvm.kt`** — actual uses `user.home`
-- [ ] **`AppSettingsDataStoreImpl.kt`** — maps `Preferences` ↔ `AppSettings`
+- [x] **`DataStoreFactory.kt`** — `expect fun dataStorePath()` + `createDataStore()` in commonMain
+- [x] **`DataStoreFactory.android.kt`** — actual uses `KoinPlatform` to get `Context`
+- [x] **`DataStoreFactory.ios.kt`** — actual uses NSDocumentDirectory
+- [x] **`DataStoreFactory.jvm.kt`** — actual uses `user.home`
+- [x] **`AppSettingsDataStoreImpl.kt`** — maps `Preferences` ↔ `AppSettings`
   - **Verify:** `./gradlew :common:settings:compileKotlinJvm`
   - **Commit:** `DVX-TK-027 Add settings data layer with DataStore impl`
 
 ### Phase 5: DI
-- [ ] **`SettingsModule.kt`** in `common/settings/di/`
-- [ ] **Wire `settingsModule` in `KoinInitializer.kt`**
+- [x] **`SettingsModule.kt`** in `common/settings/di/`
+- [x] **Wire `settingsModule` in `KoinInitializer.kt`**
   - **Commit:** `DVX-TK-027 Add settings Koin module`
 
 ### Phase 6: Dashboard Integration
-- [ ] **`DashboardContract.kt`** — replace `showInEur: Boolean` with `currency: Currency`
-- [ ] **`DashboardViewModel.kt`** — inject `ObserveAppSettingsUseCase` + `SetCurrencyUseCase`, observe settings
-- [ ] **`DashboardScreen.kt`** — update `CurrencyToggleButton` and `MetricsBlock` to use `currency`
-- [ ] **`feature/dashboard/build.gradle.kts`** — add `:common:settings` dependency
+- [x] **`DashboardContract.kt`** — replace `showInEur: Boolean` with `currency: Currency`
+- [x] **`DashboardViewModel.kt`** — inject `ObserveAppSettingsUseCase` + `SetCurrencyUseCase`, observe settings
+- [x] **`DashboardScreen.kt`** — update `CurrencyToggleButton` and `MetricsBlock` to use `currency`
+- [x] **`feature/dashboard/build.gradle.kts`** — add `:common:settings` dependency
   - **Verify:** `./gradlew :feature:dashboard:compileKotlinJvm`
   - **Commit:** `DVX-TK-027 Integrate settings into Dashboard feature`
 
 ### Phase 7: Testing & Quality
-- [ ] `./gradlew :common:settings:jvmTest`
-- [ ] `./gradlew :feature:dashboard:jvmTest`
-- [ ] `./gradlew detekt`
+- [x] `./gradlew :common:settings:jvmTest`
+- [x] `./gradlew :feature:dashboard:jvmTest`
+- [x] `./gradlew detekt`
 
 ---
 
 ## Progress Tracking
-**Total Tasks:** 14 **Completed:** 1 **Remaining:** 13
+**Total Tasks:** 14 **Completed:** 14 **Remaining:** 0
