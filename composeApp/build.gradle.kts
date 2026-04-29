@@ -48,6 +48,7 @@ kotlin {
             implementation(projects.common.network)
             implementation(projects.common.mvi)
             implementation(projects.common.uiResources)
+            implementation(projects.common.settings)
             implementation(projects.component.portfolio)
             implementation(projects.component.market)
             implementation(projects.component.watchlist)
