@@ -24,5 +24,8 @@ kotlin {
             implementation(project(":component:market"))
             implementation(project(":component:portfolio"))
         }
+        jvmTest.dependencies {
+            implementation(libs.mockk)
+        }
     }
 }
