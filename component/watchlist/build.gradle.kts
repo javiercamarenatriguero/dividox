@@ -15,7 +15,6 @@ kotlin {
             implementation(libs.koin.core)
             implementation(libs.firebase.kotlin.firestore)
             implementation(libs.kotlinx.serialization.core)
-            implementation(libs.kotlinx.datetime)
         }
         androidMain.dependencies {
             implementation(project.dependencies.platform(libs.firebase.bom))
