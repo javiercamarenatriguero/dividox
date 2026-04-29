@@ -53,6 +53,7 @@ kotlin {
             implementation(projects.component.watchlist)
             implementation(projects.integration.security)
             implementation(projects.feature.auth)
+            implementation(projects.feature.dashboard)
             implementation(projects.feature.details)
             implementation(projects.feature.home)
             implementation(projects.feature.splash)

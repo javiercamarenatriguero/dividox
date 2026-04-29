@@ -58,5 +58,6 @@ fun SetupRootNavGraph(navController: NavHostController) {
         forgotPasswordScreenNode(navController)
         homeScreenNode(navController)
         detailScreenNode(navController)
+        dashboardScreenNode(navController)
     }
 }
