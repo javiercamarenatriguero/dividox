@@ -19,6 +19,8 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(libs.kotlinx.coroutines.test)
+            implementation(project(":component:market"))
+            implementation(project(":component:portfolio"))
         }
     }
 }
