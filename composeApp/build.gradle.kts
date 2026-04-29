@@ -59,6 +59,7 @@ kotlin {
             implementation(projects.feature.splash)
             implementation(libs.androidx.navigation.compose)
             implementation(libs.kotlinx.serialization.core)
+            implementation(compose.materialIconsExtended)
         }
         androidMain.dependencies {
             implementation(libs.androidx.credentials)
