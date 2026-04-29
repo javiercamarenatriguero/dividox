@@ -1,6 +1,6 @@
 package com.akole.dividox.integration.security
 
-import com.akole.dividox.component.portfolio.domain.model.Currency
+import com.akole.dividox.common.ui.resources.Currency
 import com.akole.dividox.component.portfolio.domain.model.Holding
 import com.akole.dividox.component.portfolio.domain.model.HoldingId
 import com.akole.dividox.component.portfolio.domain.repository.PortfolioRepository

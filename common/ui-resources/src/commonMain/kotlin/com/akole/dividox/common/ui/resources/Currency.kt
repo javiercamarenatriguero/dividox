@@ -1,9 +1,5 @@
-package com.akole.dividox.component.portfolio.domain.model
+package com.akole.dividox.common.ui.resources
 
-/**
- * ISO 4217 currency codes. Enum-based for type safety and common currency support.
- * Extend with additional currencies as needed.
- */
 enum class Currency(val code: String) {
     USD("USD"),
     EUR("EUR"),
@@ -19,4 +15,3 @@ enum class Currency(val code: String) {
     BRL("BRL"),
     ZAR("ZAR"),
 }
-

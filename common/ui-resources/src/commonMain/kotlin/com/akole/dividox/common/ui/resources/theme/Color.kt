@@ -83,6 +83,13 @@ private val dark_surfaceContainerLowest = Color(0xFF0A0D14)
 private val dark_surfaceContainerHigh = Color(0xFF272A32)
 private val dark_surfaceContainerHighest = Color(0xFF31353D)
 
+// ─── Extended semantic colors ─────────────────────────────────────────────────
+
+internal val light_profit = Color(0xFF2E7D32)
+internal val light_onProfit = Color(0xFFFFFFFF)
+internal val dark_profit = Color(0xFF66BB6A)
+internal val dark_onProfit = Color(0xFF003909)
+
 // ─── Color schemes ────────────────────────────────────────────────────────────
 
 internal val DividoxLightColorScheme = lightColorScheme(
