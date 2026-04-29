@@ -42,19 +42,21 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.akole.dividox.common.mvi.CollectSideEffect
+import com.akole.dividox.common.ui.resources.Currency
 import com.akole.dividox.common.ui.resources.format.formatPercent
 import com.akole.dividox.common.ui.resources.format.formatPercentSigned
 import com.akole.dividox.common.ui.resources.format.formatPrice
 import com.akole.dividox.common.ui.resources.theme.DividoxTheme
+import com.akole.dividox.common.ui.resources.theme.extendedColors
 import com.akole.dividox.common.ui.resources.theme.spacing
 import dividox.common.ui_resources.generated.resources.Res
-import dividox.common.ui_resources.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
 import com.akole.dividox.feature.dashboard.DashboardContract.DashboardSideEffect
 import com.akole.dividox.feature.dashboard.DashboardContract.DashboardViewEvent
 import com.akole.dividox.feature.dashboard.DashboardContract.DashboardViewState
 import com.akole.dividox.integration.security.domain.model.EnrichedWatchlistEntry
 import com.akole.dividox.integration.security.domain.model.PortfolioSummary
+import dividox.common.ui_resources.generated.resources.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 
@@ -231,7 +233,7 @@ private fun MetricsBlock(
     showInEur: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    val currencyCode = if (showInEur) "EUR" else "USD"
+    val currency = if (showInEur) Currency.EUR else Currency.USD
     val isEmpty = summary == null || summary.totalValue == 0.0
 
     Column(modifier = modifier.fillMaxWidth()) {
@@ -241,14 +243,14 @@ private fun MetricsBlock(
         ) {
             MetricCard(
                 label = stringResource(Res.string.metric_total_value),
-                value = (summary?.totalValue ?: 0.0).formatPrice(currencyCode),
+                value = (summary?.totalValue ?: 0.0).formatPrice(currency),
                 modifier = Modifier.weight(1f),
             )
             MetricCard(
                 label = stringResource(Res.string.metric_total_gain),
                 value = (summary?.totalGainPercent ?: 0.0).formatPercent(),
-                valueColor = if (!isEmpty && summary!!.totalGainPercent >= 0) {
-                    Color(0xFF2E7D32)
+                valueColor = if (!isEmpty && summary.totalGainPercent >= 0) {
+                    MaterialTheme.extendedColors.profit
                 } else if (!isEmpty) {
                     MaterialTheme.colorScheme.error
                 } else {
@@ -269,7 +271,7 @@ private fun MetricsBlock(
             )
             MetricCard(
                 label = stringResource(Res.string.metric_dividends),
-                value = (summary?.dividendsCollected ?: 0.0).formatPrice(currencyCode),
+                value = (summary?.dividendsCollected ?: 0.0).formatPrice(currency),
                 modifier = Modifier.weight(1f),
             )
         }
@@ -418,7 +420,7 @@ private fun WatchlistEntryRow(
                         Text(
                             text = changePercent.formatPercentSigned(),
                             style = MaterialTheme.typography.labelSmall,
-                            color = if (changePercent >= 0) Color(0xFF2E7D32) else MaterialTheme.colorScheme.error,
+                            color = if (changePercent >= 0) MaterialTheme.extendedColors.profit else MaterialTheme.colorScheme.error,
                         )
                     }
                 }

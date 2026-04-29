@@ -1,7 +1,7 @@
 package com.akole.dividox.component.portfolio.domain.usecase
 
 import com.akole.dividox.component.portfolio.FakePortfolioRepository
-import com.akole.dividox.component.portfolio.domain.model.Currency
+import com.akole.dividox.common.ui.resources.Currency
 import com.akole.dividox.component.portfolio.domain.model.Holding
 import com.akole.dividox.component.portfolio.domain.model.HoldingId
 import kotlinx.coroutines.flow.toList

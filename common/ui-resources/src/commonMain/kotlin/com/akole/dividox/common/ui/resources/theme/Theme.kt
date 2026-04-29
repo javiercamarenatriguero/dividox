@@ -11,14 +11,23 @@ val MaterialTheme.spacing: DividoxSpacing
     @ReadOnlyComposable
     get() = LocalDividoxSpacing.current
 
+val MaterialTheme.extendedColors: DividoxExtendedColors
+    @Composable
+    @ReadOnlyComposable
+    get() = LocalDividoxExtendedColors.current
+
 @Composable
 fun DividoxTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit,
 ) {
     val colorScheme = if (darkTheme) DividoxDarkColorScheme else DividoxLightColorScheme
+    val extendedColors = if (darkTheme) DarkExtendedColors else LightExtendedColors
     val typography = buildDividoxTypography(rememberInterFontFamily())
-    CompositionLocalProvider(LocalDividoxSpacing provides DividoxSpacing()) {
+    CompositionLocalProvider(
+        LocalDividoxSpacing provides DividoxSpacing(),
+        LocalDividoxExtendedColors provides extendedColors,
+    ) {
         MaterialTheme(
             colorScheme = colorScheme,
             typography = typography,

@@ -1,7 +1,7 @@
 package com.akole.dividox.component.portfolio.data.mapper
 
 import com.akole.dividox.component.portfolio.data.dto.HoldingDto
-import com.akole.dividox.component.portfolio.domain.model.Currency
+import com.akole.dividox.common.ui.resources.Currency
 import com.akole.dividox.component.portfolio.domain.model.Holding
 import com.akole.dividox.component.portfolio.domain.model.HoldingId
 import kotlin.test.Test

@@ -1,5 +1,9 @@
 package com.akole.dividox.common.ui.resources.format
 
+import com.akole.dividox.common.ui.resources.Currency
+
+fun Double.formatPrice(currency: Currency): String = formatPrice(currency.code)
+
 fun Double.formatPrice(currencyCode: String): String =
     "${currencyCode.toCurrencySymbol()}${"%.2f".format(this)}"
 
