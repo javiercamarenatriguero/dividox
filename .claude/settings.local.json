@@ -219,8 +219,20 @@
       "Bash(./gradlew :component:market:compileCommonMainKotlinMetadata :component:market:compileDebugKotlinAndroid :component:market:compileKotlinIosArm64 :component:market:compileKotlinJvm :composeApp:compileDebugKotlin :composeApp:compileKotlinJvm)",
       "Bash(./gradlew :component:market:jvmTest --info)",
       "Bash(./gradlew :component:market:jvmTest --rerun)",
-      "Bash(gh run *)"
-    ]
+      "Bash(gh run *)",
+      "Bash(git pull *)",
+      "Bash(./gradlew :component:watchlist:compileKotlinJvm)",
+      "Bash(./gradlew :component:watchlist:jvmTest)",
+      "Bash(./gradlew :component:watchlist:compileTestKotlinJvm)",
+      "Bash(./gradlew :component:watchlist:compileTestKotlinJvm --stacktrace)",
+      "Bash(./gradlew :component:market:compileTestKotlinJvm)",
+      "Bash(./gradlew :component:market:compileTestKotlinJvm --info)",
+      "Bash(./gradlew :component:market:testDebugUnitTest)",
+      "Bash(./gradlew :component:watchlist:detekt)",
+      "Bash(git push *)",
+      "Bash(grep -E \"\\\\.kt$\")"
+    ],
+    "defaultMode": "bypassPermissions"
   },
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [

@@ -1,0 +1,2 @@
+- [Kotlin stdlib Clock vs kotlinx.datetime](feedback_kotlin_clock.md) — In Kotlin 2.x, use `kotlin.time.Clock` and `kotlin.time.Instant` (stdlib), not `kotlinx.datetime.Clock`
+- [GitHub PR via gh CLI blocked](feedback_gh_pr_emu.md) — `gh pr create` fails due to Enterprise Managed User restriction; push branch and create PR manually
