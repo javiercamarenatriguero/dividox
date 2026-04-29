@@ -15,7 +15,9 @@ kotlin {
             implementation(project(":common:ui-resources"))
             implementation(project(":integration:security"))
             implementation(project(":component:watchlist"))
+            implementation(project(":component:market"))
             implementation(libs.kotlinx.coroutines.core)
+            implementation(compose.materialIconsExtended)
         }
         commonTest.dependencies {
             implementation(libs.kotlinx.coroutines.test)
