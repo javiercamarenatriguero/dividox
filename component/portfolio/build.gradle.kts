@@ -13,7 +13,6 @@ kotlin {
         commonMain.dependencies {
             api(project(":common:ui-resources"))
             implementation(libs.kotlinx.coroutines.core)
-            implementation(libs.koin.core)
             implementation(libs.firebase.kotlin.firestore)
             implementation(libs.kotlinx.serialization.core)
         }

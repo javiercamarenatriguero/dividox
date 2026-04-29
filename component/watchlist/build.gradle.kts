@@ -12,7 +12,6 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(libs.kotlinx.coroutines.core)
-            implementation(libs.koin.core)
             implementation(libs.firebase.kotlin.firestore)
             implementation(libs.kotlinx.serialization.core)
         }

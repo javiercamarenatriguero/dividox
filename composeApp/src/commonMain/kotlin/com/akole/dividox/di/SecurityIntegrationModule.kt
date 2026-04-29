@@ -1,4 +1,4 @@
-package com.akole.dividox.integration.security.di
+package com.akole.dividox.di
 
 import com.akole.dividox.integration.security.domain.usecase.GetEnrichedWatchlistUseCase
 import com.akole.dividox.integration.security.domain.usecase.GetPortfolioSummaryUseCase
