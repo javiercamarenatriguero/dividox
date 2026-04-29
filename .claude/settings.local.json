@@ -230,16 +230,13 @@
       "Bash(./gradlew :component:market:testDebugUnitTest)",
       "Bash(./gradlew :component:watchlist:detekt)",
       "Bash(git push *)",
-<<<<<<< HEAD
       "Bash(grep -E \"\\\\.kt$\")",
       "Bash(./gradlew :integration:security:compileKotlinJvm)",
       "Bash(GIT_SSH_COMMAND=\"ssh -o BatchMode=yes\" git add integration/security/build.gradle.kts settings.gradle.kts task.md)",
       "Bash(./gradlew :integration:security:jvmTest)",
       "Bash(./gradlew :integration:security:jvmTest --info)",
       "Bash(./gradlew :integration:security:detekt --info)"
-=======
       "Bash(grep -E \"\\\\.kt$\")"
->>>>>>> main
     ],
     "defaultMode": "bypassPermissions"
   },
