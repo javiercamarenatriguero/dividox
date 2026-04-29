@@ -8,54 +8,50 @@ Scaffold `:integration:security`, define `SecurityHolding`, `PortfolioSummary`, 
 **ADRs:** ADR-006
 **Depends on:** TK-014, TK-015, TK-016
 **Blocks:** TK-018
-**Status:** Backlog
+**Status:** Done
 
 ---
 
 ## Subtasks
 
 ### Phase 1: Architecture & Setup
-- [ ] **Create Git Branch** `feature/DVX-TK-017-integration-security` — `skill: manage-git-flow`
+- [x] **Create Git Branch** `feature/DVX-TK-017-integration-security` (off `feature/DVX-TK-016-component-watchlist`)
 
 ### Phase 2: Scaffold
-- [ ] **Scaffold `:integration:security`**
+- [x] **Scaffold `:integration:security`**
   - `integration/security/build.gradle.kts` — `dividox.kmp.library` + `dividox.kmp.test`
   - `include(":integration:security")` in `settings.gradle.kts`
-  - **Verify:** `./gradlew :integration:security:compileKotlinJvm`
-  - **Commit:** `DVX-TK-017 Scaffold integration:security module`
 
 ### Phase 3: Enriched Models + Use Cases (TDD)
-- [ ] **Models:**
-  - `SecurityHolding` — `Holding` + `StockQuote` + `DividendInfo` + `totalGainPercent: Double`
+- [x] **Models:**
+  - `SecurityHolding` — `Holding` + `StockQuote` + `DividendInfo?` + `totalGainPercent: Double`
   - `PortfolioSummary` — `totalValue, totalGain, totalGainPercent, totalYield, dividendsCollected`
-  - `EnrichedWatchlistEntry` — `WatchlistEntry` + `StockQuote` + `CompanyInfo` + `isInPortfolio: Boolean`
-  - `SecurityDetail` — `ticker, quote, dividendInfo, company, priceHistory, isInPortfolio, isInWatchlist, holdingId?`
-  - **Commit:** `DVX-TK-017 Add integration:security enriched models`
+  - `EnrichedWatchlistEntry` — `WatchlistEntry` + `StockQuote?` + `CompanyInfo?` + `isInPortfolio: Boolean`
+  - `SecurityDetail` — `ticker, quote, dividendInfo, companyInfo, priceHistory, isInPortfolio, isInWatchlist, holdingId?`
 
-- [ ] **Use cases + tests:**
-  - `GetPortfolioWithQuotesUseCase` — combines portfolio + multiple quotes + dividend info
-  - `GetPortfolioSummaryUseCase` — aggregates `GetPortfolioWithQuotesUseCase`
-  - `GetEnrichedWatchlistUseCase` — watchlist entries + quotes + company info + portfolio check
-  - `GetSecurityDetailUseCase` — quote + dividend + company + price history + portfolio/watchlist flags
-  - `GetSecurityHoldingUseCase` — single ticker: Holding + Quote + DividendInfo (for Edit Holding pre-fill)
-  - **Verify:** `./gradlew :integration:security:jvmTest`
-  - **Commit:** `DVX-TK-017 Add integration:security use cases with tests`
+- [x] **Use cases + tests (27 unit tests, all passing):**
+  - `GetPortfolioWithQuotesUseCase` — `Flow<List<SecurityHolding>>`
+  - `GetPortfolioSummaryUseCase` — `Flow<PortfolioSummary>`
+  - `GetEnrichedWatchlistUseCase` — `Flow<List<EnrichedWatchlistEntry>>`
+  - `GetSecurityDetailUseCase` — `Flow<SecurityDetail>`
+  - `GetSecurityHoldingUseCase` — `Flow<SecurityHolding?>`
 
-- [ ] **`SecurityIntegrationModule.kt`** + add to `App.kt` startKoin
-  - **Commit:** `DVX-TK-017 Register security integration Koin module`
+- [x] **`SecurityIntegrationModule.kt`** + added to `KoinInitializer.kt`
 
 ### Phase 4: Testing & Quality
-- [ ] `./gradlew test` + `./gradlew detekt`
-- [ ] Create Pull Request — `skill: manage-git-flow`
+- [x] `./gradlew :integration:security:jvmTest` — 27 tests, 0 failures
+- [x] `./gradlew detekt` — clean
+- [x] PR ready — `feature/DVX-TK-017-integration-security`
 
 ---
 
 ## Progress Tracking
-**Total Tasks:** 6 **Completed:** 0 **Remaining:** 6
+**Total Tasks:** 6 **Completed:** 6 **Remaining:** 0
 
 ---
 
 ## Notes
-- `:integration:security` must not make its own Firestore or Ktor calls — orchestrates component use cases only
+- `:integration:security` makes zero Firestore/Ktor calls — orchestrates component use cases only
 - `totalGainPercent = (currentValue - costBasis) / costBasis * 100`
 - `holdingId` in `SecurityDetail` is non-null only when `isInPortfolio = true`
+- Branch is off `feature/DVX-TK-016-component-watchlist` — rebase onto main once TK-016 merges
