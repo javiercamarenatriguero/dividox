@@ -6,6 +6,8 @@ dependencies {
     compileOnly(libs.android.tools.build.gradle)
     compileOnly(libs.kotlin.gradle)
     compileOnly(libs.compose.multiplatform.gradle)
+    compileOnly(libs.room.gradle.plugin)
+    compileOnly(libs.ksp.gradle.plugin)
     implementation(libs.detekt.gradle)
 }
 
