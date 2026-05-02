@@ -43,6 +43,12 @@ data object MainGraphRoute
 data object PortfolioRoute
 
 @Serializable
+data object AddHoldingRoute
+
+@Serializable
+data class EditHoldingRoute(val holdingId: String)
+
+@Serializable
 data object DividendsRoute
 
 @Serializable
@@ -119,7 +125,7 @@ fun NavGraphBuilder.mainGraphNode(rootNavController: NavController) {
             ) {
                 dashboardScreenNode(rootNavController)
                 portfolioScreenNode(
-                    navController = rootNavController,
+                    navController = innerNavController,
                     onRegisterFabClick = { callback -> portfolioFabClick = callback },
                 )
                 dividendsScreenNode()

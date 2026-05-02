@@ -62,6 +62,7 @@ kotlin {
             implementation(projects.feature.portfolio)
             implementation(libs.androidx.navigation.compose)
             implementation(libs.kotlinx.serialization.core)
+            implementation(libs.kotlinx.datetime)
             implementation(compose.materialIconsExtended)
         }
         androidMain.dependencies {

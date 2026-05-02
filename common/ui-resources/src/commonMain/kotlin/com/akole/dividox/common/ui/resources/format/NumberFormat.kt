@@ -16,7 +16,7 @@ fun Double.formatPercentSigned(): String {
     return "$sign${formatTwoDecimals()}%"
 }
 
-private fun Double.formatTwoDecimals(): String {
+fun Double.formatTwoDecimals(): String {
     val factor = 100L
     val rounded = (this * factor).roundToLong()
     val intPart = abs(rounded / factor)
