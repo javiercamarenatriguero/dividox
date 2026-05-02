@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -17,13 +18,11 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SheetState
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -31,33 +30,54 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.akole.dividox.common.ui.resources.Currency
+import com.akole.dividox.common.ui.resources.components.DividoxTopAppBar
 import com.akole.dividox.common.ui.resources.format.formatPrice
 import com.akole.dividox.common.ui.resources.format.formatTwoDecimals
 import com.akole.dividox.common.ui.resources.theme.DividoxTheme
 import com.akole.dividox.common.ui.resources.theme.spacing
 import com.akole.dividox.component.market.domain.model.StockQuote
 import com.akole.dividox.component.portfolio.domain.model.HoldingId
-import androidx.compose.ui.tooling.preview.Preview
+import dividox.common.ui_resources.generated.resources.Res
+import dividox.common.ui_resources.generated.resources.action_add_position
+import dividox.common.ui_resources.generated.resources.action_cancel
+import dividox.common.ui_resources.generated.resources.action_delete
+import dividox.common.ui_resources.generated.resources.action_update_position
+import dividox.common.ui_resources.generated.resources.cd_delete
+import dividox.common.ui_resources.generated.resources.dialog_remove_message
+import dividox.common.ui_resources.generated.resources.dialog_remove_title
+import dividox.common.ui_resources.generated.resources.label_estimated_value
+import dividox.common.ui_resources.generated.resources.label_price_per_share
+import dividox.common.ui_resources.generated.resources.label_shares
+import dividox.common.ui_resources.generated.resources.label_unknown_position
+import dividox.common.ui_resources.generated.resources.search_security_hint
+import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HoldingSheet(
+fun HoldingScreen(
     viewModel: HoldingViewModel,
-    onDismiss: () -> Unit,
+    onBack: () -> Unit,
     onPositionSaved: () -> Unit,
     onPositionDeleted: () -> Unit,
 ) {
     val state by viewModel.viewState.collectAsState()
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    // Handle side effects
+    // State-based navigation: triggers reliably on recomposition
+    LaunchedEffect(state.operationCompleted) {
+        if (state.operationCompleted) {
+            if (state.operationIsDelete) onPositionDeleted() else onPositionSaved()
+        }
+    }
+
+    // Handle other side effects (errors, etc.)
     LaunchedEffect(Unit) {
         viewModel.sideEffect.collect { effect ->
             when (effect) {
-                is HoldingContract.HoldingSideEffect.PositionSaved -> onPositionSaved()
-                is HoldingContract.HoldingSideEffect.PositionDeleted -> onPositionDeleted()
+                is HoldingContract.HoldingSideEffect.PositionSaved -> Unit
+                is HoldingContract.HoldingSideEffect.PositionDeleted -> Unit
                 is HoldingContract.HoldingSideEffect.ShowError -> {
                     // TODO: Show error snackbar
                 }
@@ -68,26 +88,33 @@ fun HoldingSheet(
         }
     }
 
-    ModalBottomSheet(
-        onDismissRequest = {
-            viewModel.onEvent(HoldingContract.HoldingViewEvent.DismissClicked)
-            onDismiss()
+    val title = when (state.mode) {
+        HoldingContract.Mode.ADD -> stringResource(Res.string.action_add_position)
+        HoldingContract.Mode.EDIT -> stringResource(Res.string.action_update_position)
+    }
+
+    Scaffold(
+        topBar = {
+            DividoxTopAppBar(
+                title = title,
+                onBack = onBack,
+            )
         },
-        sheetState = sheetState,
-    ) {
-        HoldingSheetContent(
+    ) { paddingValues ->
+        HoldingScreenContent(
             state = state,
             onEvent = viewModel::onEvent,
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
                 .verticalScroll(rememberScrollState())
+                .padding(paddingValues)
                 .padding(bottom = MaterialTheme.spacing.large),
         )
     }
 
     if (state.showDeleteConfirmation) {
         DeleteConfirmationDialog(
-            ticker = state.selectedSecurity?.ticker ?: "Position",
+            ticker = state.selectedSecurity?.ticker ?: stringResource(Res.string.label_unknown_position),
             onConfirm = {
                 viewModel.onEvent(HoldingContract.HoldingViewEvent.ConfirmDeleteClicked)
             },
@@ -99,7 +126,7 @@ fun HoldingSheet(
 }
 
 @Composable
-private fun HoldingSheetContent(
+private fun HoldingScreenContent(
     state: HoldingContract.HoldingViewState,
     onEvent: (HoldingContract.HoldingViewEvent) -> Unit,
     modifier: Modifier = Modifier,
@@ -108,18 +135,6 @@ private fun HoldingSheetContent(
         modifier = modifier.padding(horizontal = MaterialTheme.spacing.medium),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
     ) {
-        // Title
-        val title = when (state.mode) {
-            HoldingContract.Mode.ADD -> "Add Position"
-            HoldingContract.Mode.EDIT -> "Update Position"
-        }
-        Text(
-            text = title,
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = MaterialTheme.spacing.small),
-        )
-
         // Search field (for selecting security)
         SearchSecurityField(
             query = state.searchQuery,
@@ -144,7 +159,7 @@ private fun HoldingSheetContent(
                 onValueChange = { shares ->
                     onEvent(HoldingContract.HoldingViewEvent.SharesChanged(shares))
                 },
-                label = { Text("Shares") },
+                label = { Text(stringResource(Res.string.label_shares)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
             )
@@ -155,7 +170,7 @@ private fun HoldingSheetContent(
                 onValueChange = { price ->
                     onEvent(HoldingContract.HoldingViewEvent.PricePerShareChanged(price))
                 },
-                label = { Text("Price per Share") },
+                label = { Text(stringResource(Res.string.label_price_per_share)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
             )
@@ -203,8 +218,8 @@ private fun HoldingSheetContent(
                         ),
                         enabled = !state.isLoading,
                     ) {
-                        Icon(Icons.Default.Delete, contentDescription = "Delete")
-                        Text(" Delete")
+                        Icon(Icons.Default.Delete, contentDescription = stringResource(Res.string.cd_delete))
+                        Text(stringResource(Res.string.action_delete))
                     }
                 }
 
@@ -225,8 +240,8 @@ private fun HoldingSheetContent(
                     }
                     Text(
                         text = when (state.mode) {
-                            HoldingContract.Mode.ADD -> "Add Position"
-                            HoldingContract.Mode.EDIT -> "Update Position"
+                            HoldingContract.Mode.ADD -> stringResource(Res.string.action_add_position)
+                            HoldingContract.Mode.EDIT -> stringResource(Res.string.action_update_position)
                         }
                     )
                 }
@@ -248,7 +263,7 @@ private fun SearchSecurityField(
         OutlinedTextField(
             value = query,
             onValueChange = onQueryChanged,
-            label = { Text("Search Security (ticker or name)") },
+            label = { Text(stringResource(Res.string.search_security_hint)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             enabled = selectedSecurity == null,
@@ -403,7 +418,7 @@ private fun EstimatedTotalCard(
                 .padding(MaterialTheme.spacing.medium),
         ) {
             Text(
-                text = "Estimated Value",
+                text = stringResource(Res.string.label_estimated_value),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
             )
@@ -480,9 +495,9 @@ private fun DeleteConfirmationDialog(
 @Preview
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun HoldingSheetAddEmptyPreview() {
+private fun HoldingScreenAddEmptyPreview() {
     DividoxTheme {
-        HoldingSheetContent(
+        HoldingScreenContent(
             state = HoldingContract.HoldingViewState(
                 mode = HoldingContract.Mode.ADD,
             ),
@@ -494,7 +509,7 @@ private fun HoldingSheetAddEmptyPreview() {
 @Preview
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun HoldingSheetAddWithResultsPreview() {
+private fun HoldingScreenAddWithResultsPreview() {
     val mockQuote = StockQuote(
         ticker = "AAPL",
         price = 150.0,
@@ -504,7 +519,7 @@ private fun HoldingSheetAddWithResultsPreview() {
         lastUpdated = kotlin.time.Instant.parse("2024-01-20T00:00:00Z"),
     )
     DividoxTheme {
-        HoldingSheetContent(
+        HoldingScreenContent(
             state = HoldingContract.HoldingViewState(
                 mode = HoldingContract.Mode.ADD,
                 searchQuery = "AAP",
@@ -518,9 +533,9 @@ private fun HoldingSheetAddWithResultsPreview() {
 @Preview
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun HoldingSheetAddLoadingPreview() {
+private fun HoldingScreenAddLoadingPreview() {
     DividoxTheme {
-        HoldingSheetContent(
+        HoldingScreenContent(
             state = HoldingContract.HoldingViewState(
                 mode = HoldingContract.Mode.ADD,
                 searchQuery = "AAPL",
@@ -534,7 +549,7 @@ private fun HoldingSheetAddLoadingPreview() {
 @Preview
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun HoldingSheetEditPrefilledPreview() {
+private fun HoldingScreenEditPrefilledPreview() {
     val mockQuote = StockQuote(
         ticker = "MSFT",
         price = 350.0,
@@ -544,7 +559,7 @@ private fun HoldingSheetEditPrefilledPreview() {
         lastUpdated = kotlin.time.Instant.parse("2024-01-20T00:00:00Z"),
     )
     DividoxTheme {
-        HoldingSheetContent(
+        HoldingScreenContent(
             state = HoldingContract.HoldingViewState(
                 mode = HoldingContract.Mode.EDIT,
                 holdingId = HoldingId("h1"),
@@ -561,7 +576,7 @@ private fun HoldingSheetEditPrefilledPreview() {
 @Preview
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun HoldingSheetEditDeleteDialogPreview() {
+private fun HoldingScreenEditDeleteDialogPreview() {
     val mockQuote = StockQuote(
         ticker = "TSLA",
         price = 200.0,
@@ -571,7 +586,7 @@ private fun HoldingSheetEditDeleteDialogPreview() {
         lastUpdated = kotlin.time.Instant.parse("2024-01-20T00:00:00Z"),
     )
     DividoxTheme {
-        HoldingSheetContent(
+        HoldingScreenContent(
             state = HoldingContract.HoldingViewState(
                 mode = HoldingContract.Mode.EDIT,
                 holdingId = HoldingId("h2"),
@@ -588,7 +603,7 @@ private fun HoldingSheetEditDeleteDialogPreview() {
 @Preview
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun HoldingSheetAddDarkPreview() {
+private fun HoldingScreenAddDarkPreview() {
     val mockQuote = StockQuote(
         ticker = "AAPL",
         price = 150.0,
@@ -598,7 +613,7 @@ private fun HoldingSheetAddDarkPreview() {
         lastUpdated = kotlin.time.Instant.parse("2024-01-20T00:00:00Z"),
     )
     DividoxTheme(darkTheme = true) {
-        HoldingSheetContent(
+        HoldingScreenContent(
             state = HoldingContract.HoldingViewState(
                 mode = HoldingContract.Mode.ADD,
                 searchQuery = "AAP",

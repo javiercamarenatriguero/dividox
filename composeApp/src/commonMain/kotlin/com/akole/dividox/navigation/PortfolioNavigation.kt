@@ -1,12 +1,15 @@
 package com.akole.dividox.navigation
 
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.getValue
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
+import androidx.navigation.toRoute
 import com.akole.dividox.common.mvi.collectViewState
-import com.akole.dividox.feature.portfolio.HoldingSheet
+import com.akole.dividox.feature.portfolio.HoldingScreen
 import com.akole.dividox.feature.portfolio.HoldingViewModel
 import com.akole.dividox.feature.portfolio.PortfolioContract
 import com.akole.dividox.feature.portfolio.PortfolioContract.PortfolioSideEffect
@@ -56,33 +59,35 @@ fun NavGraphBuilder.portfolioScreenNode(
         )
     }
 
-    // Add Holding Sheet
-    composable<AddHoldingRoute> {
+    composable<AddHoldingRoute>(
+        enterTransition = { slideInHorizontally { it } },
+        popExitTransition = { slideOutHorizontally { it } },
+    ) {
         val viewModel = koinViewModel<HoldingViewModel>(
             parameters = { parametersOf(null) }
         )
-        val state by collectViewState(viewModel.viewState)
 
-        HoldingSheet(
+        HoldingScreen(
             viewModel = viewModel,
-            onDismiss = { navController.popBackStack() },
+            onBack = { navController.popBackStack() },
             onPositionSaved = { navController.popBackStack() },
             onPositionDeleted = { navController.popBackStack() },
         )
     }
 
-    // Edit Holding Sheet
-    composable<EditHoldingRoute> { backStackEntry ->
-        val route = backStackEntry.destination.route as? EditHoldingRoute ?: return@composable
-        
+    composable<EditHoldingRoute>(
+        enterTransition = { slideInHorizontally { it } },
+        popExitTransition = { slideOutHorizontally { it } },
+    ) { backStackEntry ->
+        val route = backStackEntry.toRoute<EditHoldingRoute>()
+
         val viewModel = koinViewModel<HoldingViewModel>(
             parameters = { parametersOf(route.holdingId) }
         )
-        val state by collectViewState(viewModel.viewState)
 
-        HoldingSheet(
+        HoldingScreen(
             viewModel = viewModel,
-            onDismiss = { navController.popBackStack() },
+            onBack = { navController.popBackStack() },
             onPositionSaved = { navController.popBackStack() },
             onPositionDeleted = { navController.popBackStack() },
         )

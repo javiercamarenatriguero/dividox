@@ -186,8 +186,7 @@ class HoldingViewModel(
                     result.onFailure { throw it }
                 }
 
-                _state.value = _state.value.copy(isLoading = false)
-                _sideEffect.send(HoldingContract.HoldingSideEffect.HapticFeedback)
+                _state.value = _state.value.copy(isLoading = false, operationCompleted = true, operationIsDelete = false)
                 _sideEffect.send(HoldingContract.HoldingSideEffect.PositionSaved)
             } catch (e: Exception) {
                 _state.value = _state.value.copy(isLoading = false, error = e.message)
@@ -204,8 +203,7 @@ class HoldingViewModel(
                 _state.value = _state.value.copy(isLoading = true)
                 val result = removeHolding.execute(_state.value.holdingId!!)
                 result.onFailure { throw it }
-                _state.value = _state.value.copy(isLoading = false)
-                _sideEffect.send(HoldingContract.HoldingSideEffect.HapticFeedback)
+                _state.value = _state.value.copy(isLoading = false, operationCompleted = true, operationIsDelete = true)
                 _sideEffect.send(HoldingContract.HoldingSideEffect.PositionDeleted)
             } catch (e: Exception) {
                 _state.value = _state.value.copy(isLoading = false, error = e.message)

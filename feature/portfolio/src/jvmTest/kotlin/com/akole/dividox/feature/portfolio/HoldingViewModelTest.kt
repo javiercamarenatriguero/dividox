@@ -255,7 +255,9 @@ class HoldingViewModelTest {
 
         // THEN: AddHoldingUseCase.execute() should be called
         coVerify(exactly = 1) { mockAddHolding.execute(any()) }
-        assertEquals(true, vm.viewState.value.isLoading == false)  // After success, loading should be false
+        assertFalse(vm.viewState.value.isLoading)
+        assertTrue(vm.viewState.value.operationCompleted)
+        assertFalse(vm.viewState.value.operationIsDelete)
     }
 
     // ===== EDIT MODE TESTS =====

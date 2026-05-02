@@ -25,6 +25,8 @@ object HoldingContract {
         val isLoading: Boolean = false,
         val error: String? = null,
         val showDeleteConfirmation: Boolean = false,
+        val operationCompleted: Boolean = false,
+        val operationIsDelete: Boolean = false,
     )
 
     sealed interface HoldingViewEvent {
