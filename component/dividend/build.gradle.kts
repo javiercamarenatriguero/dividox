@@ -16,8 +16,8 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            implementation(libs.room.runtime)
-            implementation(libs.sqlite.bundled)
+            api(libs.room.runtime)
+            api(libs.sqlite.bundled)
             implementation(libs.kotlinx.datetime)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.firebase.kotlin.firestore)

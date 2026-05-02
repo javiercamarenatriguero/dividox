@@ -3,11 +3,12 @@ package com.akole.dividox.component.dividend.data.db
 import com.akole.dividox.component.dividend.data.datasource.DividendLocalDataSource
 
 /**
- * Convenience factory that builds the [DividendLocalDataSource] using the platform-specific
- * Room database builder.
+ * Convenience factory that creates a [DividendLocalDataSource] from a given [DividendDao].
  *
- * Encapsulates [DividendDatabase] and [DividendDao] creation so that callers (e.g., the Koin
- * DI module in `:composeApp`) do not need Room on their direct classpath.
+ * The [DividendDao] is obtained by the caller (typically the DI module in `:composeApp`)
+ * from a platform-specific [DividendDatabase] builder.
+ *
+ * @param dao The Room DAO to wrap.
  */
-fun buildDividendLocalDataSource(): DividendLocalDataSource =
-    DividendLocalDataSource(createDividendDatabaseBuilder().build().dividendDao())
+fun buildDividendLocalDataSource(dao: DividendDao): DividendLocalDataSource =
+    DividendLocalDataSource(dao)

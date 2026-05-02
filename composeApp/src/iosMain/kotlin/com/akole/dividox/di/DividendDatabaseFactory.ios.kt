@@ -1,8 +1,9 @@
-package com.akole.dividox.component.dividend.data.db
+package com.akole.dividox.di
 
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
+import com.akole.dividox.component.dividend.data.db.DividendDatabase
 import platform.Foundation.NSHomeDirectory
 
 /**
@@ -13,7 +14,7 @@ import platform.Foundation.NSHomeDirectory
  * 2. Appends the Library subdirectory (standard iOS location for DB files).
  * 3. Configures the builder with [BundledSQLiteDriver].
  */
-actual fun createDividendDatabaseBuilder(): RoomDatabase.Builder<DividendDatabase> {
+internal actual fun createDividendDatabaseBuilder(): RoomDatabase.Builder<DividendDatabase> {
     val dbPath = NSHomeDirectory() + "/Library/dividox_dividends.db"
     return Room.databaseBuilder<DividendDatabase>(name = dbPath)
         .setDriver(BundledSQLiteDriver())
