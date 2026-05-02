@@ -59,6 +59,7 @@ kotlin {
             implementation(projects.feature.details)
             implementation(projects.feature.home)
             implementation(projects.feature.splash)
+            implementation(projects.feature.portfolio)
             implementation(libs.androidx.navigation.compose)
             implementation(libs.kotlinx.serialization.core)
             implementation(compose.materialIconsExtended)

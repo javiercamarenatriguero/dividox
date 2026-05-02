@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.akole.dividox.common.ui.resources.theme.spacing
 import dividox.common.ui_resources.generated.resources.Res
 import dividox.common.ui_resources.generated.resources.ic_launcher_fore
 import kotlinx.coroutines.delay
@@ -65,7 +66,7 @@ fun SplashScreen() {
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
-                    .padding(start = 8.dp)
+                    .padding(start = MaterialTheme.spacing.small)
                     .graphicsLayer {
                         alpha = textAlpha
                         translationX = textTranslationX

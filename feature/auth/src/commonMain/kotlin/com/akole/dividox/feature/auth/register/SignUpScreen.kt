@@ -33,6 +33,7 @@ import com.akole.dividox.common.ui.resources.components.AppTextField
 import com.akole.dividox.common.ui.resources.components.DividoxTopAppBar
 import com.akole.dividox.common.ui.resources.components.PrimaryButton
 import com.akole.dividox.common.ui.resources.theme.DividoxTheme
+import com.akole.dividox.common.ui.resources.theme.spacing
 import com.akole.dividox.feature.auth.register.SignUpContract.SignUpSideEffect
 import com.akole.dividox.feature.auth.register.SignUpContract.SignUpViewEvent
 import com.akole.dividox.feature.auth.register.SignUpContract.SignUpViewState
@@ -75,7 +76,7 @@ fun SignUpScreen(
                 .verticalScroll(rememberScrollState())
                 .imePadding()
                 .padding(paddingValues)
-                .padding(horizontal = 24.dp, vertical = 24.dp),
+                .padding(horizontal = MaterialTheme.spacing.large, vertical = MaterialTheme.spacing.large),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
@@ -84,7 +85,7 @@ fun SignUpScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(MaterialTheme.spacing.xLarge))
 
             AppTextField(
                 value = state.name,
@@ -95,7 +96,7 @@ fun SignUpScreen(
                 imeAction = ImeAction.Next,
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
 
             AppTextField(
                 value = state.email,
@@ -106,7 +107,7 @@ fun SignUpScreen(
                 imeAction = ImeAction.Next,
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
 
             AppTextField(
                 value = state.password,
@@ -118,7 +119,7 @@ fun SignUpScreen(
                 onImeAction = { if (isFormValid) onEvent(SignUpViewEvent.OnCreateAccountClicked) },
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -144,7 +145,7 @@ fun SignUpScreen(
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 8.dp),
+                        .padding(bottom = MaterialTheme.spacing.small),
                 )
             }
 
@@ -155,7 +156,7 @@ fun SignUpScreen(
                 enabled = isFormValid,
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,

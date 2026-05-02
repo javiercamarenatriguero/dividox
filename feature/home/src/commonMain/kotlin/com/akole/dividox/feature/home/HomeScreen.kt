@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.akole.dividox.common.mvi.CollectSideEffect
+import com.akole.dividox.common.ui.resources.theme.spacing
 import com.akole.dividox.feature.home.HomeContract.HomeSideEffect
 import com.akole.dividox.feature.home.HomeContract.HomeViewEvent
 import com.akole.dividox.feature.home.HomeContract.HomeViewState
@@ -56,7 +57,7 @@ fun HomeScreen(
                 Text("Compose: ${state.greeting}")
             }
         }
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
         Button(onClick = { onEvent(HomeViewEvent.OnDetailClicked) }) {
             Text("View Platform Details")
         }

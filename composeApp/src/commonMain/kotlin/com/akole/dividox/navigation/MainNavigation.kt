@@ -1,9 +1,11 @@
 package com.akole.dividox.navigation
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
@@ -12,6 +14,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
@@ -24,6 +29,7 @@ import androidx.navigation.compose.rememberNavController
 import com.akole.dividox.common.ui.resources.components.BottomTab
 import com.akole.dividox.common.ui.resources.components.DividoxBottomBar
 import dividox.common.ui_resources.generated.resources.Res
+import dividox.common.ui_resources.generated.resources.portfolio_add_holding
 import dividox.common.ui_resources.generated.resources.section_dividends
 import dividox.common.ui_resources.generated.resources.section_portfolio
 import dividox.common.ui_resources.generated.resources.section_settings
@@ -50,6 +56,7 @@ fun NavGraphBuilder.mainGraphNode(rootNavController: NavController) {
     composable<MainGraphRoute> {
         val innerNavController = rememberNavController()
         val navBackStackEntry by innerNavController.currentBackStackEntryAsState()
+        var portfolioFabClick by remember { mutableStateOf({}) }
 
         val currentRoute = navBackStackEntry?.destination?.route
         val selectedTab = when {
@@ -61,6 +68,7 @@ fun NavGraphBuilder.mainGraphNode(rootNavController: NavController) {
         }
 
         Scaffold(
+            contentWindowInsets = WindowInsets(0),
             bottomBar = {
                 DividoxBottomBar(
                     selectedTab = selectedTab,
@@ -82,14 +90,27 @@ fun NavGraphBuilder.mainGraphNode(rootNavController: NavController) {
                 )
             },
             floatingActionButton = {
-                FloatingActionButton(onClick = { /* TK-026 */ }) {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = null,
-                    )
+                when (selectedTab) {
+                    BottomTab.DASHBOARD -> {
+                        FloatingActionButton(onClick = { /* TK-026 */ }) {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = null,
+                            )
+                        }
+                    }
+                    BottomTab.PORTFOLIO -> {
+                        FloatingActionButton(onClick = portfolioFabClick) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = stringResource(Res.string.portfolio_add_holding),
+                            )
+                        }
+                    }
+                    else -> {}
                 }
             },
-            floatingActionButtonPosition = FabPosition.Center,
+            floatingActionButtonPosition = FabPosition.End,
         ) { innerPadding ->
             NavHost(
                 navController = innerNavController,
@@ -97,18 +118,13 @@ fun NavGraphBuilder.mainGraphNode(rootNavController: NavController) {
                 modifier = Modifier.padding(innerPadding),
             ) {
                 dashboardScreenNode(rootNavController)
-                portfolioScreenNode()
+                portfolioScreenNode(
+                    navController = rootNavController,
+                    onRegisterFabClick = { callback -> portfolioFabClick = callback },
+                )
                 dividendsScreenNode()
                 settingsScreenNode()
             }
-        }
-    }
-}
-
-fun NavGraphBuilder.portfolioScreenNode() {
-    composable<PortfolioRoute> {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text(stringResource(Res.string.section_portfolio))
         }
     }
 }

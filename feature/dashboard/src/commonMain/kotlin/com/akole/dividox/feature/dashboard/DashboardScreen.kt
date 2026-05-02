@@ -160,7 +160,7 @@ private fun CurrencyToggleButton(
 ) {
     FilledTonalButton(
         onClick = onClick,
-        modifier = modifier,
+        modifier = modifier.padding(end = MaterialTheme.spacing.medium),
         shape = RoundedCornerShape(8.dp),
         colors = ButtonDefaults.filledTonalButtonColors(
             containerColor = MaterialTheme.colorScheme.secondaryContainer,
@@ -214,7 +214,7 @@ private fun PeriodSelectorRow(
                         MaterialTheme.colorScheme.onSurface
                     },
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(vertical = 8.dp),
+                    modifier = Modifier.padding(vertical = MaterialTheme.spacing.xSmall),
                 )
             }
         }
