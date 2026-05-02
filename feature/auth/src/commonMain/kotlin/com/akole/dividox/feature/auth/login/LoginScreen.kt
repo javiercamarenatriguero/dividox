@@ -40,6 +40,7 @@ import com.akole.dividox.common.ui.resources.components.PrimaryButton
 import com.akole.dividox.common.ui.resources.components.SectionDivider
 import com.akole.dividox.common.ui.resources.components.SocialSignInButton
 import com.akole.dividox.common.ui.resources.theme.DividoxTheme
+import com.akole.dividox.common.ui.resources.theme.spacing
 import com.akole.dividox.feature.auth.login.LoginContract.LoginSideEffect
 import com.akole.dividox.feature.auth.login.LoginContract.LoginViewEvent
 import com.akole.dividox.feature.auth.login.LoginContract.LoginViewState
@@ -79,7 +80,7 @@ fun LoginScreen(
                 contentDescription = null,
                 modifier = Modifier.width(200.dp),
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
             Text(
                 text = stringResource(UiRes.string.auth_tagline),
                 style = MaterialTheme.typography.bodyMedium,
@@ -87,7 +88,7 @@ fun LoginScreen(
                 textAlign = TextAlign.Center,
             )
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(MaterialTheme.spacing.xLarge))
 
             AppTextField(
                 value = state.email,
@@ -98,7 +99,7 @@ fun LoginScreen(
                 imeAction = ImeAction.Next,
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
 
             AppTextField(
                 value = state.password,
@@ -110,7 +111,7 @@ fun LoginScreen(
                 onImeAction = { onEvent(LoginViewEvent.OnSignInClicked) },
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(MaterialTheme.spacing.xSmall))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -125,7 +126,7 @@ fun LoginScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
 
             if (state.error != null) {
                 Text(
@@ -134,7 +135,7 @@ fun LoginScreen(
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 8.dp),
+                        .padding(bottom = MaterialTheme.spacing.small),
                 )
             }
 
@@ -146,19 +147,19 @@ fun LoginScreen(
             )
 
             if (isGoogleSignInSupported) {
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
 
                 SectionDivider(text = stringResource(UiRes.string.auth_divider_or_connect_with))
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
 
                 SocialSignInButton(
                     onClick = { onEvent(LoginViewEvent.OnGoogleSignInClicked) },
                 )
 
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(MaterialTheme.spacing.xLarge))
             } else {
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(MaterialTheme.spacing.xLarge))
             }
 
             Row(

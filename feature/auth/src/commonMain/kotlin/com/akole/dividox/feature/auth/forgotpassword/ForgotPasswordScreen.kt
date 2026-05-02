@@ -27,6 +27,7 @@ import com.akole.dividox.common.ui.resources.components.AppTextField
 import com.akole.dividox.common.ui.resources.components.DividoxTopAppBar
 import com.akole.dividox.common.ui.resources.components.PrimaryButton
 import com.akole.dividox.common.ui.resources.theme.DividoxTheme
+import com.akole.dividox.common.ui.resources.theme.spacing
 import com.akole.dividox.feature.auth.forgotpassword.ForgotPasswordContract.ForgotPasswordSideEffect
 import com.akole.dividox.feature.auth.forgotpassword.ForgotPasswordContract.ForgotPasswordViewEvent
 import com.akole.dividox.feature.auth.forgotpassword.ForgotPasswordContract.ForgotPasswordViewState
@@ -63,7 +64,7 @@ fun ForgotPasswordScreen(
                 .verticalScroll(rememberScrollState())
                 .imePadding()
                 .padding(paddingValues)
-                .padding(horizontal = 24.dp, vertical = 24.dp),
+                .padding(horizontal = MaterialTheme.spacing.large, vertical = MaterialTheme.spacing.large),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
@@ -73,7 +74,7 @@ fun ForgotPasswordScreen(
                 textAlign = TextAlign.Center,
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
 
             AppTextField(
                 value = state.email,
@@ -88,7 +89,7 @@ fun ForgotPasswordScreen(
                 enabled = !state.isSuccess,
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
 
             if (state.error != null) {
                 Text(
@@ -97,7 +98,7 @@ fun ForgotPasswordScreen(
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 8.dp),
+                        .padding(bottom = MaterialTheme.spacing.small),
                 )
             }
 
