@@ -1,6 +1,6 @@
 package com.akole.dividox.common.ui.resources.format
 
-import com.akole.dividox.common.ui.resources.Currency
+import com.akole.dividox.common.currency.domain.model.Currency
 import kotlin.math.abs
 import kotlin.math.roundToLong
 

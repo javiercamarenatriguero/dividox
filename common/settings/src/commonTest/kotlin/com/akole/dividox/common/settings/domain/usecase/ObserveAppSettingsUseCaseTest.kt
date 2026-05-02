@@ -2,7 +2,7 @@ package com.akole.dividox.common.settings.domain.usecase
 
 import com.akole.dividox.common.settings.FakeAppSettingsDataStore
 import com.akole.dividox.common.settings.domain.model.AppSettings
-import com.akole.dividox.common.ui.resources.Currency
+import com.akole.dividox.common.currency.domain.model.Currency
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test

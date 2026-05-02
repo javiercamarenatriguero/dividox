@@ -1,6 +1,6 @@
 package com.akole.dividox.feature.portfolio
 
-import com.akole.dividox.common.ui.resources.Currency
+import com.akole.dividox.common.currency.domain.model.Currency
 import com.akole.dividox.component.market.domain.model.StockQuote
 import com.akole.dividox.component.portfolio.domain.model.HoldingId
 import com.akole.dividox.component.portfolio.domain.model.Holding

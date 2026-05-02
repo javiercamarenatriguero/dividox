@@ -3,7 +3,7 @@ package com.akole.dividox.feature.portfolio
 import com.akole.dividox.common.mvi.SideEffect
 import com.akole.dividox.common.mvi.ViewEvent
 import com.akole.dividox.common.mvi.ViewState
-import com.akole.dividox.common.ui.resources.Currency
+import com.akole.dividox.common.currency.domain.model.Currency
 import com.akole.dividox.integration.security.domain.model.SecurityHolding
 
 interface PortfolioContract {

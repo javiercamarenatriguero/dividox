@@ -1,7 +1,7 @@
 package com.akole.dividox.common.settings.domain.datastore
 
 import com.akole.dividox.common.settings.domain.model.AppSettings
-import com.akole.dividox.common.ui.resources.Currency
+import com.akole.dividox.common.currency.domain.model.Currency
 import kotlinx.coroutines.flow.Flow
 
 interface AppSettingsDataStore {

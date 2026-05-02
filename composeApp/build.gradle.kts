@@ -48,6 +48,7 @@ kotlin {
             implementation(projects.common.network)
             implementation(projects.common.mvi)
             implementation(projects.common.uiResources)
+            implementation(projects.common.currency)
             implementation(projects.common.settings)
             implementation(libs.datastore.preferences)
             implementation(projects.component.portfolio)
