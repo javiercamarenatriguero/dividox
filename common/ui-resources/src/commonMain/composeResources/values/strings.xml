@@ -33,7 +33,7 @@
     <string name="currency_eur">€ EUR</string>
     <string name="metric_total_value">Total Value</string>
     <string name="metric_total_gain">Total Gain</string>
-    <string name="metric_yield">Yield</string>
+    <string name="metric_yield">Dividend</string>
     <string name="metric_dividends">Dividends</string>
     <string name="section_favourites">Favourites</string>
     <string name="action_view_all">VIEW ALL</string>
@@ -44,7 +44,7 @@
     <string name="portfolio_add_holding">Add holding</string>
     <string name="portfolio_empty_state">No holdings yet.\nTap + to add your first one.</string>
     <string name="portfolio_sort_gain">Gain</string>
-    <string name="portfolio_sort_yield">Yield</string>
+    <string name="portfolio_sort_yield">Dividend</string>
     <string name="portfolio_sort_date">Date</string>
     <string name="portfolio_edit">Edit</string>
     <string name="portfolio_shares_format">%1$s shares</string>
