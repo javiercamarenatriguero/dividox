@@ -109,6 +109,8 @@ class MarketRepositoryImpl(
                     changePercent = 0.0,
                     currency = "",
                     lastUpdated = Clock.System.now(),
+                    name = quote.shortname ?: quote.longname,
+                    exchange = quote.exchDisp,
                 )
             } ?: emptyList()
         }.mapError()

@@ -47,6 +47,7 @@ import com.akole.dividox.common.ui.resources.theme.extendedColors
 import com.akole.dividox.common.ui.resources.theme.spacing
 import com.akole.dividox.component.market.domain.model.DividendInfo
 import com.akole.dividox.component.market.domain.model.StockQuote
+import com.akole.dividox.component.market.domain.model.displayName
 import com.akole.dividox.component.portfolio.domain.model.Holding
 import com.akole.dividox.component.portfolio.domain.model.HoldingId
 import com.akole.dividox.integration.security.domain.model.SecurityHolding
@@ -318,7 +319,7 @@ private fun HoldingCard(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = ticker,
+                        text = holding.quote.displayName,
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold,
                     )
@@ -338,7 +339,22 @@ private fun HoldingCard(
                     Text(
                         text = gain.formatPercent(),
                         style = MaterialTheme.typography.labelSmall,
-                        color = if (gain >= 0) MaterialTheme.extendedColors.profit else MaterialTheme.colorScheme.error,
+                        fontWeight = FontWeight.SemiBold,
+                        color = when {
+                            gain > 0.0 -> MaterialTheme.extendedColors.profit
+                            gain < 0.0 -> MaterialTheme.colorScheme.error
+                            else -> MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                        modifier = Modifier
+                            .background(
+                                color = when {
+                                    gain > 0.0 -> MaterialTheme.extendedColors.profit.copy(alpha = 0.12f)
+                                    gain < 0.0 -> MaterialTheme.colorScheme.error.copy(alpha = 0.12f)
+                                    else -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.10f)
+                                },
+                                shape = RoundedCornerShape(4.dp),
+                            )
+                            .padding(horizontal = 6.dp, vertical = 2.dp),
                     )
                 }
             }

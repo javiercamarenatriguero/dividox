@@ -6,7 +6,9 @@ import com.akole.dividox.common.settings.domain.usecase.ObserveAppSettingsUseCas
 import com.akole.dividox.component.market.domain.model.StockQuote
 import com.akole.dividox.component.portfolio.domain.model.Holding
 import com.akole.dividox.component.portfolio.domain.model.HoldingId
+import com.akole.dividox.component.market.domain.usecase.GetStockQuoteUseCase
 import com.akole.dividox.component.market.domain.usecase.SearchSecuritiesUseCase
+import com.akole.dividox.component.portfolio.domain.usecase.GetPortfolioUseCase
 import com.akole.dividox.component.portfolio.domain.usecase.AddHoldingUseCase
 import com.akole.dividox.component.portfolio.domain.usecase.RemoveHoldingUseCase
 import com.akole.dividox.component.portfolio.domain.usecase.UpdateHoldingUseCase
@@ -37,9 +39,11 @@ class HoldingViewModelTest {
 
     private val testDispatcher = UnconfinedTestDispatcher()
     private val mockSearch = mockk<SearchSecuritiesUseCase>()
+    private val mockGetStockQuote = mockk<GetStockQuoteUseCase>()
     private val mockAddHolding = mockk<AddHoldingUseCase>()
     private val mockUpdateHolding = mockk<UpdateHoldingUseCase>()
     private val mockRemoveHolding = mockk<RemoveHoldingUseCase>()
+    private val mockGetPortfolio = mockk<GetPortfolioUseCase>()
     private val mockObserveSettings = mockk<ObserveAppSettingsUseCase>()
 
     companion object {
@@ -50,6 +54,8 @@ class HoldingViewModelTest {
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         every { mockObserveSettings() } returns flowOf(AppSettings())
+        every { mockGetPortfolio.execute() } returns flowOf(Result.success(emptyList()))
+        coEvery { mockGetStockQuote(any()) } returns Result.failure(RuntimeException("no quote"))
     }
 
     @AfterTest
@@ -60,9 +66,11 @@ class HoldingViewModelTest {
     private fun createAddViewModel() = HoldingViewModel(
         holdingId = null,
         searchSecurities = mockSearch,
+        getStockQuote = mockGetStockQuote,
         addHolding = mockAddHolding,
         updateHolding = mockUpdateHolding,
         removeHolding = mockRemoveHolding,
+        getPortfolio = mockGetPortfolio,
         getCurrentTimeMillis = { FIXED_TIMESTAMP },
         observeAppSettings = mockObserveSettings,
     )
@@ -70,9 +78,11 @@ class HoldingViewModelTest {
     private fun createEditViewModel(holdingId: HoldingId = HoldingId("h1")) = HoldingViewModel(
         holdingId = holdingId,
         searchSecurities = mockSearch,
+        getStockQuote = mockGetStockQuote,
         addHolding = mockAddHolding,
         updateHolding = mockUpdateHolding,
         removeHolding = mockRemoveHolding,
+        getPortfolio = mockGetPortfolio,
         getCurrentTimeMillis = { FIXED_TIMESTAMP },
         observeAppSettings = mockObserveSettings,
     )
@@ -263,7 +273,7 @@ class HoldingViewModelTest {
 
         // THEN: AddHoldingUseCase.execute() should be called
         coVerify(exactly = 1) { mockAddHolding.execute(any()) }
-        assertFalse(vm.viewState.value.isLoading)
+        assertFalse(vm.viewState.value.isSaving)
         assertTrue(vm.viewState.value.operationCompleted)
         assertFalse(vm.viewState.value.operationIsDelete)
     }

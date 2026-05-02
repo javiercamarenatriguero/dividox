@@ -7,9 +7,18 @@ import com.akole.dividox.component.market.domain.model.DividendInfo
 import com.akole.dividox.component.market.domain.model.PricePoint
 import com.akole.dividox.component.market.domain.model.StockQuote
 import kotlin.math.pow
+import kotlin.time.Clock
 import kotlin.time.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+
+private const val SECONDS_PER_HOUR = 3_600L
+private const val HOURS_PER_DAY = 24L
+private const val DAYS_PER_YEAR = 365L
+private const val DAYS_PER_YEAR_PRECISE = 365.25
+
+/** Unix seconds in one calendar year (non-leap). */
+private val ONE_YEAR_SECONDS = DAYS_PER_YEAR * HOURS_PER_DAY * SECONDS_PER_HOUR
 
 /**
  * Maps chart metadata to a [StockQuote].
@@ -28,15 +37,19 @@ internal fun ChartMetaDto.toStockQuote(): StockQuote {
         changePercent = changePercent,
         currency = currency ?: "USD",
         lastUpdated = Instant.fromEpochSeconds(regularMarketTime ?: 0),
+        name = longName ?: shortName,
     )
 }
 
 /**
  * Derives [DividendInfo] from a chart result that includes `events.dividends`.
  *
- * Annual payout = sum of the last 4 dividend events (assumes quarterly cadence).
- * Five-year CAGR is calculated from the first to last dividend amount in the event history;
- * the number of years is derived from the actual timestamps.
+ * Annual payout = sum of dividends paid in the last 12 months. This correctly handles
+ * any payment cadence (quarterly, semi-annual, annual) without inflating the yield.
+ * Falls back to the most recent single payment if no dividend was paid in the last year.
+ *
+ * Five-year CAGR is calculated from the first to last dividend in the event history;
+ * the number of years is derived from actual Unix timestamps.
  *
  * @param ticker Yahoo Finance symbol used as the [DividendInfo.ticker] key.
  */
@@ -44,19 +57,9 @@ internal fun ChartResultDto.toDividendInfo(ticker: String): DividendInfo {
     val price = meta.regularMarketPrice
     val dividends = events?.dividends?.values?.sortedBy { it.date } ?: emptyList()
 
-    val recent = dividends.takeLast(4)
-    val annualPayout = recent.sumOf { it.amount }
-
+    val annualPayout = calculateAnnualPayout(dividends)
     val yieldValue = if (price > 0.0) (annualPayout / price) * 100.0 else 0.0
-
-    // CAGR from first to last dividend; years derived from actual Unix timestamps
-    val fiveYearGrowth = if (dividends.size >= 2) {
-        val oldest = dividends.first().amount
-        val newest = dividends.last().amount
-        val years = (dividends.last().date - dividends.first().date).toDouble() / (365.25 * 24 * 3600)
-        if (oldest > 0.0 && years > 0.0) ((newest / oldest).pow(1.0 / years) - 1.0) * 100.0 else 0.0
-    } else 0.0
-
+    val fiveYearGrowth = calculateFiveYearGrowth(dividends)
     val exDividendDate = dividends.lastOrNull()?.date?.let {
         Instant.fromEpochSeconds(it).toLocalDateTime(TimeZone.UTC).date
     }
@@ -69,6 +72,34 @@ internal fun ChartResultDto.toDividendInfo(ticker: String): DividendInfo {
         fiveYearGrowth = fiveYearGrowth,
         exDividendDate = exDividendDate,
     )
+}
+
+/**
+ * Sums dividends paid within the last 12 months.
+ * Falls back to the last single payment when the trailing-year window is empty
+ * (e.g. annual payer whose last event was just over a year ago).
+ */
+private fun calculateAnnualPayout(
+    dividends: List<com.akole.dividox.component.market.data.dto.DividendEventDto>,
+): Double {
+    val oneYearAgoSeconds = Clock.System.now().epochSeconds - ONE_YEAR_SECONDS
+    val trailingYear = dividends.filter { it.date >= oneYearAgoSeconds }.sumOf { it.amount }
+    return if (trailingYear > 0.0) trailingYear else dividends.lastOrNull()?.amount ?: 0.0
+}
+
+/**
+ * Computes annualised dividend CAGR between the oldest and newest events.
+ * Returns 0.0 when fewer than 2 data points are available.
+ */
+private fun calculateFiveYearGrowth(
+    dividends: List<com.akole.dividox.component.market.data.dto.DividendEventDto>,
+): Double {
+    if (dividends.size < 2) return 0.0
+    val oldest = dividends.first().amount
+    val newest = dividends.last().amount
+    val years = (dividends.last().date - dividends.first().date).toDouble() /
+        (DAYS_PER_YEAR_PRECISE * HOURS_PER_DAY * SECONDS_PER_HOUR)
+    return if (oldest > 0.0 && years > 0.0) ((newest / oldest).pow(1.0 / years) - 1.0) * 100.0 else 0.0
 }
 
 /**
@@ -98,3 +129,4 @@ internal fun ChartResultDto.toPricePoints(): List<PricePoint> {
             close?.let { PricePoint(timestamp = Instant.fromEpochSeconds(ts), close = it) }
         }
 }
+

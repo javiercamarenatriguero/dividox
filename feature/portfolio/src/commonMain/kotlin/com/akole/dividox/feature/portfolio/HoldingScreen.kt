@@ -39,6 +39,7 @@ import com.akole.dividox.common.ui.resources.format.formatTwoDecimals
 import com.akole.dividox.common.ui.resources.theme.DividoxTheme
 import com.akole.dividox.common.ui.resources.theme.spacing
 import com.akole.dividox.component.market.domain.model.StockQuote
+import com.akole.dividox.component.market.domain.model.displayName
 import com.akole.dividox.component.portfolio.domain.model.HoldingId
 import dividox.common.ui_resources.generated.resources.Res
 import dividox.common.ui_resources.generated.resources.action_add_position
@@ -140,7 +141,7 @@ private fun HoldingScreenContent(
             query = state.searchQuery,
             results = state.searchResults,
             selectedSecurity = state.selectedSecurity,
-            isLoading = state.isLoading,
+            isLoading = state.isSearching,
             onQueryChanged = { query ->
                 onEvent(HoldingContract.HoldingViewEvent.SearchQueryChanged(query))
             },
@@ -216,7 +217,7 @@ private fun HoldingScreenContent(
                             containerColor = MaterialTheme.colorScheme.errorContainer,
                             contentColor = MaterialTheme.colorScheme.error,
                         ),
-                        enabled = !state.isLoading,
+                        enabled = true,
                     ) {
                         Icon(Icons.Default.Delete, contentDescription = stringResource(Res.string.cd_delete))
                         Text(stringResource(Res.string.action_delete))
@@ -228,16 +229,9 @@ private fun HoldingScreenContent(
                     modifier = Modifier
                         .weight(1f)
                         .padding(vertical = MaterialTheme.spacing.small),
-                    enabled = !state.isLoading && state.selectedSecurity != null && 
+                    enabled = state.selectedSecurity != null &&
                               state.shares.isNotBlank() && state.pricePerShare.isNotBlank(),
                 ) {
-                    if (state.isLoading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier
-                                .align(Alignment.CenterVertically)
-                                .padding(end = MaterialTheme.spacing.small),
-                        )
-                    }
                     Text(
                         text = when (state.mode) {
                             HoldingContract.Mode.ADD -> stringResource(Res.string.action_add_position)
@@ -250,6 +244,7 @@ private fun HoldingScreenContent(
     }
 }
 
+@Suppress("LongParameterList")
 @Composable
 private fun SearchSecurityField(
     query: String,
@@ -314,11 +309,21 @@ private fun SecurityResultItem(
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
             )
-            Text(
-                text = quote.price.formatPrice("USD"),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            if (quote.name != null) {
+                Text(
+                    text = quote.name!!,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                )
+            }
+            if (quote.exchange != null) {
+                Text(
+                    text = quote.exchange!!,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
     }
 }
@@ -341,7 +346,7 @@ private fun SelectedSecurityCard(security: StockQuote) {
         ) {
             Column {
                 Text(
-                    text = security.ticker,
+                    text = security.displayName,
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold,
                 )
@@ -384,17 +389,33 @@ private fun CurrencySelector(
         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
     ) {
         currencies.forEach { currency ->
-            OutlinedButton(
-                onClick = { onCurrencySelected(currency) },
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(MaterialTheme.spacing.xSmall),
-                shape = MaterialTheme.shapes.small,
-            ) {
-                Text(
-                    text = currency.code,
-                    style = MaterialTheme.typography.labelSmall,
-                )
+            val isSelected = currency == selectedCurrency
+            if (isSelected) {
+                Button(
+                    onClick = { onCurrencySelected(currency) },
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(MaterialTheme.spacing.xSmall),
+                    shape = MaterialTheme.shapes.small,
+                ) {
+                    Text(
+                        text = currency.code,
+                        style = MaterialTheme.typography.labelSmall,
+                    )
+                }
+            } else {
+                OutlinedButton(
+                    onClick = { onCurrencySelected(currency) },
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(MaterialTheme.spacing.xSmall),
+                    shape = MaterialTheme.shapes.small,
+                ) {
+                    Text(
+                        text = currency.code,
+                        style = MaterialTheme.typography.labelSmall,
+                    )
+                }
             }
         }
     }
@@ -539,7 +560,7 @@ private fun HoldingScreenAddLoadingPreview() {
             state = HoldingContract.HoldingViewState(
                 mode = HoldingContract.Mode.ADD,
                 searchQuery = "AAPL",
-                isLoading = true,
+                isSearching = true,
             ),
             onEvent = {},
         )
