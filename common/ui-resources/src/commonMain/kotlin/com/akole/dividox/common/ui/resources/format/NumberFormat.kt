@@ -25,19 +25,5 @@ fun Double.formatTwoDecimals(): String {
     return "$sign$intPart.${decPart.toString().padStart(2, '0')}"
 }
 
-private fun String.toCurrencySymbol(): String = when (this) {
-    "USD" -> "$"
-    "EUR" -> "€"
-    "GBP" -> "£"
-    "JPY" -> "¥"
-    "CHF" -> "CHF "
-    "CAD" -> "CA$"
-    "AUD" -> "A$"
-    "NZD" -> "NZ$"
-    "CNY" -> "¥"
-    "INR" -> "₹"
-    "MXN" -> "MX$"
-    "BRL" -> "R$"
-    "ZAR" -> "R"
-    else -> "$this "
-}
+private fun String.toCurrencySymbol(): String =
+    Currency.entries.firstOrNull { it.code == this }?.symbol ?: "$this "

@@ -140,6 +140,7 @@ private fun PortfolioContent(
                     HoldingsList(
                         holdings = state.holdings,
                         currency = state.currency,
+                        convertedPrices = state.convertedPrices,
                         onSecurityClicked = { ticker ->
                             onEvent(PortfolioContract.PortfolioViewEvent.SecurityClicked(ticker))
                         },
@@ -261,6 +262,7 @@ private fun SortChip(
 private fun HoldingsList(
     holdings: List<SecurityHolding>,
     currency: Currency,
+    convertedPrices: Map<String, Double>,
     onSecurityClicked: (String) -> Unit,
     onEditClicked: (String) -> Unit,
     modifier: Modifier = Modifier,
@@ -273,6 +275,7 @@ private fun HoldingsList(
             HoldingCard(
                 holding = holding,
                 currency = currency,
+                displayPrice = convertedPrices[holding.holding.tickerId] ?: holding.quote.price,
                 onSecurityClicked = onSecurityClicked,
                 onEditClicked = onEditClicked,
             )
@@ -284,13 +287,13 @@ private fun HoldingsList(
 private fun HoldingCard(
     holding: SecurityHolding,
     currency: Currency,
+    displayPrice: Double,
     onSecurityClicked: (String) -> Unit,
     onEditClicked: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val ticker = holding.holding.tickerId
     val shares = holding.holding.shares
-    val price = holding.quote.price
     val gain = holding.totalGainPercent
     val yield = holding.dividendInfo?.yield ?: 0.0
 
@@ -328,7 +331,7 @@ private fun HoldingCard(
 
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        text = price.formatPrice(currency),
+                        text = displayPrice.formatPrice(currency),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold,
                     )

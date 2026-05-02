@@ -38,6 +38,7 @@ val viewModelModule: Module = module {
             updateHolding = get(),
             removeHolding = get(),
             getCurrentTimeMillis = { getCurrentTimeMillis() },
+            observeAppSettings = get(),
         )
     }
 }

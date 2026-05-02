@@ -2,6 +2,7 @@ package com.akole.dividox.feature.portfolio
 
 import com.akole.dividox.common.settings.domain.model.AppSettings
 import com.akole.dividox.common.settings.domain.usecase.ObserveAppSettingsUseCase
+import com.akole.dividox.common.currency.CurrencyConverter
 import com.akole.dividox.common.currency.domain.model.Currency
 import com.akole.dividox.component.market.domain.model.DividendInfo
 import com.akole.dividox.component.market.domain.model.StockQuote
@@ -9,6 +10,7 @@ import com.akole.dividox.component.portfolio.domain.model.Holding
 import com.akole.dividox.component.portfolio.domain.model.HoldingId
 import com.akole.dividox.integration.security.domain.model.SecurityHolding
 import com.akole.dividox.integration.security.domain.usecase.GetPortfolioWithQuotesUseCase
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlin.test.AfterTest
@@ -35,12 +37,14 @@ class PortfolioViewModelTest {
     private val testDispatcher = UnconfinedTestDispatcher()
     private val mockUseCase = mockk<GetPortfolioWithQuotesUseCase>()
     private val mockObserveSettings = mockk<ObserveAppSettingsUseCase>()
+    private val mockCurrencyConverter = mockk<CurrencyConverter>()
 
     @BeforeTest
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         every { mockUseCase() } returns emptyFlow()
         every { mockObserveSettings() } returns flowOf(AppSettings())
+        coEvery { mockCurrencyConverter.convert(any(), any(), any()) } answers { Result.success(firstArg()) }
     }
 
     @AfterTest
@@ -48,7 +52,7 @@ class PortfolioViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun viewModel() = PortfolioViewModel(mockUseCase, mockObserveSettings)
+    private fun viewModel() = PortfolioViewModel(mockUseCase, mockObserveSettings, mockCurrencyConverter)
 
     private fun createDividendInfo(ticker: String, yield: Double): DividendInfo {
         return DividendInfo(

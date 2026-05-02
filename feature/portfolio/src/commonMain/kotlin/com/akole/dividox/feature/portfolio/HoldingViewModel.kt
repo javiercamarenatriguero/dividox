@@ -9,10 +9,12 @@ import com.akole.dividox.component.portfolio.domain.model.HoldingId
 import com.akole.dividox.component.portfolio.domain.usecase.AddHoldingUseCase
 import com.akole.dividox.component.portfolio.domain.usecase.RemoveHoldingUseCase
 import com.akole.dividox.component.portfolio.domain.usecase.UpdateHoldingUseCase
+import com.akole.dividox.common.settings.domain.usecase.ObserveAppSettingsUseCase
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlin.time.Clock
@@ -24,6 +26,7 @@ class HoldingViewModel(
     private val updateHolding: UpdateHoldingUseCase,
     private val removeHolding: RemoveHoldingUseCase,
     private val getCurrentTimeMillis: () -> Long,
+    private val observeAppSettings: ObserveAppSettingsUseCase,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(
@@ -38,8 +41,10 @@ class HoldingViewModel(
     val sideEffect = _sideEffect.receiveAsFlow()
 
     init {
-        // GIVEN: initialize default currency to EUR
-        _state.value = _state.value.copy(currency = Currency.EUR)
+        viewModelScope.launch {
+            val initialCurrency = observeAppSettings().first().currency
+            _state.value = _state.value.copy(currency = initialCurrency)
+        }
     }
 
     fun onEvent(event: HoldingContract.HoldingViewEvent) {

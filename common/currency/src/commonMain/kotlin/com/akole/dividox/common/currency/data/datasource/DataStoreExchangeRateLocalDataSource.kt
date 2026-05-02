@@ -24,7 +24,7 @@ import kotlinx.serialization.json.Json
  *
  * @param dataStore The DataStore instance backed by `dividox_exchange_rates.preferences_pb`.
  */
-internal class DataStoreExchangeRateLocalDataSource(
+class DataStoreExchangeRateLocalDataSource(
     private val dataStore: DataStore<Preferences>,
 ) : LocalExchangeRateDataSource {
 

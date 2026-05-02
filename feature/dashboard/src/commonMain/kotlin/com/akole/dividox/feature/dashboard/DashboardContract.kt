@@ -16,6 +16,8 @@ interface DashboardContract {
         val selectedPeriod: ChartPeriod = ChartPeriod.ONE_MONTH,
         val currency: Currency = Currency.EUR,
         val error: String? = null,
+        val convertedSummary: PortfolioSummary? = null,
+        val convertedWatchlistPrices: Map<String, Double> = emptyMap(),
     ) : ViewState
 
     sealed interface DashboardViewEvent : ViewEvent {

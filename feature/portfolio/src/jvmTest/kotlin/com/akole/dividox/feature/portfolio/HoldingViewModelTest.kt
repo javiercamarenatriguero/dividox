@@ -1,6 +1,8 @@
 package com.akole.dividox.feature.portfolio
 
 import com.akole.dividox.common.currency.domain.model.Currency
+import com.akole.dividox.common.settings.domain.model.AppSettings
+import com.akole.dividox.common.settings.domain.usecase.ObserveAppSettingsUseCase
 import com.akole.dividox.component.market.domain.model.StockQuote
 import com.akole.dividox.component.portfolio.domain.model.Holding
 import com.akole.dividox.component.portfolio.domain.model.HoldingId
@@ -10,6 +12,7 @@ import com.akole.dividox.component.portfolio.domain.usecase.RemoveHoldingUseCase
 import com.akole.dividox.component.portfolio.domain.usecase.UpdateHoldingUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -22,6 +25,7 @@ import kotlin.test.assertTrue
 import kotlin.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -36,6 +40,7 @@ class HoldingViewModelTest {
     private val mockAddHolding = mockk<AddHoldingUseCase>()
     private val mockUpdateHolding = mockk<UpdateHoldingUseCase>()
     private val mockRemoveHolding = mockk<RemoveHoldingUseCase>()
+    private val mockObserveSettings = mockk<ObserveAppSettingsUseCase>()
 
     companion object {
         private const val FIXED_TIMESTAMP = 1700000000000L
@@ -44,6 +49,7 @@ class HoldingViewModelTest {
     @BeforeTest
     fun setup() {
         Dispatchers.setMain(testDispatcher)
+        every { mockObserveSettings() } returns flowOf(AppSettings())
     }
 
     @AfterTest
@@ -58,6 +64,7 @@ class HoldingViewModelTest {
         updateHolding = mockUpdateHolding,
         removeHolding = mockRemoveHolding,
         getCurrentTimeMillis = { FIXED_TIMESTAMP },
+        observeAppSettings = mockObserveSettings,
     )
 
     private fun createEditViewModel(holdingId: HoldingId = HoldingId("h1")) = HoldingViewModel(
@@ -67,6 +74,7 @@ class HoldingViewModelTest {
         updateHolding = mockUpdateHolding,
         removeHolding = mockRemoveHolding,
         getCurrentTimeMillis = { FIXED_TIMESTAMP },
+        observeAppSettings = mockObserveSettings,
     )
 
     private fun createQuote(ticker: String, price: Double = 100.0): StockQuote {

@@ -3,6 +3,7 @@ package com.akole.dividox.feature.dashboard
 import com.akole.dividox.common.settings.domain.model.AppSettings
 import com.akole.dividox.common.settings.domain.usecase.ObserveAppSettingsUseCase
 import com.akole.dividox.common.settings.domain.usecase.SetCurrencyUseCase
+import com.akole.dividox.common.currency.CurrencyConverter
 import com.akole.dividox.common.currency.domain.model.Currency
 import com.akole.dividox.component.watchlist.domain.model.WatchlistEntry
 import com.akole.dividox.feature.dashboard.DashboardContract.DashboardSideEffect
@@ -47,6 +48,7 @@ class DashboardViewModelTest {
     private val removeFromWatchlist: RemoveFromWatchlistUseCase = mockk()
     private val observeAppSettings: ObserveAppSettingsUseCase = mockk()
     private val setCurrency: SetCurrencyUseCase = mockk()
+    private val currencyConverter: CurrencyConverter = mockk()
 
     @BeforeTest
     fun setup() {
@@ -55,6 +57,7 @@ class DashboardViewModelTest {
         every { getEnrichedWatchlist() } returns emptyFlow()
         every { observeAppSettings() } returns flowOf(AppSettings())
         coEvery { setCurrency(any()) } just Runs
+        coEvery { currencyConverter.convert(any(), any(), any()) } answers { Result.success(firstArg()) }
     }
 
     @AfterTest
@@ -68,6 +71,7 @@ class DashboardViewModelTest {
         removeFromWatchlist = removeFromWatchlist,
         observeAppSettings = observeAppSettings,
         setCurrency = setCurrency,
+        currencyConverter = currencyConverter,
     )
 
     // ─── Initial state ────────────────────────────────────────────────────────

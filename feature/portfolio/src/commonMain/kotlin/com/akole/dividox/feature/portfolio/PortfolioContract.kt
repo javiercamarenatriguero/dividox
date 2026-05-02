@@ -15,6 +15,7 @@ interface PortfolioContract {
         val sortOrder: SortOrder = SortOrder(),
         val currency: Currency = Currency.EUR,
         val error: String? = null,
+        val convertedPrices: Map<String, Double> = emptyMap(),
     ) : ViewState
 
     sealed interface PortfolioViewEvent : ViewEvent {

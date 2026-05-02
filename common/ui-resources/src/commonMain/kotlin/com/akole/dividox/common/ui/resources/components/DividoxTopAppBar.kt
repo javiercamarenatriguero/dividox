@@ -20,9 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import dividox.common.ui_resources.generated.resources.Res
 import dividox.common.ui_resources.generated.resources.ui_navigate_back
-import kotlin.time.Clock
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.todayIn
+import com.akole.dividox.common.ui.resources.di.todayIn
 import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -47,7 +45,7 @@ fun DividoxTopAppBar(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (showDate) {
                         val dateText = remember {
-                            val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+                            val today = todayIn()
                             val month = today.month.name
                                 .take(3)
                                 .lowercase()

@@ -19,7 +19,7 @@ import kotlinx.datetime.LocalDate
  *
  * @param httpClient Configured [HttpClient] with [ContentNegotiation] + JSON installed.
  */
-internal class FrankfurterExchangeRateDataSource(
+class FrankfurterExchangeRateDataSource(
     private val httpClient: HttpClient,
 ) : ExchangeRateDataSource {
 

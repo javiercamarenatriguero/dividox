@@ -11,10 +11,9 @@ import com.akole.dividox.common.currency.domain.repository.ExchangeRateRepositor
 import com.akole.dividox.common.currency.domain.usecase.GetExchangeRatesUseCase
 import com.akole.dividox.common.network.HttpClientConfig
 import com.akole.dividox.common.network.HttpClientFactory
+import com.akole.dividox.common.ui.resources.di.todayIn
 import kotlinx.coroutines.Dispatchers
-import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.todayIn
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.factoryOf
 import org.koin.dsl.module
@@ -39,7 +38,7 @@ val currencyModule: Module = module {
             remoteDataSource = get(),
             localDataSource = get(),
             ioDispatcher = Dispatchers.Default,
-            todayProvider = { Clock.System.todayIn(TimeZone.UTC) },
+            todayProvider = { todayIn(TimeZone.UTC) },
         )
     }
     factoryOf(::GetExchangeRatesUseCase)
