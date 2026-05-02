@@ -43,6 +43,12 @@ data object MainGraphRoute
 data object PortfolioRoute
 
 @Serializable
+data object AddHoldingRoute
+
+@Serializable
+data class EditHoldingRoute(val holdingId: String)
+
+@Serializable
 data object DividendsRoute
 
 @Serializable
@@ -60,12 +66,16 @@ fun NavGraphBuilder.mainGraphNode(rootNavController: NavController) {
 
         val currentRoute = navBackStackEntry?.destination?.route
         val selectedTab = when {
-            currentRoute == DashboardRoute::class.qualifiedName -> BottomTab.DASHBOARD
-            currentRoute == PortfolioRoute::class.qualifiedName -> BottomTab.PORTFOLIO
-            currentRoute == DividendsRoute::class.qualifiedName -> BottomTab.DIVIDENDS
-            currentRoute == SettingsRoute::class.qualifiedName -> BottomTab.SETTINGS
+            currentRoute?.contains(DashboardRoute::class.simpleName ?: "") == true -> BottomTab.DASHBOARD
+            currentRoute?.contains(PortfolioRoute::class.simpleName ?: "") == true -> BottomTab.PORTFOLIO
+            currentRoute?.contains(AddHoldingRoute::class.simpleName ?: "") == true -> BottomTab.PORTFOLIO
+            currentRoute?.contains(EditHoldingRoute::class.simpleName ?: "") == true -> BottomTab.PORTFOLIO
+            currentRoute?.contains(DividendsRoute::class.simpleName ?: "") == true -> BottomTab.DIVIDENDS
+            currentRoute?.contains(SettingsRoute::class.simpleName ?: "") == true -> BottomTab.SETTINGS
             else -> BottomTab.DASHBOARD
         }
+        val isHoldingRoute = currentRoute?.contains(AddHoldingRoute::class.simpleName ?: "") == true ||
+            currentRoute?.contains(EditHoldingRoute::class.simpleName ?: "") == true
 
         Scaffold(
             contentWindowInsets = WindowInsets(0),
@@ -100,11 +110,13 @@ fun NavGraphBuilder.mainGraphNode(rootNavController: NavController) {
                         }
                     }
                     BottomTab.PORTFOLIO -> {
-                        FloatingActionButton(onClick = portfolioFabClick) {
-                            Icon(
-                                imageVector = Icons.Default.Add,
-                                contentDescription = stringResource(Res.string.portfolio_add_holding),
-                            )
+                        if (!isHoldingRoute) {
+                            FloatingActionButton(onClick = portfolioFabClick) {
+                                Icon(
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription = stringResource(Res.string.portfolio_add_holding),
+                                )
+                            }
                         }
                     }
                     else -> {}
@@ -119,7 +131,7 @@ fun NavGraphBuilder.mainGraphNode(rootNavController: NavController) {
             ) {
                 dashboardScreenNode(rootNavController)
                 portfolioScreenNode(
-                    navController = rootNavController,
+                    navController = innerNavController,
                     onRegisterFabClick = { callback -> portfolioFabClick = callback },
                 )
                 dividendsScreenNode()

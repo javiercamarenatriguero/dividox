@@ -1,6 +1,6 @@
 package com.akole.dividox.common.ui.resources.format
 
-import com.akole.dividox.common.ui.resources.Currency
+import com.akole.dividox.common.currency.domain.model.Currency
 import kotlin.math.abs
 import kotlin.math.roundToLong
 
@@ -16,7 +16,7 @@ fun Double.formatPercentSigned(): String {
     return "$sign${formatTwoDecimals()}%"
 }
 
-private fun Double.formatTwoDecimals(): String {
+fun Double.formatTwoDecimals(): String {
     val factor = 100L
     val rounded = (this * factor).roundToLong()
     val intPart = abs(rounded / factor)
@@ -25,19 +25,5 @@ private fun Double.formatTwoDecimals(): String {
     return "$sign$intPart.${decPart.toString().padStart(2, '0')}"
 }
 
-private fun String.toCurrencySymbol(): String = when (this) {
-    "USD" -> "$"
-    "EUR" -> "€"
-    "GBP" -> "£"
-    "JPY" -> "¥"
-    "CHF" -> "CHF "
-    "CAD" -> "CA$"
-    "AUD" -> "A$"
-    "NZD" -> "NZ$"
-    "CNY" -> "¥"
-    "INR" -> "₹"
-    "MXN" -> "MX$"
-    "BRL" -> "R$"
-    "ZAR" -> "R"
-    else -> "$this "
-}
+private fun String.toCurrencySymbol(): String =
+    Currency.entries.firstOrNull { it.code == this }?.symbol ?: "$this "

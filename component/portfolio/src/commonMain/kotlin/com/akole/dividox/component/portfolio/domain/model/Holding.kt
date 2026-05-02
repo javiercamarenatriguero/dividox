@@ -1,6 +1,6 @@
 package com.akole.dividox.component.portfolio.domain.model
 
-import com.akole.dividox.common.ui.resources.Currency
+import com.akole.dividox.common.currency.domain.model.Currency
 
 /**
  * User's share holding with purchase details.

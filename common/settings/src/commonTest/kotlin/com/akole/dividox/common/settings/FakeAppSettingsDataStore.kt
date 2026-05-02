@@ -2,7 +2,7 @@ package com.akole.dividox.common.settings
 
 import com.akole.dividox.common.settings.domain.datastore.AppSettingsDataStore
 import com.akole.dividox.common.settings.domain.model.AppSettings
-import com.akole.dividox.common.ui.resources.Currency
+import com.akole.dividox.common.currency.domain.model.Currency
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update

@@ -33,7 +33,7 @@
     <string name="currency_eur">€ EUR</string>
     <string name="metric_total_value">Total Value</string>
     <string name="metric_total_gain">Total Gain</string>
-    <string name="metric_yield">Yield</string>
+    <string name="metric_yield">Dividend</string>
     <string name="metric_dividends">Dividends</string>
     <string name="section_favourites">Favourites</string>
     <string name="action_view_all">VIEW ALL</string>
@@ -44,9 +44,21 @@
     <string name="portfolio_add_holding">Add holding</string>
     <string name="portfolio_empty_state">No holdings yet.\nTap + to add your first one.</string>
     <string name="portfolio_sort_gain">Gain</string>
-    <string name="portfolio_sort_yield">Yield</string>
+    <string name="portfolio_sort_yield">Dividend</string>
     <string name="portfolio_sort_date">Date</string>
     <string name="portfolio_edit">Edit</string>
-    <string name="portfolio_shares_format">%s shares</string>
-    <string name="portfolio_yield_label">Yield: %s</string>
+    <string name="portfolio_shares_format">%1$s shares</string>
+    <string name="portfolio_yield_label">Dividend: %1$s</string>
+    <string name="action_add_position">Add Position</string>
+    <string name="action_update_position">Update Position</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="label_shares">Shares</string>
+    <string name="label_price_per_share">Price per Share</string>
+    <string name="label_estimated_value">Estimated Value</string>
+    <string name="search_security_hint">Search security (ticker or name)</string>
+    <string name="dialog_remove_title">Remove Position?</string>
+    <string name="dialog_remove_message">Remove %1$s from your portfolio? This cannot be undone.</string>
+    <string name="cd_delete">Delete</string>
+    <string name="label_unknown_position">Position</string>
 </resources>

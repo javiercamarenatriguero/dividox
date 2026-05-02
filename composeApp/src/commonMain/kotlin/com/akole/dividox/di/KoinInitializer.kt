@@ -10,6 +10,7 @@ object KoinInitializer {
             config()
             modules(
                 appModule,
+                currencyModule,
                 portfolioModule,
                 marketModule,
                 watchlistModule,

@@ -5,7 +5,10 @@ import com.akole.dividox.feature.auth.login.LoginViewModel
 import com.akole.dividox.feature.auth.register.SignUpViewModel
 import com.akole.dividox.feature.dashboard.DashboardViewModel
 import com.akole.dividox.feature.home.HomeViewModel
+import com.akole.dividox.feature.portfolio.HoldingViewModel
 import com.akole.dividox.feature.portfolio.PortfolioViewModel
+import com.akole.dividox.component.portfolio.domain.model.HoldingId
+import com.akole.dividox.common.ui.resources.di.getCurrentTimeMillis
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
@@ -23,4 +26,21 @@ val viewModelModule: Module = module {
     viewModelOf(::ForgotPasswordViewModel)
     viewModelOf(::DashboardViewModel)
     viewModelOf(::PortfolioViewModel)
+    
+    // HoldingViewModel with optional holdingId parameter for Add/Edit modes
+    viewModel { params ->
+        val holdingIdValue: String? = params.getOrNull()
+        val holdingId = holdingIdValue?.let { HoldingId(it) }
+        HoldingViewModel(
+            holdingId = holdingId,
+            searchSecurities = get(),
+            getStockQuote = get(),
+            addHolding = get(),
+            updateHolding = get(),
+            removeHolding = get(),
+            getPortfolio = get(),
+            getCurrentTimeMillis = { getCurrentTimeMillis() },
+            observeAppSettings = get(),
+        )
+    }
 }

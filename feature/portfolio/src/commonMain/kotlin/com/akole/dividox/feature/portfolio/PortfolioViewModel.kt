@@ -2,6 +2,8 @@ package com.akole.dividox.feature.portfolio
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.akole.dividox.common.currency.CurrencyConverter
+import com.akole.dividox.common.currency.domain.model.Currency
 import com.akole.dividox.common.mvi.viewmodel.MVI
 import com.akole.dividox.common.mvi.viewmodel.mvi
 import com.akole.dividox.common.settings.domain.usecase.ObserveAppSettingsUseCase
@@ -17,6 +19,7 @@ import kotlinx.coroutines.launch
 class PortfolioViewModel(
     private val getPortfolioWithQuotes: GetPortfolioWithQuotesUseCase,
     private val observeAppSettings: ObserveAppSettingsUseCase,
+    private val currencyConverter: CurrencyConverter,
 ) : ViewModel(),
     MVI<PortfolioViewState, PortfolioViewEvent, PortfolioSideEffect> by mvi(PortfolioViewState()) {
 
@@ -26,7 +29,6 @@ class PortfolioViewModel(
 
     init {
         observeData()
-        observeSettings()
     }
 
     override fun onViewEvent(viewEvent: PortfolioViewEvent) {
@@ -63,16 +65,21 @@ class PortfolioViewModel(
                 getPortfolioWithQuotes(),
                 searchQuery,
                 sortOrder,
-            ) { holdings, query, order ->
+                observeAppSettings(),
+            ) { holdings, query, order, settings ->
                 rawHoldings.value = holdings
+                val targetCurrency = settings.currency
                 val filtered = filterHoldings(holdings, query)
                 val sorted = sortHoldings(filtered, order)
+                val convertedPrices = convertHoldingPrices(holdings, targetCurrency)
                 viewState.value.copy(
                     isLoading = false,
                     holdings = sorted,
                     searchQuery = query,
                     sortOrder = order,
+                    currency = targetCurrency,
                     error = null,
+                    convertedPrices = convertedPrices,
                 )
             }.collect { newState ->
                 updateViewState { newState }
@@ -104,11 +111,16 @@ class PortfolioViewModel(
         }
     }
 
-    private fun observeSettings() {
-        viewModelScope.launch {
-            observeAppSettings().collect { settings ->
-                updateViewState { copy(currency = settings.currency) }
-            }
+    private suspend fun convertHoldingPrices(
+        holdings: List<SecurityHolding>,
+        to: Currency,
+    ): Map<String, Double> = buildMap {
+        holdings.forEach { holding ->
+            val ticker = holding.holding.tickerId
+            val price = holding.quote.price
+            val from = Currency.entries.firstOrNull { it.code == holding.quote.currency } ?: Currency.USD
+            val converted = currencyConverter.convert(price, from, to).getOrElse { price }
+            put(ticker, converted)
         }
     }
 }

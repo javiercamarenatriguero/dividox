@@ -40,7 +40,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.akole.dividox.common.mvi.CollectSideEffect
-import com.akole.dividox.common.ui.resources.Currency
+import com.akole.dividox.common.currency.domain.model.Currency
 import com.akole.dividox.common.ui.resources.components.DividoxTopAppBar
 import com.akole.dividox.common.ui.resources.format.formatPercent
 import com.akole.dividox.common.ui.resources.format.formatPercentSigned
@@ -123,7 +123,7 @@ private fun DashboardContent(
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
 
                 MetricsBlock(
-                    summary = state.summary,
+                    summary = state.convertedSummary ?: state.summary,
                     currency = state.currency,
                 )
 
@@ -131,6 +131,8 @@ private fun DashboardContent(
 
                 FavouritesSection(
                     watchlist = state.watchlist,
+                    convertedPrices = state.convertedWatchlistPrices,
+                    displayCurrency = state.currency,
                     onFavouriteToggled = { ticker ->
                         onEvent(DashboardViewEvent.FavouriteToggled(ticker))
                     },
@@ -311,6 +313,8 @@ private fun MetricCard(
 @Composable
 private fun FavouritesSection(
     watchlist: List<EnrichedWatchlistEntry>,
+    convertedPrices: Map<String, Double>,
+    displayCurrency: Currency,
     onFavouriteToggled: (String) -> Unit,
     onSecurityClicked: (String) -> Unit,
     onViewAllClicked: () -> Unit,
@@ -352,6 +356,8 @@ private fun FavouritesSection(
             watchlist.take(2).forEach { entry ->
                 WatchlistEntryRow(
                     entry = entry,
+                    convertedPrice = convertedPrices[entry.entry.tickerId],
+                    displayCurrency = displayCurrency,
                     onFavouriteToggled = onFavouriteToggled,
                     onSecurityClicked = onSecurityClicked,
                 )
@@ -364,6 +370,8 @@ private fun FavouritesSection(
 @Composable
 private fun WatchlistEntryRow(
     entry: EnrichedWatchlistEntry,
+    convertedPrice: Double?,
+    displayCurrency: Currency,
     onFavouriteToggled: (String) -> Unit,
     onSecurityClicked: (String) -> Unit,
 ) {
@@ -404,10 +412,10 @@ private fun WatchlistEntryRow(
             }
 
             if (price != null) {
-                val currency = entry.quote?.currency ?: "USD"
+                val displayPrice = convertedPrice ?: price
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        text = price.formatPrice(currency),
+                        text = displayPrice.formatPrice(displayCurrency),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
                     )

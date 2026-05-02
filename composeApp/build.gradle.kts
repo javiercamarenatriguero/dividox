@@ -48,6 +48,7 @@ kotlin {
             implementation(projects.common.network)
             implementation(projects.common.mvi)
             implementation(projects.common.uiResources)
+            implementation(projects.common.currency)
             implementation(projects.common.settings)
             implementation(libs.datastore.preferences)
             implementation(projects.component.portfolio)
@@ -62,6 +63,7 @@ kotlin {
             implementation(projects.feature.portfolio)
             implementation(libs.androidx.navigation.compose)
             implementation(libs.kotlinx.serialization.core)
+            implementation(libs.kotlinx.datetime)
             implementation(compose.materialIconsExtended)
         }
         androidMain.dependencies {

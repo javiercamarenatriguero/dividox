@@ -38,7 +38,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
 import com.akole.dividox.common.mvi.CollectSideEffect
-import com.akole.dividox.common.ui.resources.Currency
+import com.akole.dividox.common.currency.domain.model.Currency
 import com.akole.dividox.common.ui.resources.components.DividoxTopAppBar
 import com.akole.dividox.common.ui.resources.format.formatPercent
 import com.akole.dividox.common.ui.resources.format.formatPrice
@@ -47,6 +47,7 @@ import com.akole.dividox.common.ui.resources.theme.extendedColors
 import com.akole.dividox.common.ui.resources.theme.spacing
 import com.akole.dividox.component.market.domain.model.DividendInfo
 import com.akole.dividox.component.market.domain.model.StockQuote
+import com.akole.dividox.component.market.domain.model.displayName
 import com.akole.dividox.component.portfolio.domain.model.Holding
 import com.akole.dividox.component.portfolio.domain.model.HoldingId
 import com.akole.dividox.integration.security.domain.model.SecurityHolding
@@ -140,6 +141,7 @@ private fun PortfolioContent(
                     HoldingsList(
                         holdings = state.holdings,
                         currency = state.currency,
+                        convertedPrices = state.convertedPrices,
                         onSecurityClicked = { ticker ->
                             onEvent(PortfolioContract.PortfolioViewEvent.SecurityClicked(ticker))
                         },
@@ -261,6 +263,7 @@ private fun SortChip(
 private fun HoldingsList(
     holdings: List<SecurityHolding>,
     currency: Currency,
+    convertedPrices: Map<String, Double>,
     onSecurityClicked: (String) -> Unit,
     onEditClicked: (String) -> Unit,
     modifier: Modifier = Modifier,
@@ -273,6 +276,7 @@ private fun HoldingsList(
             HoldingCard(
                 holding = holding,
                 currency = currency,
+                displayPrice = convertedPrices[holding.holding.tickerId] ?: holding.quote.price,
                 onSecurityClicked = onSecurityClicked,
                 onEditClicked = onEditClicked,
             )
@@ -284,13 +288,13 @@ private fun HoldingsList(
 private fun HoldingCard(
     holding: SecurityHolding,
     currency: Currency,
+    displayPrice: Double,
     onSecurityClicked: (String) -> Unit,
     onEditClicked: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val ticker = holding.holding.tickerId
     val shares = holding.holding.shares
-    val price = holding.quote.price
     val gain = holding.totalGainPercent
     val yield = holding.dividendInfo?.yield ?: 0.0
 
@@ -315,7 +319,7 @@ private fun HoldingCard(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = ticker,
+                        text = holding.quote.displayName,
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold,
                     )
@@ -328,14 +332,29 @@ private fun HoldingCard(
 
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        text = price.formatPrice(currency),
+                        text = displayPrice.formatPrice(currency),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold,
                     )
                     Text(
                         text = gain.formatPercent(),
                         style = MaterialTheme.typography.labelSmall,
-                        color = if (gain >= 0) MaterialTheme.extendedColors.profit else MaterialTheme.colorScheme.error,
+                        fontWeight = FontWeight.SemiBold,
+                        color = when {
+                            gain > 0.0 -> MaterialTheme.extendedColors.profit
+                            gain < 0.0 -> MaterialTheme.colorScheme.error
+                            else -> MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                        modifier = Modifier
+                            .background(
+                                color = when {
+                                    gain > 0.0 -> MaterialTheme.extendedColors.profit.copy(alpha = 0.12f)
+                                    gain < 0.0 -> MaterialTheme.colorScheme.error.copy(alpha = 0.12f)
+                                    else -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.10f)
+                                },
+                                shape = RoundedCornerShape(4.dp),
+                            )
+                            .padding(horizontal = 6.dp, vertical = 2.dp),
                     )
                 }
             }
