@@ -61,6 +61,7 @@ kotlin {
             implementation(projects.feature.home)
             implementation(projects.feature.splash)
             implementation(projects.feature.portfolio)
+            implementation(projects.component.dividend)
             implementation(libs.androidx.navigation.compose)
             implementation(libs.kotlinx.serialization.core)
             implementation(libs.kotlinx.datetime)

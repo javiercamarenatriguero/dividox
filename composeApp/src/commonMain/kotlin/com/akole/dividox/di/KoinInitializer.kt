@@ -16,6 +16,7 @@ object KoinInitializer {
                 watchlistModule,
                 securityIntegrationModule,
                 settingsModule,
+                dividendModule,
                 viewModelModule,
             )
         }
