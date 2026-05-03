@@ -17,8 +17,8 @@ import androidx.compose.ui.unit.dp
  * Displays network connectivity status banner at the top of the screen.
  *
  * **States:**
- * - Offline (gray background): "No internet connection"
- * - Reconnecting (green background): "Connection restored"
+ * - Offline (red semi-transparent): "No internet connection"
+ * - Reconnecting (green semi-transparent): "Connection restored"
  *
  * @param isOnline Whether device is online (true = connected, false = disconnected)
  * @param showReconnecting Whether to show the green "reconnecting" state
@@ -34,18 +34,18 @@ fun ConnectivityBanner(
     }
 
     val backgroundColor = if (showReconnecting) {
-        // Green for reconnecting state
-        MaterialTheme.colorScheme.inverseSurface.copy(alpha = 0.7f)
+        MaterialTheme.colorScheme.tertiary.copy(alpha = 0.15f)
     } else {
-        // Gray for offline state
-        MaterialTheme.colorScheme.surfaceVariant
+        MaterialTheme.colorScheme.error.copy(alpha = 0.15f)
     }
 
-    val message = if (showReconnecting) {
-        "Connection restored"
+    val textColor = if (showReconnecting) {
+        MaterialTheme.colorScheme.tertiary
     } else {
-        "No internet connection"
+        MaterialTheme.colorScheme.error
     }
+
+    val message = if (showReconnecting) "Connection restored" else "No internet connection"
 
     Box(
         modifier = modifier
@@ -57,7 +57,7 @@ fun ConnectivityBanner(
     ) {
         Text(
             text = message,
-            color = MaterialTheme.colorScheme.onSurface,
+            color = textColor,
             style = MaterialTheme.typography.bodySmall,
             textAlign = TextAlign.Center,
         )
