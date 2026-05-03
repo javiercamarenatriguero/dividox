@@ -3,6 +3,7 @@ package com.akole.dividox
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,8 +26,8 @@ fun App() {
             SetupRootNavGraph(navController)
             Column(
                 modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .fillMaxSize(),
+                    .align(Alignment.TopStart)
+                    .systemBarsPadding(),
             ) {
                 ConnectivityBannerHost(connectivityFlow = connectivityManager.observeConnectivity())
             }
