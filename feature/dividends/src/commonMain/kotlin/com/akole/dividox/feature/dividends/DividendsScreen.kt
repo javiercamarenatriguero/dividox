@@ -49,7 +49,10 @@ import com.akole.dividox.common.ui.resources.components.connectivity.Connectivit
 import com.akole.dividox.common.ui.resources.components.connectivity.LocalNetworkConnectivityManager
 import com.akole.dividox.common.ui.resources.format.formatPercent
 import com.akole.dividox.common.ui.resources.format.formatPercentSigned
+import com.akole.dividox.common.ui.resources.format.formatShort
 import com.akole.dividox.common.ui.resources.format.formatTwoDecimals
+import com.akole.dividox.common.ui.resources.format.fullName
+import com.akole.dividox.common.ui.resources.format.monthShort
 import com.akole.dividox.common.ui.resources.theme.extendedColors
 import com.akole.dividox.common.ui.resources.theme.spacing
 import com.akole.dividox.feature.dividends.DividendsContract.DividendsSideEffect
@@ -60,7 +63,6 @@ import com.akole.dividox.integration.dividend.domain.model.EnrichedPayment
 import com.akole.dividox.integration.dividend.domain.model.MonthBar
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.Month
 
 @Composable
 fun DividendsScreen(
@@ -483,7 +485,7 @@ private fun HistoryMonthGroup(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "${yearMonth.month.displayName()} ${yearMonth.year}",
+                text = "${yearMonth.month.fullName()} ${yearMonth.year}",
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold,
             )
@@ -593,26 +595,3 @@ private fun CompanyLogo(ticker: String, size: Int = 40) {
         )
     }
 }
-
-// ─── Date formatting extensions ───────────────────────────────────────────────
-
-private fun LocalDate.formatShort(): String =
-    "${day.toString().padStart(2, '0')}/${monthNumber.toString().padStart(2, '0')}/$year"
-
-private fun LocalDate.monthShort(): String = month.displayName().take(3)
-
-private fun Month.displayName(): String = when (this) {
-    Month.JANUARY -> "January"
-    Month.FEBRUARY -> "February"
-    Month.MARCH -> "March"
-    Month.APRIL -> "April"
-    Month.MAY -> "May"
-    Month.JUNE -> "June"
-    Month.JULY -> "July"
-    Month.AUGUST -> "August"
-    Month.SEPTEMBER -> "September"
-    Month.OCTOBER -> "October"
-    Month.NOVEMBER -> "November"
-    Month.DECEMBER -> "December"
-}
-
