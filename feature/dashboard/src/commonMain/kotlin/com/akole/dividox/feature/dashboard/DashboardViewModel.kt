@@ -6,6 +6,7 @@ import com.akole.dividox.common.currency.CurrencyConverter
 import com.akole.dividox.common.currency.domain.model.Currency
 import com.akole.dividox.common.mvi.viewmodel.MVI
 import com.akole.dividox.common.mvi.viewmodel.mvi
+import com.akole.dividox.common.network.connectivity.NetworkConnectivityManager
 import com.akole.dividox.common.settings.domain.usecase.ObserveAppSettingsUseCase
 import com.akole.dividox.common.settings.domain.usecase.SetCurrencyUseCase
 import com.akole.dividox.component.watchlist.domain.usecase.RemoveFromWatchlistUseCase
@@ -31,12 +32,14 @@ class DashboardViewModel(
     private val observeAppSettings: ObserveAppSettingsUseCase,
     private val setCurrency: SetCurrencyUseCase,
     private val currencyConverter: CurrencyConverter,
+    private val connectivityManager: NetworkConnectivityManager,
 ) : ViewModel(),
     MVI<DashboardViewState, DashboardViewEvent, DashboardSideEffect> by mvi(DashboardViewState()) {
 
     init {
         observeData()
         observeSettings()
+        observeConnectivity()
     }
 
     override fun onViewEvent(viewEvent: DashboardViewEvent) {
@@ -124,6 +127,18 @@ class DashboardViewModel(
     private fun removeFavourite(ticker: String) {
         viewModelScope.launch {
             removeFromWatchlist(ticker)
+        }
+    }
+
+    private fun observeConnectivity() {
+        viewModelScope.launch {
+            var previousConnected = true
+            connectivityManager.observeConnectivity().collect { isConnected ->
+                if (!previousConnected && isConnected) {
+                    observeData()
+                }
+                previousConnected = isConnected
+            }
         }
     }
 }
