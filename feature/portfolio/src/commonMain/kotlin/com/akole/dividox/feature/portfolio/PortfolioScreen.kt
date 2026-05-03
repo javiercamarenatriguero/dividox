@@ -40,6 +40,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.akole.dividox.common.mvi.CollectSideEffect
 import com.akole.dividox.common.currency.domain.model.Currency
 import com.akole.dividox.common.ui.resources.components.DividoxTopAppBar
+import com.akole.dividox.common.ui.resources.components.connectivity.ConnectivityBannerHost
+import com.akole.dividox.common.ui.resources.components.connectivity.LocalNetworkConnectivityManager
 import com.akole.dividox.common.ui.resources.format.formatPercent
 import com.akole.dividox.common.ui.resources.format.formatPrice
 import com.akole.dividox.common.ui.resources.theme.DividoxTheme
@@ -91,6 +93,8 @@ private fun PortfolioContent(
     state: PortfolioContract.PortfolioViewState,
     onEvent: (PortfolioContract.PortfolioViewEvent) -> Unit,
 ) {
+    val connectivityManager = LocalNetworkConnectivityManager.current
+
     Scaffold(
         topBar = {
             DividoxTopAppBar(
@@ -99,59 +103,68 @@ private fun PortfolioContent(
         },
         floatingActionButton = {},
     ) { paddingValues ->
-        if (state.isLoading) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                contentAlignment = Alignment.Center,
-            ) {
-                CircularProgressIndicator()
-            }
-        } else {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(horizontal = MaterialTheme.spacing.medium),
-            ) {
-                Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues),
+        ) {
+            // Banner positioned right below TopAppBar
+            ConnectivityBannerHost(connectivityFlow = connectivityManager.observeConnectivity())
 
-                SearchBar(
-                    query = state.searchQuery,
-                    onQueryChanged = { query ->
-                        onEvent(PortfolioContract.PortfolioViewEvent.SearchQueryChanged(query))
-                    },
-                )
+            if (state.isLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    CircularProgressIndicator()
+                }
+            } else {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .weight(1f)
+                        .padding(horizontal = MaterialTheme.spacing.medium),
+                ) {
+                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
 
-                Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
-
-                SortChips(
-                    selectedOrder = state.sortOrder,
-                    onOrderChanged = { order ->
-                        onEvent(PortfolioContract.PortfolioViewEvent.SortOrderChanged(order))
-                    },
-                )
-
-                Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
-
-                if (state.holdings.isEmpty()) {
-                    EmptyState()
-                } else {
-                    HoldingsList(
-                        holdings = state.holdings,
-                        currency = state.currency,
-                        convertedPrices = state.convertedPrices,
-                        onSecurityClicked = { ticker ->
-                            onEvent(PortfolioContract.PortfolioViewEvent.SecurityClicked(ticker))
-                        },
-                        onEditClicked = { holdingId ->
-                            onEvent(PortfolioContract.PortfolioViewEvent.EditHoldingClicked(holdingId))
+                    SearchBar(
+                        query = state.searchQuery,
+                        onQueryChanged = { query ->
+                            onEvent(PortfolioContract.PortfolioViewEvent.SearchQueryChanged(query))
                         },
                     )
-                }
 
-                Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
+                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
+
+                    SortChips(
+                        selectedOrder = state.sortOrder,
+                        onOrderChanged = { order ->
+                            onEvent(PortfolioContract.PortfolioViewEvent.SortOrderChanged(order))
+                        },
+                    )
+
+                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
+
+                    if (state.holdings.isEmpty()) {
+                        EmptyState()
+                    } else {
+                        HoldingsList(
+                            holdings = state.holdings,
+                            currency = state.currency,
+                            convertedPrices = state.convertedPrices,
+                            onSecurityClicked = { ticker ->
+                                onEvent(PortfolioContract.PortfolioViewEvent.SecurityClicked(ticker))
+                            },
+                            onEditClicked = { holdingId ->
+                                onEvent(PortfolioContract.PortfolioViewEvent.EditHoldingClicked(holdingId))
+                            },
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
+                }
             }
         }
     }

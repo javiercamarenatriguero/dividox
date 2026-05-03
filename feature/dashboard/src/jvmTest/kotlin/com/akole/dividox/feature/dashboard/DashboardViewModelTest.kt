@@ -1,10 +1,11 @@
 package com.akole.dividox.feature.dashboard
 
+import com.akole.dividox.common.network.connectivity.NetworkConnectivityManager
 import com.akole.dividox.common.settings.domain.model.AppSettings
 import com.akole.dividox.common.settings.domain.usecase.ObserveAppSettingsUseCase
-import com.akole.dividox.common.settings.domain.usecase.SetCurrencyUseCase
 import com.akole.dividox.common.currency.CurrencyConverter
 import com.akole.dividox.common.currency.domain.model.Currency
+import com.akole.dividox.common.settings.domain.usecase.SetCurrencyUseCase
 import com.akole.dividox.component.watchlist.domain.model.WatchlistEntry
 import com.akole.dividox.feature.dashboard.DashboardContract.DashboardSideEffect
 import com.akole.dividox.feature.dashboard.DashboardContract.DashboardViewEvent
@@ -49,6 +50,7 @@ class DashboardViewModelTest {
     private val observeAppSettings: ObserveAppSettingsUseCase = mockk()
     private val setCurrency: SetCurrencyUseCase = mockk()
     private val currencyConverter: CurrencyConverter = mockk()
+    private val connectivityManager: NetworkConnectivityManager = mockk()
 
     @BeforeTest
     fun setup() {
@@ -56,6 +58,7 @@ class DashboardViewModelTest {
         every { getPortfolioSummary() } returns emptyFlow()
         every { getEnrichedWatchlist() } returns emptyFlow()
         every { observeAppSettings() } returns flowOf(AppSettings())
+        every { connectivityManager.observeConnectivity() } returns emptyFlow()
         coEvery { setCurrency(any()) } just Runs
         coEvery { currencyConverter.convert(any(), any(), any()) } answers { Result.success(firstArg()) }
     }
@@ -72,6 +75,7 @@ class DashboardViewModelTest {
         observeAppSettings = observeAppSettings,
         setCurrency = setCurrency,
         currencyConverter = currencyConverter,
+        connectivityManager = connectivityManager,
     )
 
     // ─── Initial state ────────────────────────────────────────────────────────
@@ -140,6 +144,8 @@ class DashboardViewModelTest {
     @Test
     fun `SHOULD reflect EUR currency WHEN settings emit EUR GIVEN initial state`() = runTest {
         // GIVEN
+        every { getPortfolioSummary() } returns flowOf(emptySummary)
+        every { getEnrichedWatchlist() } returns flowOf(emptyList())
         every { observeAppSettings() } returns flowOf(AppSettings(currency = Currency.EUR))
 
         // WHEN
@@ -153,6 +159,8 @@ class DashboardViewModelTest {
     @Test
     fun `SHOULD reflect USD currency WHEN settings emit USD GIVEN persisted preference`() = runTest {
         // GIVEN
+        every { getPortfolioSummary() } returns flowOf(emptySummary)
+        every { getEnrichedWatchlist() } returns flowOf(emptyList())
         every { observeAppSettings() } returns flowOf(AppSettings(currency = Currency.USD))
 
         // WHEN
@@ -203,6 +211,8 @@ class DashboardViewModelTest {
     @Test
     fun `SHOULD call setCurrency with USD WHEN CurrencyToggled GIVEN current currency is EUR`() = runTest {
         // GIVEN
+        every { getPortfolioSummary() } returns flowOf(emptySummary)
+        every { getEnrichedWatchlist() } returns flowOf(emptyList())
         every { observeAppSettings() } returns flowOf(AppSettings(currency = Currency.EUR))
         val vm = viewModel()
         advanceUntilIdle()
@@ -218,6 +228,8 @@ class DashboardViewModelTest {
     @Test
     fun `SHOULD call setCurrency with EUR WHEN CurrencyToggled GIVEN current currency is USD`() = runTest {
         // GIVEN
+        every { getPortfolioSummary() } returns flowOf(emptySummary)
+        every { getEnrichedWatchlist() } returns flowOf(emptyList())
         every { observeAppSettings() } returns flowOf(AppSettings(currency = Currency.USD))
         val vm = viewModel()
         advanceUntilIdle()

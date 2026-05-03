@@ -84,6 +84,10 @@ class HoldingViewModel(
                 _state.value = _state.value.copy(currency = event.currency)
             }
 
+            is HoldingContract.HoldingViewEvent.PurchaseDateChanged -> {
+                _state.value = _state.value.copy(purchaseDateMillis = event.dateMillis)
+            }
+
             HoldingContract.HoldingViewEvent.ConfirmClicked -> handleConfirm()
 
             HoldingContract.HoldingViewEvent.DeleteClicked -> {
@@ -128,6 +132,7 @@ class HoldingViewModel(
                 shares = holding.shares.toString(),
                 pricePerShare = holding.purchasePrice.toString(),
                 currency = holding.purchaseCurrency,
+                purchaseDateMillis = holding.purchaseDate,
             )
             recalculateTotal()
         }
@@ -150,6 +155,7 @@ class HoldingViewModel(
                 shares = existing.shares.toString(),
                 pricePerShare = existing.purchasePrice.toString(),
                 currency = existing.purchaseCurrency,
+                purchaseDateMillis = existing.purchaseDate,
             )
             recalculateTotal()
         }
@@ -222,7 +228,7 @@ class HoldingViewModel(
                         shares = shares,
                         purchasePrice = price,
                         purchaseCurrency = currency,
-                        purchaseDate = getCurrentTimeMillis(),
+                        purchaseDate = state.purchaseDateMillis,
                     )
                 )
             } else if (state.mode == HoldingContract.Mode.EDIT && state.holdingId != null) {
@@ -233,7 +239,7 @@ class HoldingViewModel(
                         shares = shares,
                         purchasePrice = price,
                         purchaseCurrency = currency,
-                        purchaseDate = state.originalHolding?.purchaseDate ?: getCurrentTimeMillis(),
+                        purchaseDate = state.purchaseDateMillis,
                     )
                 )
             }

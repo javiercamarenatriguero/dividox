@@ -18,7 +18,7 @@ private const val DAYS_PER_YEAR = 365L
 private const val DAYS_PER_YEAR_PRECISE = 365.25
 
 /** Unix seconds in one calendar year (non-leap). */
-private val ONE_YEAR_SECONDS = DAYS_PER_YEAR * HOURS_PER_DAY * SECONDS_PER_HOUR
+private const val ONE_YEAR_SECONDS = DAYS_PER_YEAR * HOURS_PER_DAY * SECONDS_PER_HOUR
 
 /**
  * Maps chart metadata to a [StockQuote].

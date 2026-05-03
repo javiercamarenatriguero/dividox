@@ -2,19 +2,26 @@ package com.akole.dividox.feature.portfolio
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -23,17 +30,27 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.SelectableDates
+import androidx.compose.material3.rememberDatePickerState
+import kotlin.time.Clock
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.akole.dividox.common.currency.domain.model.Currency
 import com.akole.dividox.common.ui.resources.components.DividoxTopAppBar
+import com.akole.dividox.common.ui.resources.components.connectivity.ConnectivityBannerHost
+import com.akole.dividox.common.ui.resources.components.connectivity.LocalNetworkConnectivityManager
 import com.akole.dividox.common.ui.resources.format.formatPrice
 import com.akole.dividox.common.ui.resources.format.formatTwoDecimals
 import com.akole.dividox.common.ui.resources.theme.DividoxTheme
@@ -51,9 +68,13 @@ import dividox.common.ui_resources.generated.resources.dialog_remove_message
 import dividox.common.ui_resources.generated.resources.dialog_remove_title
 import dividox.common.ui_resources.generated.resources.label_estimated_value
 import dividox.common.ui_resources.generated.resources.label_price_per_share
+import dividox.common.ui_resources.generated.resources.label_purchase_date
 import dividox.common.ui_resources.generated.resources.label_shares
 import dividox.common.ui_resources.generated.resources.label_unknown_position
 import dividox.common.ui_resources.generated.resources.search_security_hint
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -94,6 +115,8 @@ fun HoldingScreen(
         HoldingContract.Mode.EDIT -> stringResource(Res.string.action_update_position)
     }
 
+    val connectivityManager = LocalNetworkConnectivityManager.current
+
     Scaffold(
         topBar = {
             DividoxTopAppBar(
@@ -101,16 +124,24 @@ fun HoldingScreen(
                 onBack = onBack,
             )
         },
+        contentWindowInsets = WindowInsets(0),
     ) { paddingValues ->
-        HoldingScreenContent(
-            state = state,
-            onEvent = viewModel::onEvent,
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(paddingValues)
-                .padding(bottom = MaterialTheme.spacing.large),
-        )
+                .padding(paddingValues),
+        ) {
+            ConnectivityBannerHost(connectivityFlow = connectivityManager.observeConnectivity())
+            HoldingScreenContent(
+                state = state,
+                onEvent = viewModel::onEvent,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .imePadding()
+                    .padding(bottom = MaterialTheme.spacing.large),
+            )
+        }
     }
 
     if (state.showDeleteConfirmation) {
@@ -157,23 +188,29 @@ private fun HoldingScreenContent(
             // Shares input
             OutlinedTextField(
                 value = state.shares,
-                onValueChange = { shares ->
-                    onEvent(HoldingContract.HoldingViewEvent.SharesChanged(shares))
+                onValueChange = { input ->
+                    if (input.all { it.isDigit() }) {
+                        onEvent(HoldingContract.HoldingViewEvent.SharesChanged(input))
+                    }
                 },
                 label = { Text(stringResource(Res.string.label_shares)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             )
 
             // Price per share input
             OutlinedTextField(
                 value = state.pricePerShare,
-                onValueChange = { price ->
-                    onEvent(HoldingContract.HoldingViewEvent.PricePerShareChanged(price))
+                onValueChange = { input ->
+                    if (input.matches(Regex("^\\d*\\.?\\d*$"))) {
+                        onEvent(HoldingContract.HoldingViewEvent.PricePerShareChanged(input))
+                    }
                 },
                 label = { Text(stringResource(Res.string.label_price_per_share)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             )
 
             // Currency selector (chips or dropdown)
@@ -181,6 +218,14 @@ private fun HoldingScreenContent(
                 selectedCurrency = state.currency,
                 onCurrencySelected = { currency ->
                     onEvent(HoldingContract.HoldingViewEvent.CurrencyChanged(currency))
+                },
+            )
+
+            // Purchase date picker
+            PurchaseDateField(
+                dateMillis = state.purchaseDateMillis,
+                onDateSelected = { millis ->
+                    onEvent(HoldingContract.HoldingViewEvent.PurchaseDateChanged(millis))
                 },
             )
 
@@ -512,6 +557,60 @@ private fun DeleteConfirmationDialog(
 }
 
 // ===== PREVIEWS =====
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PurchaseDateField(
+    dateMillis: Long,
+    onDateSelected: (Long) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var showPicker by remember { mutableStateOf(false) }
+    val todayMillis = Clock.System.now().toEpochMilliseconds()
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = dateMillis,
+        selectableDates = object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long) = utcTimeMillis <= todayMillis
+        },
+    )
+
+    if (showPicker) {
+        DatePickerDialog(
+            onDismissRequest = { showPicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let { onDateSelected(it) }
+                    showPicker = false
+                }) { Text("OK") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPicker = false }) { Text("Cancel") }
+            },
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
+
+    Box(modifier = modifier.fillMaxWidth()) {
+        OutlinedTextField(
+            value = dateMillis.toFormattedDate(),
+            onValueChange = {},
+            readOnly = true,
+            label = { Text(stringResource(Res.string.label_purchase_date)) },
+            trailingIcon = { Icon(Icons.Filled.DateRange, contentDescription = null) },
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Box(modifier = Modifier.matchParentSize().clickable { showPicker = true })
+    }
+}
+
+private fun Long.toFormattedDate(): String {
+    val date = Instant.fromEpochMilliseconds(this).toLocalDateTime(TimeZone.UTC).date
+    val day = date.dayOfMonth.toString().padStart(2, '0')
+    val month = date.monthNumber.toString().padStart(2, '0')
+    return "$day/$month/${date.year}"
+}
+
 
 @Preview
 @OptIn(ExperimentalMaterial3Api::class)

@@ -6,6 +6,7 @@ import com.akole.dividox.common.currency.CurrencyConverter
 import com.akole.dividox.common.currency.domain.model.Currency
 import com.akole.dividox.common.mvi.viewmodel.MVI
 import com.akole.dividox.common.mvi.viewmodel.mvi
+import com.akole.dividox.common.network.connectivity.NetworkConnectivityManager
 import com.akole.dividox.common.settings.domain.usecase.ObserveAppSettingsUseCase
 import com.akole.dividox.common.settings.domain.usecase.SetCurrencyUseCase
 import com.akole.dividox.component.watchlist.domain.usecase.RemoveFromWatchlistUseCase
@@ -21,6 +22,7 @@ import com.akole.dividox.integration.security.domain.model.EnrichedWatchlistEntr
 import com.akole.dividox.integration.security.domain.model.PortfolioSummary
 import com.akole.dividox.integration.security.domain.usecase.GetEnrichedWatchlistUseCase
 import com.akole.dividox.integration.security.domain.usecase.GetPortfolioSummaryUseCase
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
@@ -31,12 +33,15 @@ class DashboardViewModel(
     private val observeAppSettings: ObserveAppSettingsUseCase,
     private val setCurrency: SetCurrencyUseCase,
     private val currencyConverter: CurrencyConverter,
+    private val connectivityManager: NetworkConnectivityManager,
 ) : ViewModel(),
     MVI<DashboardViewState, DashboardViewEvent, DashboardSideEffect> by mvi(DashboardViewState()) {
 
+    private var dataJob: Job? = null
+
     init {
         observeData()
-        observeSettings()
+        observeConnectivity()
     }
 
     override fun onViewEvent(viewEvent: DashboardViewEvent) {
@@ -54,7 +59,8 @@ class DashboardViewModel(
     }
 
     private fun observeData() {
-        viewModelScope.launch {
+        dataJob?.cancel()
+        dataJob = viewModelScope.launch {
             combine(
                 getPortfolioSummary(),
                 getEnrichedWatchlist(),
@@ -113,17 +119,21 @@ class DashboardViewModel(
         }
     }
 
-    private fun observeSettings() {
-        viewModelScope.launch {
-            observeAppSettings().collect { settings ->
-                updateViewState { copy(currency = settings.currency) }
-            }
-        }
-    }
-
     private fun removeFavourite(ticker: String) {
         viewModelScope.launch {
             removeFromWatchlist(ticker)
+        }
+    }
+
+    private fun observeConnectivity() {
+        viewModelScope.launch {
+            var previousConnected = true
+            connectivityManager.observeConnectivity().collect { isConnected ->
+                if (!previousConnected && isConnected) {
+                    observeData()
+                }
+                previousConnected = isConnected
+            }
         }
     }
 }

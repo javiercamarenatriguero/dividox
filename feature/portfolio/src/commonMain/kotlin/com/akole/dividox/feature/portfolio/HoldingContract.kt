@@ -21,6 +21,7 @@ object HoldingContract {
         val shares: String = "",
         val pricePerShare: String = "",
         val currency: Currency = Currency.USD,
+        val purchaseDateMillis: Long = kotlin.time.Clock.System.now().toEpochMilliseconds(),
         val estimatedTotal: Double = 0.0,
         val isSearching: Boolean = false,
         val isSaving: Boolean = false,
@@ -42,6 +43,7 @@ object HoldingContract {
         data class SharesChanged(val shares: String) : HoldingViewEvent
         data class PricePerShareChanged(val price: String) : HoldingViewEvent
         data class CurrencyChanged(val currency: Currency) : HoldingViewEvent
+        data class PurchaseDateChanged(val dateMillis: Long) : HoldingViewEvent
 
         // Actions
         data object ConfirmClicked : HoldingViewEvent // "Add Position" or "Update Position"
