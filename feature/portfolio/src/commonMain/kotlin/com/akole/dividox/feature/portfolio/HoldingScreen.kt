@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
@@ -43,6 +44,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.akole.dividox.common.currency.domain.model.Currency
@@ -176,23 +178,29 @@ private fun HoldingScreenContent(
             // Shares input
             OutlinedTextField(
                 value = state.shares,
-                onValueChange = { shares ->
-                    onEvent(HoldingContract.HoldingViewEvent.SharesChanged(shares))
+                onValueChange = { input ->
+                    if (input.all { it.isDigit() }) {
+                        onEvent(HoldingContract.HoldingViewEvent.SharesChanged(input))
+                    }
                 },
                 label = { Text(stringResource(Res.string.label_shares)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             )
 
             // Price per share input
             OutlinedTextField(
                 value = state.pricePerShare,
-                onValueChange = { price ->
-                    onEvent(HoldingContract.HoldingViewEvent.PricePerShareChanged(price))
+                onValueChange = { input ->
+                    if (input.matches(Regex("^\\d*\\.?\\d*$"))) {
+                        onEvent(HoldingContract.HoldingViewEvent.PricePerShareChanged(input))
+                    }
                 },
                 label = { Text(stringResource(Res.string.label_price_per_share)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             )
 
             // Currency selector (chips or dropdown)
