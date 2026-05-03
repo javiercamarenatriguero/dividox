@@ -55,6 +55,7 @@ kotlin {
             implementation(projects.component.market)
             implementation(projects.component.watchlist)
             implementation(projects.integration.security)
+            implementation(projects.integration.dividend)
             implementation(projects.feature.auth)
             implementation(projects.feature.dashboard)
             implementation(projects.feature.details)
