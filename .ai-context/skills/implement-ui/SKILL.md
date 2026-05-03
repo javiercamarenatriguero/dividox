@@ -102,6 +102,26 @@ class [FeatureName]ViewModel(
 }
 ```
 
+#### ⚠️ Coroutine Job tracking rule
+
+When a function that starts a `combine(...).collect(...)` or any long-lived flow observation can be called **more than once** (e.g. triggered by reconnection, retry, or user action), always track the `Job` and cancel it before re-launching to avoid accumulating coroutines:
+
+```kotlin
+import kotlinx.coroutines.Job
+
+private var dataJob: Job? = null
+
+private fun observeData() {
+    dataJob?.cancel()
+    dataJob = viewModelScope.launch {
+        combine(flowA(), flowB()) { a, b -> /* ... */ }
+            .collect { updateViewState { /* ... */ } }
+    }
+}
+```
+
+Without this, each invocation creates a new coroutine on top of existing ones. N reconnections = N+1 active coroutines competing to update the same state, causing race conditions and wasted memory.
+
 ### Step 3: Create Screen
 
 Use `collectViewState` and `CollectSideEffect` from `:common:mvi`.
