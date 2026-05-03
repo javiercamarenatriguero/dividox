@@ -18,6 +18,7 @@ kotlin {
             api(projects.common.network)
             implementation(compose.materialIconsExtended)
             implementation(libs.kotlinx.datetime)
+            implementation(libs.jetco.charts)
         }
     }
 }
