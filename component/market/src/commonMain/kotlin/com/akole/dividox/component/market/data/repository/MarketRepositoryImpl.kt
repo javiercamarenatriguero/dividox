@@ -4,11 +4,14 @@ import com.akole.dividox.component.market.data.api.YahooFinanceApi
 import io.ktor.client.HttpClient
 import com.akole.dividox.component.market.data.mapper.toCompanyInfo
 import com.akole.dividox.component.market.data.mapper.toDividendInfo
+import com.akole.dividox.component.market.data.mapper.toMarketDividendEvents
 import com.akole.dividox.component.market.data.mapper.toPricePoints
 import com.akole.dividox.component.market.data.mapper.toStockQuote
 import com.akole.dividox.component.market.domain.model.ChartPeriod
 import com.akole.dividox.component.market.domain.model.CompanyInfo
+import com.akole.dividox.component.market.domain.model.DividendHistoryRange
 import com.akole.dividox.component.market.domain.model.DividendInfo
+import com.akole.dividox.component.market.domain.model.MarketDividendEvent
 import com.akole.dividox.component.market.domain.model.MarketError
 import com.akole.dividox.component.market.domain.model.PricePoint
 import com.akole.dividox.component.market.domain.model.StockQuote
@@ -87,6 +90,17 @@ class MarketRepositoryImpl(
             val dto = api.getChartWithEvents(ticker)
             val result = dto.chart.result?.firstOrNull() ?: return@runCatching emptyList()
             listOf(result.toDividendInfo(ticker))
+        }.mapError()
+    }
+
+    override suspend fun getHistoricalDividendEvents(
+        ticker: String,
+        range: DividendHistoryRange,
+    ): Result<List<MarketDividendEvent>> = withContext(ioDispatcher) {
+        runCatching {
+            val dto = api.getChartWithEvents(ticker, range = range.apiValue)
+            val result = dto.chart.result?.firstOrNull() ?: return@runCatching emptyList()
+            result.toMarketDividendEvents(ticker)
         }.mapError()
     }
 

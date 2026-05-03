@@ -3,6 +3,7 @@ package com.akole.dividox.feature.dividends
 import com.akole.dividox.common.mvi.SideEffect
 import com.akole.dividox.common.mvi.ViewEvent
 import com.akole.dividox.common.mvi.ViewState
+import com.akole.dividox.component.market.domain.model.DividendHistoryRange
 import com.akole.dividox.integration.dividend.domain.model.DividendActivitySummary
 import com.akole.dividox.integration.dividend.domain.model.EnrichedPayment
 import com.akole.dividox.integration.dividend.domain.model.MonthBar
@@ -14,6 +15,7 @@ interface DividendsContract {
         val isLoading: Boolean = true,
         val summary: DividendActivitySummary? = null,
         val projectionBars: List<MonthBar> = emptyList(),
+        val selectedRange: DividendHistoryRange = DividendHistoryRange.ONE_YEAR,
         val upcomingPayments: List<EnrichedPayment> = emptyList(),
         val historyByMonth: Map<LocalDate, List<EnrichedPayment>> = emptyMap(),
         val expandedMonths: Set<LocalDate> = emptySet(),
@@ -23,6 +25,7 @@ interface DividendsContract {
 
     sealed interface DividendsViewEvent : ViewEvent {
         data object Refresh : DividendsViewEvent
+        data class RangeSelected(val range: DividendHistoryRange) : DividendsViewEvent
         data class MonthToggled(val yearMonth: LocalDate) : DividendsViewEvent
         data class PaymentClicked(val ticker: String) : DividendsViewEvent
         data class HistoryEntryClicked(val ticker: String) : DividendsViewEvent

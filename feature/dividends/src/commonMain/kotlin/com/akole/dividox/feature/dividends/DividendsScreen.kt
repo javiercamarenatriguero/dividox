@@ -37,11 +37,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.akole.dividox.common.mvi.CollectSideEffect
 import com.akole.dividox.common.ui.resources.charts.BarChart
 import com.akole.dividox.common.ui.resources.charts.BarChartEntry
+import com.akole.dividox.component.market.domain.model.DividendHistoryRange
 import com.akole.dividox.common.ui.resources.components.DividoxTopAppBar
 import com.akole.dividox.common.ui.resources.components.connectivity.ConnectivityBannerHost
 import com.akole.dividox.common.ui.resources.components.connectivity.LocalNetworkConnectivityManager
@@ -51,6 +54,7 @@ import com.akole.dividox.common.ui.resources.format.formatShort
 import com.akole.dividox.common.ui.resources.format.formatTwoDecimals
 import com.akole.dividox.common.ui.resources.format.monthFull
 import com.akole.dividox.common.ui.resources.format.monthShort
+import com.akole.dividox.common.ui.resources.format.monthShortWithYear
 import com.akole.dividox.common.ui.resources.theme.extendedColors
 import com.akole.dividox.common.ui.resources.theme.spacing
 import com.akole.dividox.feature.dividends.DividendsContract.DividendsSideEffect
@@ -161,10 +165,12 @@ private fun DividendsContent(
         }
 
         // Section 2 — Projection Chart
-        if (state.projectionBars.isNotEmpty()) {
+        if (state.projectionBars.isNotEmpty() || state.selectedRange != DividendHistoryRange.MAX) {
             item {
                 ProjectionChartSection(
                     bars = state.projectionBars,
+                    selectedRange = state.selectedRange,
+                    onRangeSelected = { onEvent(DividendsViewEvent.RangeSelected(it)) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = MaterialTheme.spacing.medium),
@@ -367,6 +373,8 @@ private fun VerticalDivider(modifier: Modifier = Modifier) {
 @Composable
 private fun ProjectionChartSection(
     bars: List<MonthBar>,
+    selectedRange: DividendHistoryRange,
+    onRangeSelected: (DividendHistoryRange) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Card(
@@ -374,43 +382,104 @@ private fun ProjectionChartSection(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
         Column(modifier = Modifier.padding(MaterialTheme.spacing.medium)) {
-            Row(
+            Text(
+                text = "Dividend Projection",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Spacer(Modifier.height(MaterialTheme.spacing.small))
+            DividendRangeSelectorRow(
+                selectedRange = selectedRange,
+                onRangeSelected = onRangeSelected,
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = "Dividend Projection",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                Surface(
-                    shape = RoundedCornerShape(4.dp),
-                    color = MaterialTheme.colorScheme.secondaryContainer,
-                ) {
-                    Text(
-                        text = "Last 12 months",
-                        style = MaterialTheme.typography.labelSmall,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                    )
-                }
-            }
+            )
             Spacer(Modifier.height(MaterialTheme.spacing.small))
 
             val entries = bars.map { bar ->
                 BarChartEntry(
-                    label = bar.yearMonth.monthShort(),
+                    label = bar.yearMonth.barLabel(selectedRange),
                     value = bar.amount.toFloat(),
                 )
             }
 
-            BarChart(
-                entries = entries,
-                modifier = Modifier.fillMaxWidth(),
-                barColor = MaterialTheme.colorScheme.primary,
-            )
+            val hasData = bars.any { it.amount > 0.0 }
+            if (!hasData) {
+                Box(
+                    modifier = Modifier.fillMaxWidth().height(180.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "No dividend data yet",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            } else {
+                // barWidth grows with label length to avoid clipping
+                val barWidth: Dp = when (selectedRange) {
+                    DividendHistoryRange.YTD,
+                    DividendHistoryRange.ONE_YEAR -> 32.dp
+                    DividendHistoryRange.TWO_YEARS -> 42.dp
+                    DividendHistoryRange.FIVE_YEARS,
+                    DividendHistoryRange.MAX -> 38.dp
+                }
+                BarChart(
+                    entries = entries,
+                    modifier = Modifier.fillMaxWidth(),
+                    barColor = MaterialTheme.colorScheme.primary,
+                    barWidth = barWidth,
+                )
+            }
         }
     }
+}
+
+@Composable
+private fun DividendRangeSelectorRow(
+    selectedRange: DividendHistoryRange,
+    onRangeSelected: (DividendHistoryRange) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        DividendHistoryRange.entries.forEach { range ->
+            val isSelected = range == selectedRange
+            Surface(
+                shape = RoundedCornerShape(6.dp),
+                color = if (isSelected) {
+                    MaterialTheme.colorScheme.primaryContainer
+                } else {
+                    MaterialTheme.colorScheme.surfaceContainerHigh
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable { onRangeSelected(range) },
+            ) {
+                Text(
+                    text = range.label,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                    color = if (isSelected) {
+                        MaterialTheme.colorScheme.onPrimaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.onSurface
+                    },
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(vertical = MaterialTheme.spacing.xSmall),
+                )
+            }
+        }
+    }
+}
+
+private fun LocalDate.barLabel(range: DividendHistoryRange): String = when (range) {
+    DividendHistoryRange.YTD,
+    DividendHistoryRange.ONE_YEAR -> monthShort()
+    DividendHistoryRange.TWO_YEARS -> monthShortWithYear()
+    DividendHistoryRange.FIVE_YEARS,
+    DividendHistoryRange.MAX -> year.toString()
 }
 
 // ─── Section 3: Upcoming Payments ────────────────────────────────────────────

@@ -17,3 +17,9 @@ expect fun LocalDate.monthShort(): String
  * Returns the localized full month name using the system locale (e.g. "January", "enero").
  */
 expect fun LocalDate.monthFull(): String
+
+/**
+ * Returns a compact label combining the 3-letter month abbreviation and a 2-digit year
+ * (e.g. "Jan '24"). Suitable for chart X-axis labels when multiple years are displayed.
+ */
+fun LocalDate.monthShortWithYear(): String = "${monthShort()} '${year.toString().takeLast(2)}"
