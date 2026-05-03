@@ -42,6 +42,8 @@ import androidx.compose.ui.unit.dp
 import com.akole.dividox.common.mvi.CollectSideEffect
 import com.akole.dividox.common.currency.domain.model.Currency
 import com.akole.dividox.common.ui.resources.components.DividoxTopAppBar
+import com.akole.dividox.common.ui.resources.components.connectivity.ConnectivityBannerHost
+import com.akole.dividox.common.ui.resources.components.connectivity.LocalNetworkConnectivityManager
 import com.akole.dividox.common.ui.resources.format.formatPercent
 import com.akole.dividox.common.ui.resources.format.formatPercentSigned
 import com.akole.dividox.common.ui.resources.format.formatPrice
@@ -83,6 +85,8 @@ private fun DashboardContent(
     state: DashboardViewState,
     onEvent: (DashboardViewEvent) -> Unit,
 ) {
+    val connectivityManager = LocalNetworkConnectivityManager.current
+
     Scaffold(
         topBar = {
             DividoxTopAppBar(
@@ -96,23 +100,27 @@ private fun DashboardContent(
             )
         },
     ) { paddingValues ->
-        if (state.isLoading) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                contentAlignment = Alignment.Center,
-            ) {
-                CircularProgressIndicator()
-            }
-        } else {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(paddingValues)
-                    .padding(horizontal = MaterialTheme.spacing.medium),
-            ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues),
+        ) {
+            ConnectivityBannerHost(connectivityFlow = connectivityManager.observeConnectivity())
+
+            if (state.isLoading) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    CircularProgressIndicator()
+                }
+            } else {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = MaterialTheme.spacing.medium),
+                ) {
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
 
                 PeriodSelectorRow(
@@ -147,6 +155,7 @@ private fun DashboardContent(
                 DisclaimerText()
 
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
+                }
             }
         }
     }

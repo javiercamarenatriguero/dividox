@@ -49,6 +49,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.akole.dividox.common.currency.domain.model.Currency
 import com.akole.dividox.common.ui.resources.components.DividoxTopAppBar
+import com.akole.dividox.common.ui.resources.components.connectivity.ConnectivityBannerHost
+import com.akole.dividox.common.ui.resources.components.connectivity.LocalNetworkConnectivityManager
 import com.akole.dividox.common.ui.resources.format.formatPrice
 import com.akole.dividox.common.ui.resources.format.formatTwoDecimals
 import com.akole.dividox.common.ui.resources.theme.DividoxTheme
@@ -113,6 +115,8 @@ fun HoldingScreen(
         HoldingContract.Mode.EDIT -> stringResource(Res.string.action_update_position)
     }
 
+    val connectivityManager = LocalNetworkConnectivityManager.current
+
     Scaffold(
         topBar = {
             DividoxTopAppBar(
@@ -122,16 +126,22 @@ fun HoldingScreen(
         },
         contentWindowInsets = WindowInsets(0),
     ) { paddingValues ->
-        HoldingScreenContent(
-            state = state,
-            onEvent = viewModel::onEvent,
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(paddingValues)
-                .imePadding()
-                .padding(bottom = MaterialTheme.spacing.large),
-        )
+                .padding(paddingValues),
+        ) {
+            ConnectivityBannerHost(connectivityFlow = connectivityManager.observeConnectivity())
+            HoldingScreenContent(
+                state = state,
+                onEvent = viewModel::onEvent,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .imePadding()
+                    .padding(bottom = MaterialTheme.spacing.large),
+            )
+        }
     }
 
     if (state.showDeleteConfirmation) {

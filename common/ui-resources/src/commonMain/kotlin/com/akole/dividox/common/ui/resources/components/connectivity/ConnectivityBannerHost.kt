@@ -2,8 +2,10 @@ package com.akole.dividox.common.ui.resources.components.connectivity
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 
@@ -20,38 +22,39 @@ import kotlinx.coroutines.flow.Flow
  */
 @Composable
 fun ConnectivityBannerHost(connectivityFlow: Flow<Boolean>) {
-    val isOnline = remember { mutableStateOf(true) }
-    val showReconnecting = remember { mutableStateOf(false) }
+    var isOnline by remember { mutableStateOf(true) }
+    var showReconnecting by remember { mutableStateOf(false) }
+    var previousOnline by remember { mutableStateOf(true) }
 
     LaunchedEffect(connectivityFlow) {
         connectivityFlow.collect { online ->
             when {
-                online && !isOnline.value -> {
-                    // Transitioned from offline to online
-                    isOnline.value = true
-                    showReconnecting.value = true
-
-                    // Auto-dismiss green banner after 2.5s
-                    delay(2500)
-                    showReconnecting.value = false
-                }
-
                 !online -> {
-                    // Went offline
-                    isOnline.value = false
-                    showReconnecting.value = false
+                    isOnline = false
+                    showReconnecting = false
                 }
-
+                online && !previousOnline -> {
+                    isOnline = true
+                    showReconnecting = true
+                }
                 else -> {
-                    // Already online or no state change
-                    isOnline.value = online
+                    isOnline = true
                 }
             }
+            previousOnline = online
+        }
+    }
+
+    // Separate effect so the collect lambda is never blocked by the dismiss delay
+    LaunchedEffect(showReconnecting) {
+        if (showReconnecting) {
+            delay(2500)
+            showReconnecting = false
         }
     }
 
     ConnectivityBanner(
-        isOnline = isOnline.value,
-        showReconnecting = showReconnecting.value,
+        isOnline = isOnline,
+        showReconnecting = showReconnecting,
     )
 }
