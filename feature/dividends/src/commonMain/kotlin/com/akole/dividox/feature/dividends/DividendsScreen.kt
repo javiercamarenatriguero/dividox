@@ -2,7 +2,6 @@ package com.akole.dividox.feature.dividends
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,7 +15,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -51,7 +49,7 @@ import com.akole.dividox.common.ui.resources.format.formatPercent
 import com.akole.dividox.common.ui.resources.format.formatPercentSigned
 import com.akole.dividox.common.ui.resources.format.formatShort
 import com.akole.dividox.common.ui.resources.format.formatTwoDecimals
-import com.akole.dividox.common.ui.resources.format.fullName
+import com.akole.dividox.common.ui.resources.format.monthFull
 import com.akole.dividox.common.ui.resources.format.monthShort
 import com.akole.dividox.common.ui.resources.theme.extendedColors
 import com.akole.dividox.common.ui.resources.theme.spacing
@@ -408,7 +406,7 @@ private fun ProjectionChartSection(
 
             BarChart(
                 entries = entries,
-                modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                modifier = Modifier.fillMaxWidth(),
                 barColor = MaterialTheme.colorScheme.primary,
             )
         }
@@ -485,7 +483,7 @@ private fun HistoryMonthGroup(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "${yearMonth.month.fullName()} ${yearMonth.year}",
+                text = "${yearMonth.monthFull()} ${yearMonth.year}",
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold,
             )
