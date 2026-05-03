@@ -28,7 +28,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.rememberDatePickerState
+import kotlin.time.Clock
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -542,7 +544,13 @@ private fun PurchaseDateField(
     modifier: Modifier = Modifier,
 ) {
     var showPicker by remember { mutableStateOf(false) }
-    val datePickerState = rememberDatePickerState(initialSelectedDateMillis = dateMillis)
+    val todayMillis = Clock.System.now().toEpochMilliseconds()
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = dateMillis,
+        selectableDates = object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long) = utcTimeMillis <= todayMillis
+        },
+    )
 
     if (showPicker) {
         DatePickerDialog(
