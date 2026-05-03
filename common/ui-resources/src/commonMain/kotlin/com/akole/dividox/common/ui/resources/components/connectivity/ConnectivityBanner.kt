@@ -10,8 +10,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+
+private val ConnectivityGreen = Color(0xFF2E7D32)
 
 /**
  * Displays network connectivity status banner at the top of the screen.
@@ -34,13 +37,13 @@ fun ConnectivityBanner(
     }
 
     val backgroundColor = if (showReconnecting) {
-        MaterialTheme.colorScheme.tertiary.copy(alpha = 0.15f)
+        ConnectivityGreen.copy(alpha = 0.15f)
     } else {
         MaterialTheme.colorScheme.error.copy(alpha = 0.15f)
     }
 
     val textColor = if (showReconnecting) {
-        MaterialTheme.colorScheme.tertiary
+        ConnectivityGreen
     } else {
         MaterialTheme.colorScheme.error
     }
