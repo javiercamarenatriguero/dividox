@@ -15,6 +15,7 @@ kotlin {
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.serialization.kotlinx.json)
             implementation(libs.kotlinx.serialization.core)
+            implementation(libs.kotlinx.coroutines.core)
         }
         androidMain.dependencies {
             implementation(libs.ktor.client.okhttp)

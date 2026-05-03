@@ -15,6 +15,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(projects.common.currency)
+            api(projects.common.network)
             implementation(compose.materialIconsExtended)
             implementation(libs.kotlinx.datetime)
         }

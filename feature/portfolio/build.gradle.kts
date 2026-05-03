@@ -14,6 +14,7 @@ kotlin {
             implementation(project(":common:mvi"))
             implementation(project(":common:ui-resources"))
             implementation(project(":common:settings"))
+            implementation(project(":common:network"))
             implementation(project(":component:portfolio"))
             implementation(project(":component:market"))
             implementation(project(":integration:security"))

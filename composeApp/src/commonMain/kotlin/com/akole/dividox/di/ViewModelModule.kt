@@ -25,7 +25,7 @@ val viewModelModule: Module = module {
     viewModelOf(::SignUpViewModel)
     viewModelOf(::ForgotPasswordViewModel)
     viewModelOf(::DashboardViewModel)
-    viewModelOf(::PortfolioViewModel)
+    viewModel { PortfolioViewModel(get(), get(), get(), get()) }
     
     // HoldingViewModel with optional holdingId parameter for Add/Edit modes
     viewModel { params ->
