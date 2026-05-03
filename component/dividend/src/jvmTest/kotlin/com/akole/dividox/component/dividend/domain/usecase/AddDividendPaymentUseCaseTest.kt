@@ -2,7 +2,6 @@ package com.akole.dividox.component.dividend.domain.usecase
 
 import com.akole.dividox.component.dividend.domain.model.DividendPayment
 import com.akole.dividox.component.dividend.domain.model.DividendPaymentId
-import com.akole.dividox.component.dividend.domain.model.PaymentMethod
 import com.akole.dividox.component.dividend.domain.repository.DividendRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -27,7 +26,6 @@ class AddDividendPaymentUseCaseTest {
             amount = 100.0,
             currency = "USD",
             paymentDate = LocalDate(2025, 3, 15),
-            method = PaymentMethod.CASH,
         )
         coEvery { repository.addDividendPayment(payment) } just Runs
 

@@ -2,7 +2,6 @@ package com.akole.dividox.component.dividend.domain.usecase
 
 import com.akole.dividox.component.dividend.domain.model.DividendPayment
 import com.akole.dividox.component.dividend.domain.model.DividendPaymentId
-import com.akole.dividox.component.dividend.domain.model.PaymentMethod
 import com.akole.dividox.component.dividend.domain.repository.DividendRepository
 import io.mockk.every
 import io.mockk.mockk
@@ -42,7 +41,6 @@ class GetUpcomingPaymentsUseCaseTest {
             amount = 50.0,
             currency = "USD",
             paymentDate = LocalDate(2026, 12, 31),
-            method = PaymentMethod.CASH,
         )
         every { repository.getUpcomingPayments() } returns flowOf(listOf(upcoming))
 

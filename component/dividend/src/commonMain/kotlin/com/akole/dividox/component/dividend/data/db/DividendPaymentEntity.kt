@@ -12,7 +12,6 @@ import androidx.room.PrimaryKey
  * @property amount Gross dividend amount.
  * @property currency ISO 4217 currency code.
  * @property paymentDate ISO-8601 date string (YYYY-MM-DD) used for SQL date functions.
- * @property method String representation of [com.akole.dividox.component.dividend.domain.model.PaymentMethod].
  */
 @Entity(tableName = "dividend_payments")
 data class DividendPaymentEntity(
@@ -21,5 +20,4 @@ data class DividendPaymentEntity(
     val amount: Double,
     val currency: String,
     @ColumnInfo(name = "payment_date") val paymentDate: String,
-    val method: String,
 )

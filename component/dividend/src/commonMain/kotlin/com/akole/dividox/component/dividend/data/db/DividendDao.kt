@@ -22,18 +22,18 @@ interface DividendDao {
     fun observeAll(): Flow<List<DividendPaymentEntity>>
 
     /**
-     * Returns the sum of CASH payments for a given year.
+     * Returns the sum of payments for a given year.
      *
      * @param year Four-digit year string, e.g. "2025".
      * @return Sum of [DividendPaymentEntity.amount] for matching rows; 0.0 if none.
      */
-    @Query("SELECT COALESCE(SUM(amount), 0.0) FROM dividend_payments WHERE strftime('%Y', payment_date) = :year AND method = 'CASH'")
+    @Query("SELECT COALESCE(SUM(amount), 0.0) FROM dividend_payments WHERE strftime('%Y', payment_date) = :year")
     suspend fun sumByYear(year: String): Double
 
     /**
-     * Returns the sum of all CASH payments ever recorded.
+     * Returns the sum of all payments ever recorded.
      */
-    @Query("SELECT COALESCE(SUM(amount), 0.0) FROM dividend_payments WHERE method = 'CASH'")
+    @Query("SELECT COALESCE(SUM(amount), 0.0) FROM dividend_payments")
     suspend fun sumLifetime(): Double
 
     /**

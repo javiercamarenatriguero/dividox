@@ -10,7 +10,6 @@ import kotlinx.datetime.LocalDate
  * @property amount The gross dividend amount received.
  * @property currency ISO 4217 currency code (e.g., "USD").
  * @property paymentDate The date the dividend was paid or credited.
- * @property method Whether the dividend was received as cash or reinvested.
  */
 data class DividendPayment(
     val id: DividendPaymentId,
@@ -18,5 +17,4 @@ data class DividendPayment(
     val amount: Double,
     val currency: String,
     val paymentDate: LocalDate,
-    val method: PaymentMethod,
 )

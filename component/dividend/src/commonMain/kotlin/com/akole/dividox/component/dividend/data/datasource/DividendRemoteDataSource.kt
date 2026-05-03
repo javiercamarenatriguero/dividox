@@ -2,7 +2,6 @@ package com.akole.dividox.component.dividend.data.datasource
 
 import com.akole.dividox.component.dividend.domain.model.DividendPayment
 import com.akole.dividox.component.dividend.domain.model.DividendPaymentId
-import com.akole.dividox.component.dividend.domain.model.PaymentMethod
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.firestore.firestore
 import kotlinx.coroutines.flow.Flow
@@ -14,7 +13,6 @@ private const val FIELD_TICKER_ID = "tickerId"
 private const val FIELD_AMOUNT = "amount"
 private const val FIELD_CURRENCY = "currency"
 private const val FIELD_PAYMENT_DATE = "paymentDate"
-private const val FIELD_METHOD = "method"
 
 /**
  * Remote data source backed by Firestore.
@@ -26,9 +24,6 @@ private const val FIELD_METHOD = "method"
  * - `amount` (Double)
  * - `currency` (String)
  * - `paymentDate` (String, ISO-8601)
- * - `method` (String, PaymentMethod name)
- *
- * Firestore is accessed via [Firebase.firestore] to stay consistent with the rest of the project.
  *
  * @property userId Authenticated user ID used to scope the collection.
  */
@@ -41,8 +36,6 @@ class DividendRemoteDataSource(
 
     /**
      * Observes the Firestore dividend collection as a stream of domain models.
-     *
-     * Uses a real-time snapshot listener so the cache stays in sync automatically.
      */
     fun observeAll(): Flow<List<DividendPayment>> =
         collection.snapshots().map { snapshot ->
@@ -54,8 +47,6 @@ class DividendRemoteDataSource(
     /**
      * Writes a new dividend payment document to Firestore.
      *
-     * The document ID is set to [DividendPayment.id] to enable deterministic upserts.
-     *
      * @param payment The payment to persist.
      */
     suspend fun add(payment: DividendPayment) {
@@ -65,7 +56,6 @@ class DividendRemoteDataSource(
                 FIELD_AMOUNT to payment.amount,
                 FIELD_CURRENCY to payment.currency,
                 FIELD_PAYMENT_DATE to payment.paymentDate.toString(),
-                FIELD_METHOD to payment.method.name,
             ),
         )
     }
@@ -77,7 +67,6 @@ class DividendRemoteDataSource(
             amount = get(FIELD_AMOUNT),
             currency = get(FIELD_CURRENCY),
             paymentDate = LocalDate.parse(get(FIELD_PAYMENT_DATE)),
-            method = PaymentMethod.valueOf(get(FIELD_METHOD)),
         )
 }
 

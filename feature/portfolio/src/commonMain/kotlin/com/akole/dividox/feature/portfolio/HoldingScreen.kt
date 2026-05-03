@@ -2,6 +2,7 @@ package com.akole.dividox.feature.portfolio
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,11 +11,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -23,10 +27,15 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -51,9 +60,13 @@ import dividox.common.ui_resources.generated.resources.dialog_remove_message
 import dividox.common.ui_resources.generated.resources.dialog_remove_title
 import dividox.common.ui_resources.generated.resources.label_estimated_value
 import dividox.common.ui_resources.generated.resources.label_price_per_share
+import dividox.common.ui_resources.generated.resources.label_purchase_date
 import dividox.common.ui_resources.generated.resources.label_shares
 import dividox.common.ui_resources.generated.resources.label_unknown_position
 import dividox.common.ui_resources.generated.resources.search_security_hint
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -181,6 +194,14 @@ private fun HoldingScreenContent(
                 selectedCurrency = state.currency,
                 onCurrencySelected = { currency ->
                     onEvent(HoldingContract.HoldingViewEvent.CurrencyChanged(currency))
+                },
+            )
+
+            // Purchase date picker
+            PurchaseDateField(
+                dateMillis = state.purchaseDateMillis,
+                onDateSelected = { millis ->
+                    onEvent(HoldingContract.HoldingViewEvent.PurchaseDateChanged(millis))
                 },
             )
 
@@ -512,6 +533,54 @@ private fun DeleteConfirmationDialog(
 }
 
 // ===== PREVIEWS =====
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PurchaseDateField(
+    dateMillis: Long,
+    onDateSelected: (Long) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var showPicker by remember { mutableStateOf(false) }
+    val datePickerState = rememberDatePickerState(initialSelectedDateMillis = dateMillis)
+
+    if (showPicker) {
+        DatePickerDialog(
+            onDismissRequest = { showPicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let { onDateSelected(it) }
+                    showPicker = false
+                }) { Text("OK") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPicker = false }) { Text("Cancel") }
+            },
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
+
+    Box(modifier = modifier.fillMaxWidth()) {
+        OutlinedTextField(
+            value = dateMillis.toFormattedDate(),
+            onValueChange = {},
+            readOnly = true,
+            label = { Text(stringResource(Res.string.label_purchase_date)) },
+            trailingIcon = { Icon(Icons.Filled.DateRange, contentDescription = null) },
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Box(modifier = Modifier.matchParentSize().clickable { showPicker = true })
+    }
+}
+
+private fun Long.toFormattedDate(): String {
+    val date = Instant.fromEpochMilliseconds(this).toLocalDateTime(TimeZone.UTC).date
+    val day = date.dayOfMonth.toString().padStart(2, '0')
+    val month = date.monthNumber.toString().padStart(2, '0')
+    return "$day/$month/${date.year}"
+}
+
 
 @Preview
 @OptIn(ExperimentalMaterial3Api::class)
