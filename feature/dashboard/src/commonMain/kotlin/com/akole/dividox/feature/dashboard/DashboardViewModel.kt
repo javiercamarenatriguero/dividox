@@ -22,6 +22,7 @@ import com.akole.dividox.integration.security.domain.model.EnrichedWatchlistEntr
 import com.akole.dividox.integration.security.domain.model.PortfolioSummary
 import com.akole.dividox.integration.security.domain.usecase.GetEnrichedWatchlistUseCase
 import com.akole.dividox.integration.security.domain.usecase.GetPortfolioSummaryUseCase
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
@@ -35,6 +36,8 @@ class DashboardViewModel(
     private val connectivityManager: NetworkConnectivityManager,
 ) : ViewModel(),
     MVI<DashboardViewState, DashboardViewEvent, DashboardSideEffect> by mvi(DashboardViewState()) {
+
+    private var dataJob: Job? = null
 
     init {
         observeData()
@@ -57,7 +60,8 @@ class DashboardViewModel(
     }
 
     private fun observeData() {
-        viewModelScope.launch {
+        dataJob?.cancel()
+        dataJob = viewModelScope.launch {
             combine(
                 getPortfolioSummary(),
                 getEnrichedWatchlist(),
