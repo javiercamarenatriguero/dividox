@@ -12,5 +12,5 @@ val dividendIntegrationModule: Module = module {
     factoryOf(::GetDividendActivitySummaryUseCase)
     factoryOf(::GetEnrichedUpcomingPaymentsUseCase)
     factoryOf(::GetEnrichedPaymentHistoryUseCase)
-    factoryOf(::GetDividendProjectionBarsUseCase)
+    factory { GetDividendProjectionBarsUseCase(dividendRepository = get()) }
 }

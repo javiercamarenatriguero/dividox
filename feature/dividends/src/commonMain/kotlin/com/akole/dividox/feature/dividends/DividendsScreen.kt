@@ -597,7 +597,7 @@ private fun CompanyLogo(ticker: String, size: Int = 40) {
 // ─── Date formatting extensions ───────────────────────────────────────────────
 
 private fun LocalDate.formatShort(): String =
-    "${dayOfMonth.toString().padStart(2, '0')}/${monthNumber.toString().padStart(2, '0')}/$year"
+    "${day.toString().padStart(2, '0')}/${monthNumber.toString().padStart(2, '0')}/$year"
 
 private fun LocalDate.monthShort(): String = month.displayName().take(3)
 
@@ -614,6 +614,5 @@ private fun Month.displayName(): String = when (this) {
     Month.OCTOBER -> "October"
     Month.NOVEMBER -> "November"
     Month.DECEMBER -> "December"
-    else -> "Unknown"
 }
 

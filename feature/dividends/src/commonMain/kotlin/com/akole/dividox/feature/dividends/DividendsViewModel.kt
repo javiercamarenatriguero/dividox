@@ -103,5 +103,7 @@ class DividendsViewModel(
 
     private fun List<EnrichedPayment>.groupByMonth(): Map<LocalDate, List<EnrichedPayment>> =
         groupBy { LocalDate(it.payment.paymentDate.year, it.payment.paymentDate.month, 1) }
-            .toSortedMap(compareByDescending { it })
+            .entries
+            .sortedByDescending { it.key }
+            .associate { it.key to it.value }
 }
