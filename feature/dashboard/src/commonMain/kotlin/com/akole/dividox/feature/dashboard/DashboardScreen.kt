@@ -41,6 +41,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.akole.dividox.common.mvi.CollectSideEffect
 import com.akole.dividox.common.currency.domain.model.Currency
+import com.akole.dividox.common.ui.resources.components.AnimatedValueText
 import com.akole.dividox.common.ui.resources.components.DividoxTopAppBar
 import com.akole.dividox.common.ui.resources.components.connectivity.ConnectivityBannerHost
 import com.akole.dividox.common.ui.resources.components.connectivity.LocalNetworkConnectivityManager
@@ -307,8 +308,8 @@ private fun MetricCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = value,
+            AnimatedValueText(
+                value = value,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = valueColor,
@@ -423,8 +424,8 @@ private fun WatchlistEntryRow(
             if (price != null) {
                 val displayPrice = convertedPrice ?: price
                 Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        text = displayPrice.formatPrice(displayCurrency),
+                    AnimatedValueText(
+                        value = displayPrice.formatPrice(displayCurrency),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
                     )

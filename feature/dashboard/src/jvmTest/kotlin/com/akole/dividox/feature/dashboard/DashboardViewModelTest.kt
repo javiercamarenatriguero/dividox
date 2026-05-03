@@ -144,6 +144,8 @@ class DashboardViewModelTest {
     @Test
     fun `SHOULD reflect EUR currency WHEN settings emit EUR GIVEN initial state`() = runTest {
         // GIVEN
+        every { getPortfolioSummary() } returns flowOf(emptySummary)
+        every { getEnrichedWatchlist() } returns flowOf(emptyList())
         every { observeAppSettings() } returns flowOf(AppSettings(currency = Currency.EUR))
 
         // WHEN
@@ -157,6 +159,8 @@ class DashboardViewModelTest {
     @Test
     fun `SHOULD reflect USD currency WHEN settings emit USD GIVEN persisted preference`() = runTest {
         // GIVEN
+        every { getPortfolioSummary() } returns flowOf(emptySummary)
+        every { getEnrichedWatchlist() } returns flowOf(emptyList())
         every { observeAppSettings() } returns flowOf(AppSettings(currency = Currency.USD))
 
         // WHEN
@@ -207,6 +211,8 @@ class DashboardViewModelTest {
     @Test
     fun `SHOULD call setCurrency with USD WHEN CurrencyToggled GIVEN current currency is EUR`() = runTest {
         // GIVEN
+        every { getPortfolioSummary() } returns flowOf(emptySummary)
+        every { getEnrichedWatchlist() } returns flowOf(emptyList())
         every { observeAppSettings() } returns flowOf(AppSettings(currency = Currency.EUR))
         val vm = viewModel()
         advanceUntilIdle()
@@ -222,6 +228,8 @@ class DashboardViewModelTest {
     @Test
     fun `SHOULD call setCurrency with EUR WHEN CurrencyToggled GIVEN current currency is USD`() = runTest {
         // GIVEN
+        every { getPortfolioSummary() } returns flowOf(emptySummary)
+        every { getEnrichedWatchlist() } returns flowOf(emptyList())
         every { observeAppSettings() } returns flowOf(AppSettings(currency = Currency.USD))
         val vm = viewModel()
         advanceUntilIdle()

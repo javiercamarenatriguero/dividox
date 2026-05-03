@@ -41,7 +41,6 @@ class DashboardViewModel(
 
     init {
         observeData()
-        observeSettings()
         observeConnectivity()
     }
 
@@ -117,14 +116,6 @@ class DashboardViewModel(
         viewModelScope.launch {
             val next = if (viewState.value.currency == Currency.EUR) Currency.USD else Currency.EUR
             setCurrency(next)
-        }
-    }
-
-    private fun observeSettings() {
-        viewModelScope.launch {
-            observeAppSettings().collect { settings ->
-                updateViewState { copy(currency = settings.currency) }
-            }
         }
     }
 
