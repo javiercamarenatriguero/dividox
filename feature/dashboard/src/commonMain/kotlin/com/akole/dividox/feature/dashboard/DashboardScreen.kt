@@ -19,11 +19,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -33,6 +36,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -43,7 +50,9 @@ import androidx.compose.ui.unit.dp
 import com.akole.dividox.common.mvi.CollectSideEffect
 import com.akole.dividox.common.currency.domain.model.Currency
 import com.akole.dividox.common.ui.resources.components.AnimatedValueText
+import com.akole.dividox.common.ui.resources.components.DividoxPullToRefreshBox
 import com.akole.dividox.common.ui.resources.components.DividoxTopAppBar
+import com.akole.dividox.common.ui.resources.components.LastUpdatedBar
 import com.akole.dividox.common.ui.resources.components.connectivity.ConnectivityBannerHost
 import com.akole.dividox.common.ui.resources.components.connectivity.LocalNetworkConnectivityManager
 import com.akole.dividox.common.ui.resources.format.formatPercent
@@ -95,9 +104,9 @@ private fun DashboardContent(
             DividoxTopAppBar(
                 title = stringResource(Res.string.section_dashboard),
                 actions = {
-                    CurrencyToggleButton(
-                        currency = state.currency,
-                        onClick = { onEvent(DashboardViewEvent.CurrencyToggled) },
+                    CurrencyDropdown(
+                        selected = state.currency,
+                        onCurrencySelected = { onEvent(DashboardViewEvent.CurrencySelected(it)) },
                     )
                 },
             )
@@ -109,6 +118,10 @@ private fun DashboardContent(
                 .padding(paddingValues),
         ) {
             ConnectivityBannerHost(connectivityFlow = connectivityManager.observeConnectivity())
+            LastUpdatedBar(
+                lastUpdated = state.lastUpdated,
+                onRefresh = { onEvent(DashboardViewEvent.Refresh) },
+            )
 
             if (state.isLoading) {
                 Box(
@@ -118,6 +131,11 @@ private fun DashboardContent(
                     CircularProgressIndicator()
                 }
             } else {
+                DividoxPullToRefreshBox(
+                    isRefreshing = state.isRefreshing,
+                    onRefresh = { onEvent(DashboardViewEvent.Refresh) },
+                    modifier = Modifier.fillMaxSize(),
+                ) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -164,37 +182,70 @@ private fun DashboardContent(
 
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
                 }
+                }
             }
         }
     }
 }
 
-// ─── Currency toggle ──────────────────────────────────────────────────────────
+// ─── Currency dropdown ────────────────────────────────────────────────────────
+
+private val PINNED_CURRENCIES = listOf(Currency.EUR, Currency.USD, Currency.GBP)
+private val CURRENCY_LIST: List<Currency> = PINNED_CURRENCIES +
+    Currency.entries.filter { it !in PINNED_CURRENCIES }.sortedBy { it.code }
 
 @Composable
-private fun CurrencyToggleButton(
-    currency: Currency,
-    onClick: () -> Unit,
+private fun CurrencyDropdown(
+    selected: Currency,
+    onCurrencySelected: (Currency) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    FilledTonalButton(
-        onClick = onClick,
-        modifier = modifier.padding(end = MaterialTheme.spacing.medium),
-        shape = RoundedCornerShape(8.dp),
-        colors = ButtonDefaults.filledTonalButtonColors(
-            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-        ),
-    ) {
-        Text(
-            text = if (currency == Currency.EUR) {
-                stringResource(Res.string.currency_eur)
-            } else {
-                stringResource(Res.string.currency_usd)
-            },
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.SemiBold,
-        )
+    var expanded by remember { mutableStateOf(false) }
+    Box(modifier = modifier.padding(end = MaterialTheme.spacing.small)) {
+        FilledTonalButton(
+            onClick = { expanded = true },
+            shape = RoundedCornerShape(8.dp),
+            colors = ButtonDefaults.filledTonalButtonColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+            ),
+        ) {
+            Text(
+                text = "${selected.symbol.trim()} ${selected.code}",
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Icon(
+                imageVector = Icons.Filled.ArrowDropDown,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp),
+            )
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+        ) {
+            CURRENCY_LIST.forEach { currency ->
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            text = "${currency.symbol.trim()} ${currency.code}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = if (currency == selected) FontWeight.Bold else FontWeight.Normal,
+                            color = if (currency == selected) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurface
+                            },
+                        )
+                    },
+                    onClick = {
+                        expanded = false
+                        onCurrencySelected(currency)
+                    },
+                )
+            }
+        }
     }
 }
 
@@ -327,6 +378,7 @@ private fun PortfolioHeroCard(
                         value = totalValue,
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
+                        autoShrink = true,
                     )
                 }
                 Box(
@@ -347,6 +399,7 @@ private fun PortfolioHeroCard(
                         value = invested,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold,
+                        autoShrink = true,
                     )
                 }
             }
@@ -368,6 +421,7 @@ private fun PortfolioHeroCard(
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = gainColor,
+                        autoShrink = true,
                     )
                     AnimatedValueText(
                         value = "($gainPercent)",
@@ -410,6 +464,7 @@ private fun YieldChip(
                 value = yield,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
+                autoShrink = true,
             )
         }
     }
@@ -440,6 +495,7 @@ private fun DividendsChip(
                 value = lifetimeDividends,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
+                autoShrink = true,
             )
             Spacer(modifier = Modifier.height(2.dp))
             Row(

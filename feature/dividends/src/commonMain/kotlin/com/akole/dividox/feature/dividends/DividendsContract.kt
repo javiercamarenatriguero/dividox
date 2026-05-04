@@ -8,12 +8,15 @@ import com.akole.dividox.component.market.domain.model.DividendHistoryRange
 import com.akole.dividox.integration.dividend.domain.model.DividendActivitySummary
 import com.akole.dividox.integration.dividend.domain.model.EnrichedPayment
 import com.akole.dividox.integration.dividend.domain.model.MonthBar
+import kotlin.time.Instant
 import kotlinx.datetime.LocalDate
 
 interface DividendsContract {
 
     data class DividendsViewState(
         val isLoading: Boolean = true,
+        val isRefreshing: Boolean = false,
+        val lastUpdated: Instant? = null,
         val currency: Currency = Currency.USD,
         val summary: DividendActivitySummary? = null,
         val projectionBars: List<MonthBar> = emptyList(),

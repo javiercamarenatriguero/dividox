@@ -150,8 +150,16 @@ class MarketRepositoryImpl(
                         name = quote.shortname ?: quote.longname,
                         exchange = quote.exchDisp,
                     )
-                } ?: emptyList()
+                }
+                ?.sortedBy { exchangePriority(it.exchange) }
+                ?: emptyList()
         }.mapError()
+    }
+
+    private fun exchangePriority(exchange: String?): Int {
+        val e = exchange?.uppercase() ?: return Int.MAX_VALUE
+        return EXCHANGE_PRIORITY.indexOfFirst { e.contains(it) }
+            .takeIf { it >= 0 } ?: Int.MAX_VALUE
     }
 
     private fun isExpired(timestamp: Long, ttlMs: Long): Boolean =
@@ -169,6 +177,25 @@ class MarketRepositoryImpl(
         private const val QUOTE_TTL_MS = 300_000L              // 5 minutes
         private const val DIVIDEND_TTL_MS = 3_600_000L         // 1 hour
         private const val HISTORICAL_DIVIDEND_TTL_MS = 86_400_000L  // 24 hours
+
+        /**
+         * Main exchange tiers, ordered from highest to lowest priority.
+         * Yahoo Finance returns exchDisp values like "NASDAQ", "NYSE", "LSE", etc.
+         * Unlisted or exotic exchanges fall to Int.MAX_VALUE and stay at the bottom.
+         */
+        private val EXCHANGE_PRIORITY = listOf(
+            "NASDAQ", "NYSE",            // US — tier 1
+            "LSE",                       // UK
+            "XETRA", "FSX", "FRA",      // Germany
+            "EURONEXT", "PAR", "AMS",   // Euronext
+            "BME", "MCE",               // Spain
+            "MIL",                       // Italy
+            "SIX", "SWX",               // Switzerland
+            "TSX",                       // Canada
+            "ASX",                       // Australia
+            "TSE", "OSE",               // Japan
+            "HKEX", "HKG",              // Hong Kong
+        )
     }
 }
 

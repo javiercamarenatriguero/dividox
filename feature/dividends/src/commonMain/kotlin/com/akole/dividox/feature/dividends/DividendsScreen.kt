@@ -48,7 +48,9 @@ import com.akole.dividox.common.mvi.CollectSideEffect
 import com.akole.dividox.common.ui.resources.charts.BarChart
 import com.akole.dividox.common.ui.resources.charts.BarChartEntry
 import com.akole.dividox.component.market.domain.model.DividendHistoryRange
+import com.akole.dividox.common.ui.resources.components.DividoxPullToRefreshBox
 import com.akole.dividox.common.ui.resources.components.DividoxTopAppBar
+import com.akole.dividox.common.ui.resources.components.LastUpdatedBar
 import com.akole.dividox.common.ui.resources.components.connectivity.ConnectivityBannerHost
 import com.akole.dividox.common.ui.resources.components.connectivity.LocalNetworkConnectivityManager
 import com.akole.dividox.common.ui.resources.format.formatBarChartPopupLabel
@@ -115,6 +117,10 @@ fun DividendsScreen(
                 .padding(top = innerPadding.calculateTopPadding()),
         ) {
             ConnectivityBannerHost(connectivityFlow = connectivityManager.observeConnectivity())
+            LastUpdatedBar(
+                lastUpdated = state.lastUpdated,
+                onRefresh = { onEvent(DividendsViewEvent.Refresh) },
+            )
 
             when {
                 state.isLoading -> LoadingContent(modifier = Modifier.weight(1f))
@@ -123,11 +129,17 @@ fun DividendsScreen(
                     onRetry = { onEvent(DividendsViewEvent.Refresh) },
                     modifier = Modifier.weight(1f),
                 )
-                else -> DividendsContent(
-                    state = state,
-                    onEvent = onEvent,
+                else -> DividoxPullToRefreshBox(
+                    isRefreshing = state.isRefreshing,
+                    onRefresh = { onEvent(DividendsViewEvent.Refresh) },
                     modifier = Modifier.weight(1f),
-                )
+                ) {
+                    DividendsContent(
+                        state = state,
+                        onEvent = onEvent,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
             }
         }
     }

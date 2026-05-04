@@ -7,6 +7,7 @@ import com.akole.dividox.common.currency.domain.model.Currency
 import com.akole.dividox.common.mvi.viewmodel.MVI
 import com.akole.dividox.common.mvi.viewmodel.mvi
 import com.akole.dividox.common.network.connectivity.NetworkConnectivityManager
+import com.akole.dividox.common.settings.AppRefreshTracker
 import com.akole.dividox.common.settings.domain.usecase.ObserveAppSettingsUseCase
 import com.akole.dividox.component.market.domain.model.DividendHistoryRange
 import com.akole.dividox.feature.dividends.DividendsContract.DividendsSideEffect
@@ -26,7 +27,9 @@ import com.akole.dividox.component.dividend.domain.model.DividendPaymentId
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
+import kotlin.time.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.Month
@@ -45,6 +48,7 @@ class DividendsViewModel(
     private val observePortfolioChanges: ObservePortfolioChangesUseCase,
     private val observeAppSettings: ObserveAppSettingsUseCase,
     private val currencyConverter: CurrencyConverter,
+    private val refreshTracker: AppRefreshTracker,
 ) : ViewModel(),
     MVI<DividendsViewState, DividendsViewEvent, DividendsSideEffect> by mvi(DividendsViewState()) {
 
@@ -57,6 +61,7 @@ class DividendsViewModel(
         observePortfolioAndSync()
         observeData()
         observeConnectivity()
+        observeRefreshTracker()
     }
 
     /**
@@ -74,7 +79,10 @@ class DividendsViewModel(
     }
 
     override fun onViewEvent(viewEvent: DividendsViewEvent) {        when (viewEvent) {
-            DividendsViewEvent.Refresh -> observeData()
+            DividendsViewEvent.Refresh -> {
+                updateViewState { copy(isRefreshing = true) }
+                observeData()
+            }
             is DividendsViewEvent.RangeSelected -> applyRange(viewEvent.range)
             DividendsViewEvent.ToggleUpcomingExpanded -> updateViewState { copy(upcomingExpanded = !upcomingExpanded) }
             DividendsViewEvent.TogglePastActivityExpanded -> updateViewState { copy(pastActivityExpanded = !pastActivityExpanded) }
@@ -115,6 +123,7 @@ class DividendsViewModel(
                     ?.let { s -> s.copy(nextPayout = allUpcoming.firstOrNull() ?: s.nextPayout) }
                 viewState.value.copy(
                     isLoading = false,
+                    isRefreshing = false,
                     currency = targetCurrency,
                     summary = convertedSummary,
                     projectionBars = allBars.filterByRange(viewState.value.selectedRange),
@@ -125,9 +134,11 @@ class DividendsViewModel(
                     isOffline = false,
                 )
             }.catch { e ->
-                updateViewState { copy(isLoading = false, error = e.message ?: "Unknown error") }
+                updateViewState { copy(isLoading = false, isRefreshing = false, error = e.message ?: "Unknown error") }
             }.collect { newState ->
-                updateViewState { newState }
+                val now = Clock.System.now()
+                refreshTracker.notifyRefreshed(now)
+                updateViewState { newState.copy(lastUpdated = now) }
             }
         }
     }
@@ -141,6 +152,14 @@ class DividendsViewModel(
                     observeData()
                 }
                 previousConnected = isConnected
+            }
+        }
+    }
+
+    private fun observeRefreshTracker() {
+        viewModelScope.launch {
+            refreshTracker.lastRefreshed.filterNotNull().collect { instant ->
+                updateViewState { copy(lastUpdated = instant) }
             }
         }
     }

@@ -42,7 +42,7 @@
     <string name="favourites_empty_hint">No favourites yet. Search for a security to add one.</string>
     <string name="cd_remove_from_favourites">Remove from favourites</string>
     <string name="disclaimer_prices_delayed">Prices delayed 15 minutes</string>
-    <string name="portfolio_search_placeholder">Search holdings...</string>
+    <string name="portfolio_search_placeholder">Filter holdings...</string>
     <string name="portfolio_add_holding">Add holding</string>
     <string name="portfolio_empty_state">No holdings yet.\nTap + to add your first one.</string>
     <string name="portfolio_sort_gain">Gain</string>
@@ -81,4 +81,7 @@
     <string name="cd_collapse">Collapse</string>
     <string name="cd_expand">Expand</string>
     <string name="ui_no_value">—</string>
+    <string name="ui_last_updated">Updated at %1$s</string>
+    <string name="ui_refresh">Refresh</string>
+    <string name="ui_not_yet_updated">Not yet updated</string>
 </resources>

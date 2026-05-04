@@ -7,15 +7,17 @@ import com.akole.dividox.common.currency.domain.model.Currency
 import com.akole.dividox.common.mvi.viewmodel.MVI
 import com.akole.dividox.common.mvi.viewmodel.mvi
 import com.akole.dividox.common.network.connectivity.NetworkConnectivityManager
+import com.akole.dividox.common.settings.AppRefreshTracker
 import com.akole.dividox.common.settings.domain.usecase.ObserveAppSettingsUseCase
 import com.akole.dividox.common.settings.domain.usecase.SetCurrencyUseCase
 import com.akole.dividox.component.market.domain.model.ChartPeriod as MarketChartPeriod
 import com.akole.dividox.component.watchlist.domain.usecase.RemoveFromWatchlistUseCase
 import com.akole.dividox.feature.dashboard.DashboardContract.DashboardSideEffect
 import com.akole.dividox.feature.dashboard.DashboardContract.DashboardViewEvent
-import com.akole.dividox.feature.dashboard.DashboardContract.DashboardViewEvent.CurrencyToggled
+import com.akole.dividox.feature.dashboard.DashboardContract.DashboardViewEvent.CurrencySelected
 import com.akole.dividox.feature.dashboard.DashboardContract.DashboardViewEvent.FavouriteToggled
 import com.akole.dividox.feature.dashboard.DashboardContract.DashboardViewEvent.PeriodSelected
+import com.akole.dividox.feature.dashboard.DashboardContract.DashboardViewEvent.Refresh
 import com.akole.dividox.feature.dashboard.DashboardContract.DashboardViewEvent.SecurityClicked
 import com.akole.dividox.feature.dashboard.DashboardContract.DashboardViewEvent.ViewAllFavouritesClicked
 import com.akole.dividox.feature.dashboard.DashboardContract.DashboardViewState
@@ -31,6 +33,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DatePeriod
@@ -50,6 +53,7 @@ class DashboardViewModel(
     private val setCurrency: SetCurrencyUseCase,
     private val currencyConverter: CurrencyConverter,
     private val connectivityManager: NetworkConnectivityManager,
+    private val refreshTracker: AppRefreshTracker,
 ) : ViewModel(),
     MVI<DashboardViewState, DashboardViewEvent, DashboardSideEffect> by mvi(DashboardViewState()) {
 
@@ -63,6 +67,7 @@ class DashboardViewModel(
     init {
         observeData()
         observeConnectivity()
+        observeRefreshTracker()
     }
 
     override fun onViewEvent(viewEvent: DashboardViewEvent) {
@@ -71,7 +76,7 @@ class DashboardViewModel(
                 updateViewState { copy(selectedPeriod = viewEvent.period) }
                 periodFlow.value = viewEvent.period
             }
-            CurrencyToggled -> toggleCurrency()
+            is CurrencySelected -> selectCurrency(viewEvent.currency)
             is FavouriteToggled -> removeFavourite(viewEvent.ticker)
             is SecurityClicked -> viewModelScope.emitSideEffect(
                 DashboardSideEffect.Navigation.NavigateToSecurity(viewEvent.ticker),
@@ -79,6 +84,10 @@ class DashboardViewModel(
             ViewAllFavouritesClicked -> viewModelScope.emitSideEffect(
                 DashboardSideEffect.Navigation.NavigateToFavorites,
             )
+            Refresh -> {
+                updateViewState { copy(isRefreshing = true) }
+                observeData()
+            }
         }
     }
 
@@ -125,6 +134,7 @@ class DashboardViewModel(
                 val convertedWatchlistPrices = convertWatchlistPrices(watchlist, targetCurrency)
                 viewState.value.copy(
                     isLoading = false,
+                    isRefreshing = false,
                     summary = convertedSummary,
                     watchlist = watchlist,
                     currency = targetCurrency,
@@ -137,7 +147,9 @@ class DashboardViewModel(
                     lifetimeDividends = convertAmount(lifetime, targetCurrency),
                 )
             }.collect { newState ->
-                updateViewState { newState }
+                val now = Clock.System.now()
+                refreshTracker.notifyRefreshed(now)
+                updateViewState { newState.copy(lastUpdated = now) }
             }
         }
     }
@@ -196,10 +208,9 @@ class DashboardViewModel(
         }
     }
 
-    private fun toggleCurrency() {
+    private fun selectCurrency(currency: Currency) {
         viewModelScope.launch {
-            val next = if (viewState.value.currency == Currency.EUR) Currency.USD else Currency.EUR
-            setCurrency(next)
+            setCurrency(currency)
         }
     }
 
@@ -217,6 +228,14 @@ class DashboardViewModel(
                     observeData()
                 }
                 previousConnected = isConnected
+            }
+        }
+    }
+
+    private fun observeRefreshTracker() {
+        viewModelScope.launch {
+            refreshTracker.lastRefreshed.filterNotNull().collect { instant ->
+                updateViewState { copy(lastUpdated = instant) }
             }
         }
     }

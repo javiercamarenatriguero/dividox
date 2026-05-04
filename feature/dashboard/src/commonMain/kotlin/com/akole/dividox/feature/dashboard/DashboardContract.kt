@@ -6,11 +6,14 @@ import com.akole.dividox.common.mvi.ViewState
 import com.akole.dividox.common.currency.domain.model.Currency
 import com.akole.dividox.integration.security.domain.model.EnrichedWatchlistEntry
 import com.akole.dividox.integration.security.domain.model.PortfolioSummary
+import kotlin.time.Instant
 
 interface DashboardContract {
 
     data class DashboardViewState(
         val isLoading: Boolean = true,
+        val isRefreshing: Boolean = false,
+        val lastUpdated: Instant? = null,
         val summary: PortfolioSummary? = null,
         val watchlist: List<EnrichedWatchlistEntry> = emptyList(),
         val selectedPeriod: ChartPeriod = ChartPeriod.ALL,
@@ -26,10 +29,11 @@ interface DashboardContract {
 
     sealed interface DashboardViewEvent : ViewEvent {
         data class PeriodSelected(val period: ChartPeriod) : DashboardViewEvent
-        data object CurrencyToggled : DashboardViewEvent
+        data class CurrencySelected(val currency: Currency) : DashboardViewEvent
         data class FavouriteToggled(val ticker: String) : DashboardViewEvent
         data class SecurityClicked(val ticker: String) : DashboardViewEvent
         data object ViewAllFavouritesClicked : DashboardViewEvent
+        data object Refresh : DashboardViewEvent
     }
 
     sealed interface DashboardSideEffect : SideEffect {
