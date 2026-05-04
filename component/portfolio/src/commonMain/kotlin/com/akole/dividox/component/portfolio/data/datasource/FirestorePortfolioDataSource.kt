@@ -15,16 +15,19 @@ import kotlinx.coroutines.flow.map
  * Firestore KMP implementation of portfolio data source via dev.gitlive:firebase-firestore.
  * Persists holdings at: `users/{userId}/portfolio/{holdingId}`
  *
- * @property userId Current authenticated user ID—determines collection path
+ * The user ID is resolved lazily on each access via [userIdProvider], ensuring the correct
+ * authenticated user is always used even if the data source is created before auth completes.
+ *
+ * @property userIdProvider Provides the current authenticated user ID on demand.
  */
 class FirestorePortfolioDataSource(
-    private val userId: String,
+    private val userIdProvider: () -> String,
 ) : PortfolioDataSource {
 
     private val collectionRef
         get() = Firebase.firestore
             .collection("users")
-            .document(userId)
+            .document(userIdProvider())
             .collection("portfolio")
 
     /**

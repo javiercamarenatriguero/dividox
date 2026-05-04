@@ -2,6 +2,7 @@ package com.akole.dividox.component.dividend.data.db
 
 import androidx.room.Dao
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
 
@@ -45,7 +46,16 @@ interface DividendDao {
     fun observeUpcoming(today: String): Flow<List<DividendPaymentEntity>>
 
     /**
-     * Inserts or updates a list of payment entities.
+     * Atomically replaces all cached payments.
+     * Using [Transaction] ensures Room emits only once (after upsert), not twice.
+     */
+    @Transaction
+    suspend fun replaceAll(payments: List<DividendPaymentEntity>) {
+        clearAll()
+        upsert(payments)
+    }
+
+    /** Inserts or updates a list of payment entities.
      * Conflict strategy: replace on primary key collision.
      */
     @Upsert

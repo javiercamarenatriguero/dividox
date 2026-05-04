@@ -2,6 +2,7 @@ package com.akole.dividox.component.dividend.domain.repository
 
 import com.akole.dividox.component.dividend.domain.model.DividendPayment
 import kotlinx.coroutines.flow.Flow
+import kotlinx.datetime.LocalDate
 
 /**
  * Contract for accessing and persisting dividend payment data.
@@ -28,13 +29,31 @@ interface DividendRepository {
     fun getYtdDividends(): Flow<Double>
 
     /**
+     * Observes the sum of dividend payments received since [from] (inclusive).
+     */
+    fun getDividendsSince(from: LocalDate): Flow<Double>
+
+    /**
      * Observes dividends with a future payment date (upcoming scheduled payments).
      */
     fun getUpcomingPayments(): Flow<List<DividendPayment>>
 
     /**
-     * Persists a new dividend payment to the remote source (Firestore).
-     * The local cache is updated reactively via the Firestore snapshot listener.
+     * Replaces the entire local dividend cache with the given list.
+     * Called by the sync use case to ensure stale pre-purchase dividends are removed.
+     *
+     * @param payments The complete set of eligible payments to persist.
+     */
+    suspend fun replaceAllPayments(payments: List<DividendPayment>)
+
+    /**
+     * Deletes all locally cached dividend payments.
+     * Must be called on sign-out to prevent stale data leaking into the next session.
+     */
+    suspend fun clearAll()
+
+    /**
+     * Persists or updates a single dividend payment in the local cache.
      *
      * @param payment The payment to record.
      */

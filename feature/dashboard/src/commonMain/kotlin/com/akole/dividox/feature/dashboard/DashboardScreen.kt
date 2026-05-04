@@ -7,18 +7,19 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -48,6 +49,7 @@ import com.akole.dividox.common.ui.resources.components.connectivity.LocalNetwor
 import com.akole.dividox.common.ui.resources.format.formatPercent
 import com.akole.dividox.common.ui.resources.format.formatPercentSigned
 import com.akole.dividox.common.ui.resources.format.formatPrice
+import com.akole.dividox.common.ui.resources.format.formatPriceSigned
 import com.akole.dividox.common.ui.resources.theme.DividoxTheme
 import com.akole.dividox.common.ui.resources.theme.extendedColors
 import com.akole.dividox.common.ui.resources.theme.spacing
@@ -134,6 +136,11 @@ private fun DashboardContent(
                 MetricsBlock(
                     summary = state.convertedSummary ?: state.summary,
                     currency = state.currency,
+                    selectedPeriod = state.selectedPeriod,
+                    periodGainPercent = state.periodGainPercent,
+                    periodGainAbsolute = state.periodGainAbsolute,
+                    periodDividends = state.periodDividends,
+                    lifetimeDividends = state.lifetimeDividends,
                 )
 
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
@@ -239,46 +246,46 @@ private fun PeriodSelectorRow(
 private fun MetricsBlock(
     summary: PortfolioSummary?,
     currency: Currency,
+    selectedPeriod: ChartPeriod,
+    periodGainPercent: Double,
+    periodGainAbsolute: Double,
+    periodDividends: Double,
+    lifetimeDividends: Double,
     modifier: Modifier = Modifier,
 ) {
     val isEmpty = summary == null || summary.totalValue == 0.0
+    val gainColor = when {
+        isEmpty -> MaterialTheme.colorScheme.onSurfaceVariant
+        periodGainAbsolute >= 0 -> MaterialTheme.extendedColors.profit
+        else -> MaterialTheme.colorScheme.error
+    }
+    val totalValue = (summary?.totalValue ?: 0.0).formatPrice(currency)
+    val invested = ((summary?.totalValue ?: 0.0) - (summary?.totalGain ?: 0.0)).formatPrice(currency)
 
-    Column(modifier = modifier.fillMaxWidth()) {
+    Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small)) {
+        PortfolioHeroCard(
+            totalValue = totalValue,
+            invested = invested,
+            gainAbsolute = periodGainAbsolute.formatPriceSigned(currency),
+            gainPercent = periodGainPercent.formatPercentSigned(),
+            gainColor = gainColor,
+            periodLabel = selectedPeriod.label,
+        )
+
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(IntrinsicSize.Max),
             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
         ) {
-            MetricCard(
-                label = stringResource(Res.string.metric_total_value),
-                value = (summary?.totalValue ?: 0.0).formatPrice(currency),
+            YieldChip(
+                yield = (summary?.totalYield ?: 0.0).formatPercent(),
                 modifier = Modifier.weight(1f),
             )
-            MetricCard(
-                label = stringResource(Res.string.metric_total_gain),
-                value = (summary?.totalGainPercent ?: 0.0).formatPercent(),
-                valueColor = if (!isEmpty && summary.totalGainPercent >= 0) {
-                    MaterialTheme.extendedColors.profit
-                } else if (!isEmpty) {
-                    MaterialTheme.colorScheme.error
-                } else {
-                    MaterialTheme.colorScheme.onSurface
-                },
-                modifier = Modifier.weight(1f),
-            )
-        }
-        Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
-        ) {
-            MetricCard(
-                label = stringResource(Res.string.metric_yield),
-                value = (summary?.totalYield ?: 0.0).formatPercent(),
-                modifier = Modifier.weight(1f),
-            )
-            MetricCard(
-                label = stringResource(Res.string.metric_dividends),
-                value = (summary?.dividendsCollected ?: 0.0).formatPrice(currency),
+            DividendsChip(
+                lifetimeDividends = lifetimeDividends.formatPrice(currency),
+                periodDividends = periodDividends.formatPrice(currency),
+                periodLabel = selectedPeriod.label,
                 modifier = Modifier.weight(1f),
             )
         }
@@ -286,11 +293,134 @@ private fun MetricsBlock(
 }
 
 @Composable
-private fun MetricCard(
-    label: String,
-    value: String,
+private fun PortfolioHeroCard(
+    totalValue: String,
+    invested: String,
+    gainAbsolute: String,
+    gainPercent: String,
+    gainColor: Color,
+    periodLabel: String,
     modifier: Modifier = Modifier,
-    valueColor: Color = MaterialTheme.colorScheme.onSurface,
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        ),
+        shape = RoundedCornerShape(16.dp),
+    ) {
+        Column {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = MaterialTheme.spacing.medium, vertical = MaterialTheme.spacing.large),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(Res.string.metric_total_value),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    AnimatedValueText(
+                        value = totalValue,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .padding(horizontal = MaterialTheme.spacing.small)
+                        .width(1.dp)
+                        .height(48.dp)
+                        .background(MaterialTheme.colorScheme.outlineVariant),
+                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(Res.string.metric_invested),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    AnimatedValueText(
+                        value = invested,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(gainColor.copy(alpha = 0.10f))
+                    .padding(horizontal = MaterialTheme.spacing.medium, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xSmall),
+                ) {
+                    AnimatedValueText(
+                        value = gainAbsolute,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = gainColor,
+                    )
+                    AnimatedValueText(
+                        value = "($gainPercent)",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Normal,
+                        color = gainColor,
+                    )
+                }
+                Text(
+                    text = periodLabel,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun YieldChip(
+    yield: String,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier.fillMaxHeight(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        ),
+        shape = RoundedCornerShape(12.dp),
+    ) {
+        Column(modifier = Modifier.padding(MaterialTheme.spacing.medium)) {
+            Text(
+                text = stringResource(Res.string.metric_yield),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            AnimatedValueText(
+                value = yield,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+            )
+        }
+    }
+}
+
+@Composable
+private fun DividendsChip(
+    lifetimeDividends: String,
+    periodDividends: String,
+    periodLabel: String,
+    modifier: Modifier = Modifier,
 ) {
     Card(
         modifier = modifier,
@@ -299,21 +429,35 @@ private fun MetricCard(
         ),
         shape = RoundedCornerShape(12.dp),
     ) {
-        Column(
-            modifier = Modifier.padding(MaterialTheme.spacing.medium),
-        ) {
+        Column(modifier = Modifier.padding(MaterialTheme.spacing.medium)) {
             Text(
-                text = label,
+                text = stringResource(Res.string.metric_dividends),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(modifier = Modifier.height(4.dp))
             AnimatedValueText(
-                value = value,
+                value = lifetimeDividends,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
-                color = valueColor,
             )
+            Spacer(modifier = Modifier.height(2.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                AnimatedValueText(
+                    value = periodDividends,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Normal,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                Text(
+                    text = "· $periodLabel",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
     }
 }

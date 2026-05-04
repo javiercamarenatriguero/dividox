@@ -16,7 +16,7 @@ import org.koin.dsl.module
 
 val watchlistModule: Module = module {
     single<WatchlistDataSource> {
-        WatchlistFirestoreDataSource(userId = get<GetCurrentUserIdUseCase>()())
+        WatchlistFirestoreDataSource(userIdProvider = { get<GetCurrentUserIdUseCase>()() })
     }
     single<WatchlistRepository> {
         WatchlistRepositoryImpl(

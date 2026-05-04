@@ -6,6 +6,7 @@ import com.akole.dividox.component.dividend.data.db.buildDividendLocalDataSource
 import com.akole.dividox.component.dividend.data.repository.DividendRepositoryImpl
 import com.akole.dividox.component.dividend.domain.repository.DividendRepository
 import com.akole.dividox.component.dividend.domain.usecase.AddDividendPaymentUseCase
+import com.akole.dividox.component.dividend.domain.usecase.ClearLocalDividendDataUseCase
 import com.akole.dividox.component.dividend.domain.usecase.GetDividendHistoryUseCase
 import com.akole.dividox.component.dividend.domain.usecase.GetLifetimeDividendsUseCase
 import com.akole.dividox.component.dividend.domain.usecase.GetUpcomingPaymentsUseCase
@@ -39,4 +40,5 @@ val dividendModule = module {
     factory { GetYtdDividendsUseCase(get()) }
     factory { GetUpcomingPaymentsUseCase(get()) }
     factory { AddDividendPaymentUseCase(get()) }
+    factory { ClearLocalDividendDataUseCase(get()) }
 }

@@ -35,4 +35,18 @@ class CurrencyConverter(
             rates.rates[to] ?: error("No exchange rate found for ${to.code} (base: ${from.code})")
         }.map { rate -> amount * rate }
     }
+
+    /**
+     * Returns the exchange rate from [from] to [to] without applying it to any amount.
+     * Use this when you need to convert many values with the same rate — fetch the rate once
+     * and multiply locally to avoid repeated suspension calls.
+     *
+     * Returns 1.0 when [from] == [to].
+     */
+    suspend fun getRate(from: Currency, to: Currency): Result<Double> {
+        if (from == to) return Result.success(1.0)
+        return getExchangeRates(from).mapCatching { rates ->
+            rates.rates[to] ?: error("No exchange rate found for ${to.code} (base: ${from.code})")
+        }
+    }
 }

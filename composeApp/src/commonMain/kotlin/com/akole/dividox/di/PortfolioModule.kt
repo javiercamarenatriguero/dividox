@@ -16,7 +16,7 @@ import org.koin.dsl.module
 
 val portfolioModule: Module = module {
     single<PortfolioDataSource> {
-        FirestorePortfolioDataSource(userId = get<GetCurrentUserIdUseCase>()())
+        FirestorePortfolioDataSource(userIdProvider = { get<GetCurrentUserIdUseCase>()() })
     }
     single<PortfolioRepository> {
         PortfolioRepositoryImpl(

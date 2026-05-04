@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ArrowDropUp
@@ -31,6 +32,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,6 +43,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.akole.dividox.common.currency.domain.model.Currency
 import com.akole.dividox.common.mvi.CollectSideEffect
 import com.akole.dividox.common.ui.resources.charts.BarChart
 import com.akole.dividox.common.ui.resources.charts.BarChartEntry
@@ -48,10 +51,11 @@ import com.akole.dividox.component.market.domain.model.DividendHistoryRange
 import com.akole.dividox.common.ui.resources.components.DividoxTopAppBar
 import com.akole.dividox.common.ui.resources.components.connectivity.ConnectivityBannerHost
 import com.akole.dividox.common.ui.resources.components.connectivity.LocalNetworkConnectivityManager
+import com.akole.dividox.common.ui.resources.format.formatBarChartPopupLabel
 import com.akole.dividox.common.ui.resources.format.formatPercent
 import com.akole.dividox.common.ui.resources.format.formatPercentSigned
+import com.akole.dividox.common.ui.resources.format.formatPrice
 import com.akole.dividox.common.ui.resources.format.formatShort
-import com.akole.dividox.common.ui.resources.format.formatTwoDecimals
 import com.akole.dividox.common.ui.resources.format.monthFull
 import com.akole.dividox.common.ui.resources.format.monthShort
 import com.akole.dividox.common.ui.resources.format.monthShortWithYear
@@ -63,8 +67,27 @@ import com.akole.dividox.feature.dividends.DividendsContract.DividendsViewState
 import com.akole.dividox.integration.dividend.domain.model.DividendActivitySummary
 import com.akole.dividox.integration.dividend.domain.model.EnrichedPayment
 import com.akole.dividox.integration.dividend.domain.model.MonthBar
+import dividox.common.ui_resources.generated.resources.Res
+import dividox.common.ui_resources.generated.resources.cd_collapse
+import dividox.common.ui_resources.generated.resources.cd_expand
+import dividox.common.ui_resources.generated.resources.dividends_empty_state
+import dividox.common.ui_resources.generated.resources.dividends_metric_lifetime
+import dividox.common.ui_resources.generated.resources.dividends_metric_next_payout
+import dividox.common.ui_resources.generated.resources.dividends_metric_ytd
+import dividox.common.ui_resources.generated.resources.dividends_metric_yoc
+import dividox.common.ui_resources.generated.resources.dividends_metric_yoc_target
+import dividox.common.ui_resources.generated.resources.dividends_metric_yoy
+import dividox.common.ui_resources.generated.resources.dividends_section_past_activity
+import dividox.common.ui_resources.generated.resources.dividends_section_projection
+import dividox.common.ui_resources.generated.resources.dividends_section_upcoming
+import dividox.common.ui_resources.generated.resources.dividends_show_less
+import dividox.common.ui_resources.generated.resources.dividends_show_more
+import dividox.common.ui_resources.generated.resources.dividends_tap_to_retry
+import dividox.common.ui_resources.generated.resources.dividends_title
+import dividox.common.ui_resources.generated.resources.ui_no_value
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.LocalDate
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun DividendsScreen(
@@ -83,13 +106,13 @@ fun DividendsScreen(
 
     Scaffold(
         topBar = {
-            DividoxTopAppBar(title = "Dividend Activity")
+            DividoxTopAppBar(title = stringResource(Res.string.dividends_title))
         },
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding),
+                .padding(top = innerPadding.calculateTopPadding()),
         ) {
             ConnectivityBannerHost(connectivityFlow = connectivityManager.observeConnectivity())
 
@@ -132,7 +155,7 @@ private fun ErrorContent(
             )
             Spacer(Modifier.height(8.dp))
             Text(
-                text = "Tap to retry",
+                text = stringResource(Res.string.dividends_tap_to_retry),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.clickable(onClick = onRetry),
@@ -156,6 +179,7 @@ private fun DividendsContent(
             state.summary?.let { summary ->
                 DividendMetricsBlock(
                     summary = summary,
+                    currency = state.currency,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = MaterialTheme.spacing.medium)
@@ -170,6 +194,7 @@ private fun DividendsContent(
                 ProjectionChartSection(
                     bars = state.projectionBars,
                     selectedRange = state.selectedRange,
+                    currency = state.currency,
                     onRangeSelected = { onEvent(DividendsViewEvent.RangeSelected(it)) },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -182,20 +207,46 @@ private fun DividendsContent(
         if (state.upcomingPayments.isNotEmpty()) {
             item {
                 SectionHeader(
-                    title = "Upcoming Payments",
+                    title = stringResource(Res.string.dividends_section_upcoming),
                     modifier = Modifier.padding(horizontal = MaterialTheme.spacing.medium),
                 )
             }
-            items(state.upcomingPayments) { enrichedPayment ->
-                UpcomingPaymentRow(
-                    enrichedPayment = enrichedPayment,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            onEvent(DividendsViewEvent.PaymentClicked(enrichedPayment.payment.tickerId))
-                        }
-                        .padding(horizontal = MaterialTheme.spacing.medium),
-                )
+            val visibleUpcoming = if (state.upcomingExpanded) state.upcomingPayments else state.upcomingPayments.take(3)
+            val upcomingByMonth = visibleUpcoming.groupBy {
+                LocalDate(it.payment.paymentDate.year, it.payment.paymentDate.month, 1)
+            }
+            upcomingByMonth.forEach { (yearMonth, payments) ->
+                item(key = "upcoming-month-${yearMonth}") {
+                    UpcomingMonthHeader(yearMonth = yearMonth)
+                }
+                items(payments, key = { it.payment.id.value }) { enrichedPayment ->
+                    DividendHistoryRow(
+                        enrichedPayment = enrichedPayment,
+                        currency = state.currency,
+                        onClick = { onEvent(DividendsViewEvent.PaymentClicked(enrichedPayment.payment.tickerId)) },
+                        modifier = Modifier.padding(horizontal = MaterialTheme.spacing.medium),
+                    )
+                }
+            }
+            if (state.upcomingPayments.size > 3) {
+                item {
+                    TextButton(
+                        onClick = { onEvent(DividendsViewEvent.ToggleUpcomingExpanded) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = MaterialTheme.spacing.medium),
+                    ) {
+                        val remaining = state.upcomingPayments.size - 3
+                        Text(
+                            text = if (state.upcomingExpanded) {
+                                stringResource(Res.string.dividends_show_less)
+                            } else {
+                                stringResource(Res.string.dividends_show_more, remaining)
+                            },
+                            style = MaterialTheme.typography.labelMedium,
+                        )
+                    }
+                }
             }
         }
 
@@ -203,16 +254,27 @@ private fun DividendsContent(
         if (state.historyByMonth.isNotEmpty()) {
             item {
                 SectionHeader(
-                    title = "Past Activity",
+                    title = stringResource(Res.string.dividends_section_past_activity),
                     modifier = Modifier.padding(horizontal = MaterialTheme.spacing.medium),
                 )
             }
-            state.historyByMonth.forEach { (yearMonth, payments) ->
+            val monthKeys = state.historyByMonth.keys.toList()
+            val visibleMonths = if (state.pastActivityExpanded) monthKeys else monthKeys.take(3)
+            var lastSeenYear = -1
+            visibleMonths.forEach { yearMonth ->
+                val payments = state.historyByMonth[yearMonth] ?: return@forEach
+                if (yearMonth.year != lastSeenYear) {
+                    lastSeenYear = yearMonth.year
+                    item(key = "year-${yearMonth.year}") {
+                        YearHeader(year = yearMonth.year)
+                    }
+                }
                 val isExpanded = yearMonth in state.expandedMonths
                 item(key = "month-${yearMonth}") {
                     HistoryMonthGroup(
                         yearMonth = yearMonth,
                         payments = payments,
+                        currency = state.currency,
                         isExpanded = isExpanded,
                         onToggle = { onEvent(DividendsViewEvent.MonthToggled(yearMonth)) },
                         onPaymentClick = { ticker ->
@@ -220,6 +282,26 @@ private fun DividendsContent(
                         },
                         modifier = Modifier.padding(horizontal = MaterialTheme.spacing.medium),
                     )
+                }
+            }
+            if (monthKeys.size > 3) {
+                item {
+                    TextButton(
+                        onClick = { onEvent(DividendsViewEvent.TogglePastActivityExpanded) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = MaterialTheme.spacing.medium),
+                    ) {
+                        val remaining = monthKeys.size - 3
+                        Text(
+                            text = if (state.pastActivityExpanded) {
+                                stringResource(Res.string.dividends_show_less)
+                            } else {
+                                stringResource(Res.string.dividends_show_more, remaining)
+                            },
+                            style = MaterialTheme.typography.labelMedium,
+                        )
+                    }
                 }
             }
         }
@@ -233,11 +315,16 @@ private fun DividendsContent(
 @Composable
 private fun DividendMetricsBlock(
     summary: DividendActivitySummary,
+    currency: Currency,
     modifier: Modifier = Modifier,
 ) {
     Card(
         modifier = modifier,
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(16.dp),
+        border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.secondary),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        ),
     ) {
         Column(
             modifier = Modifier.padding(MaterialTheme.spacing.medium),
@@ -249,26 +336,26 @@ private fun DividendMetricsBlock(
                 horizontalArrangement = Arrangement.SpaceEvenly,
             ) {
                 MetricItem(
-                    label = "Lifetime",
-                    value = "$${summary.lifetime.formatTwoDecimals()}",
+                    label = stringResource(Res.string.dividends_metric_lifetime),
+                    value = summary.lifetime.formatPrice(currency),
                     modifier = Modifier.weight(1f),
                 )
                 VerticalDivider()
                 MetricItem(
-                    label = "YTD",
-                    value = "$${summary.ytd.formatTwoDecimals()}",
+                    label = stringResource(Res.string.dividends_metric_ytd),
+                    value = summary.ytd.formatPrice(currency),
                     modifier = Modifier.weight(1f),
                 )
                 VerticalDivider()
                 val yoy = summary.yoyPercent
-                val yoyText = yoy?.formatPercentSigned() ?: "—"
+                val yoyText = yoy?.formatPercentSigned() ?: stringResource(Res.string.ui_no_value)
                 val yoyColor = when {
                     yoy == null -> MaterialTheme.colorScheme.onSurface
                     yoy >= 0 -> MaterialTheme.extendedColors.profit
                     else -> MaterialTheme.colorScheme.error
                 }
                 MetricItem(
-                    label = "YoY",
+                    label = stringResource(Res.string.dividends_metric_yoy),
                     value = yoyText,
                     valueColor = yoyColor,
                     modifier = Modifier.weight(1f),
@@ -282,23 +369,46 @@ private fun DividendMetricsBlock(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly,
             ) {
-                val nextPayoutText = summary.nextPayout?.let {
-                    val ticker = it.payment.tickerId
-                    val date = it.payment.paymentDate.formatShort()
-                    "$ticker · $date"
-                } ?: "—"
-                MetricItem(
-                    label = "Next Payout",
-                    value = nextPayoutText,
-                    modifier = Modifier.weight(1f),
-                )
+                Column(
+                    modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Text(
+                        text = stringResource(Res.string.dividends_metric_next_payout),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.height(2.dp))
+                    val nextPayout = summary.nextPayout
+                    if (nextPayout != null) {
+                        Text(
+                            text = nextPayout.payment.tickerId,
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        Text(
+                            text = nextPayout.payment.paymentDate.formatShort(),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                        )
+                    } else {
+                        Text(
+                            text = stringResource(Res.string.ui_no_value),
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                }
                 VerticalDivider()
                 Column(
                     modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Text(
-                        text = "YoC",
+                        text = stringResource(Res.string.dividends_metric_yoc),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -320,7 +430,7 @@ private fun DividendMetricsBlock(
                         color = progressColor,
                     )
                     Text(
-                        text = "Target ${summary.yocTarget.formatPercent()}",
+                        text = stringResource(Res.string.dividends_metric_yoc_target, summary.yocTarget.formatPercent()),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -374,6 +484,7 @@ private fun VerticalDivider(modifier: Modifier = Modifier) {
 private fun ProjectionChartSection(
     bars: List<MonthBar>,
     selectedRange: DividendHistoryRange,
+    currency: Currency,
     onRangeSelected: (DividendHistoryRange) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -383,7 +494,7 @@ private fun ProjectionChartSection(
     ) {
         Column(modifier = Modifier.padding(MaterialTheme.spacing.medium)) {
             Text(
-                text = "Dividend Projection",
+                text = stringResource(Res.string.dividends_section_projection),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
             )
@@ -395,7 +506,7 @@ private fun ProjectionChartSection(
             )
             Spacer(Modifier.height(MaterialTheme.spacing.small))
 
-            val entries = bars.map { bar ->
+            val entries: List<BarChartEntry> = bars.map { bar ->
                 BarChartEntry(
                     label = bar.yearMonth.barLabel(selectedRange),
                     value = bar.amount.toFloat(),
@@ -409,25 +520,29 @@ private fun ProjectionChartSection(
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
-                        text = "No dividend data yet",
+                        text = stringResource(Res.string.dividends_empty_state),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             } else {
-                // barWidth grows with label length to avoid clipping
                 val barWidth: Dp = when (selectedRange) {
                     DividendHistoryRange.YTD,
-                    DividendHistoryRange.ONE_YEAR -> 32.dp
-                    DividendHistoryRange.TWO_YEARS -> 42.dp
+                    DividendHistoryRange.ONE_YEAR -> 24.dp
+                    DividendHistoryRange.TWO_YEARS -> 30.dp
                     DividendHistoryRange.FIVE_YEARS,
-                    DividendHistoryRange.MAX -> 38.dp
+                    DividendHistoryRange.MAX -> 28.dp
                 }
                 BarChart(
                     entries = entries,
                     modifier = Modifier.fillMaxWidth(),
                     barColor = MaterialTheme.colorScheme.primary,
                     barWidth = barWidth,
+                    minBarSlotWidth = barWidth + 20.dp,
+                    skipAlternateXLabels = entries.size > 6,
+                    popupLabelFormatter = { entry ->
+                        formatBarChartPopupLabel(entry.value, currency.code, entry.label)
+                    },
                 )
             }
         }
@@ -482,61 +597,45 @@ private fun LocalDate.barLabel(range: DividendHistoryRange): String = when (rang
     DividendHistoryRange.MAX -> year.toString()
 }
 
-// ─── Section 3: Upcoming Payments ────────────────────────────────────────────
-
-@Composable
-private fun UpcomingPaymentRow(
-    enrichedPayment: EnrichedPayment,
-    modifier: Modifier = Modifier,
-) {
-    val payment = enrichedPayment.payment
-    Row(
-        modifier = modifier.padding(vertical = MaterialTheme.spacing.small),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
-    ) {
-        CompanyLogo(ticker = payment.tickerId)
-
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = payment.tickerId,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.SemiBold,
-            )
-            val companyName = enrichedPayment.companyInfo?.name
-            if (companyName != null) {
-                Text(
-                    text = companyName,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-        }
-
-        Column(horizontalAlignment = Alignment.End) {
-            Text(
-                text = "${payment.currency} ${payment.amount.formatTwoDecimals()}",
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.SemiBold,
-            )
-            Text(
-                text = payment.paymentDate.formatShort(),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
-    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-}
+private fun LocalDate.monthYearLabel(): String = "${monthFull()} $year"
 
 // ─── Section 4: Past Activity ─────────────────────────────────────────────────
+
+@Composable
+private fun UpcomingMonthHeader(yearMonth: LocalDate, modifier: Modifier = Modifier) {
+    Text(
+        text = yearMonth.monthYearLabel(),
+        style = MaterialTheme.typography.titleSmall,
+        fontWeight = FontWeight.SemiBold,
+        modifier = modifier.padding(
+            horizontal = MaterialTheme.spacing.medium,
+            vertical = MaterialTheme.spacing.xSmall,
+        ),
+    )
+}
+
+@Composable
+private fun YearHeader(year: Int, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.secondaryContainer)
+            .padding(horizontal = MaterialTheme.spacing.medium, vertical = MaterialTheme.spacing.xSmall),
+    ) {
+        Text(
+            text = year.toString(),
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSecondaryContainer,
+        )
+    }
+}
 
 @Composable
 private fun HistoryMonthGroup(
     yearMonth: LocalDate,
     payments: List<EnrichedPayment>,
+    currency: Currency,
     isExpanded: Boolean,
     onToggle: () -> Unit,
     onPaymentClick: (String) -> Unit,
@@ -552,21 +651,21 @@ private fun HistoryMonthGroup(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "${yearMonth.monthFull()} ${yearMonth.year}",
+                text = yearMonth.monthYearLabel(),
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold,
             )
             Row(verticalAlignment = Alignment.CenterVertically) {
                 val monthTotal: Double = payments.sumOf { it.payment.amount }
                 Text(
-                    text = "$${monthTotal.formatTwoDecimals()}",
+                    text = monthTotal.formatPrice(currency),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Spacer(Modifier.width(4.dp))
                 Icon(
                     imageVector = if (isExpanded) Icons.Default.ArrowDropUp else Icons.Default.ArrowDropDown,
-                    contentDescription = if (isExpanded) "Collapse" else "Expand",
+                    contentDescription = if (isExpanded) stringResource(Res.string.cd_collapse) else stringResource(Res.string.cd_expand),
                 )
             }
         }
@@ -575,6 +674,7 @@ private fun HistoryMonthGroup(
             payments.forEach { enrichedPayment ->
                 DividendHistoryRow(
                     enrichedPayment = enrichedPayment,
+                    currency = currency,
                     onClick = { onPaymentClick(enrichedPayment.payment.tickerId) },
                 )
             }
@@ -587,6 +687,7 @@ private fun HistoryMonthGroup(
 @Composable
 private fun DividendHistoryRow(
     enrichedPayment: EnrichedPayment,
+    currency: Currency,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -625,7 +726,7 @@ private fun DividendHistoryRow(
                 modifier = Modifier.size(14.dp),
             )
             Text(
-                text = "${payment.currency} ${payment.amount.formatTwoDecimals()}",
+                text = payment.amount.formatPrice(currency),
                 style = MaterialTheme.typography.bodySmall,
                 fontWeight = FontWeight.SemiBold,
             )
@@ -639,7 +740,7 @@ private fun DividendHistoryRow(
 private fun SectionHeader(title: String, modifier: Modifier = Modifier) {
     Text(
         text = title,
-        style = MaterialTheme.typography.titleMedium,
+        style = MaterialTheme.typography.titleLarge,
         fontWeight = FontWeight.SemiBold,
         modifier = modifier,
     )

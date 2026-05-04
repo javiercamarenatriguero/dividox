@@ -15,6 +15,8 @@ kotlin {
             implementation(project(":common:ui-resources"))
             implementation(project(":common:settings"))
             implementation(project(":integration:security"))
+            implementation(project(":integration:dividend"))
+            implementation(libs.kotlinx.datetime)
             implementation(project(":component:watchlist"))
             implementation(project(":component:market"))
             implementation(libs.kotlinx.coroutines.core)

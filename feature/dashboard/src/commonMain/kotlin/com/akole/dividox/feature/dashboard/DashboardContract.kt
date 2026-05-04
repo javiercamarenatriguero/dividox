@@ -13,11 +13,15 @@ interface DashboardContract {
         val isLoading: Boolean = true,
         val summary: PortfolioSummary? = null,
         val watchlist: List<EnrichedWatchlistEntry> = emptyList(),
-        val selectedPeriod: ChartPeriod = ChartPeriod.ONE_MONTH,
+        val selectedPeriod: ChartPeriod = ChartPeriod.ALL,
         val currency: Currency = Currency.EUR,
         val error: String? = null,
         val convertedSummary: PortfolioSummary? = null,
         val convertedWatchlistPrices: Map<String, Double> = emptyMap(),
+        val periodGainPercent: Double = 0.0,
+        val periodGainAbsolute: Double = 0.0,
+        val periodDividends: Double = 0.0,
+        val lifetimeDividends: Double = 0.0,
     ) : ViewState
 
     sealed interface DashboardViewEvent : ViewEvent {

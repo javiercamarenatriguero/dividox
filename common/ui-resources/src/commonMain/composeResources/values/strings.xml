@@ -32,9 +32,11 @@
     <string name="currency_usd">$ USD</string>
     <string name="currency_eur">€ EUR</string>
     <string name="metric_total_value">Total Value</string>
+    <string name="metric_invested">Invested</string>
     <string name="metric_total_gain">Total Gain</string>
-    <string name="metric_yield">Dividend</string>
+    <string name="metric_yield">Yield</string>
     <string name="metric_dividends">Dividends</string>
+    <string name="metric_dividends_lifetime">total</string>
     <string name="section_favourites">Favourites</string>
     <string name="action_view_all">VIEW ALL</string>
     <string name="favourites_empty_hint">No favourites yet. Search for a security to add one.</string>
@@ -62,4 +64,21 @@
     <string name="dialog_remove_message">Remove %1$s from your portfolio? This cannot be undone.</string>
     <string name="cd_delete">Delete</string>
     <string name="label_unknown_position">Position</string>
+    <string name="dividends_title">Dividend Activity</string>
+    <string name="dividends_tap_to_retry">Tap to retry</string>
+    <string name="dividends_section_upcoming">Upcoming Payments</string>
+    <string name="dividends_show_more">Show %1$d more</string>
+    <string name="dividends_show_less">Show less</string>
+    <string name="dividends_section_past_activity">Past Activity</string>
+    <string name="dividends_metric_lifetime">Lifetime</string>
+    <string name="dividends_metric_ytd">YTD</string>
+    <string name="dividends_metric_yoy">YoY</string>
+    <string name="dividends_metric_next_payout">Next Payout</string>
+    <string name="dividends_metric_yoc">YoC</string>
+    <string name="dividends_metric_yoc_target">Target %1$s</string>
+    <string name="dividends_section_projection">Dividend Projection</string>
+    <string name="dividends_empty_state">No dividend data yet</string>
+    <string name="cd_collapse">Collapse</string>
+    <string name="cd_expand">Expand</string>
+    <string name="ui_no_value">—</string>
 </resources>

@@ -9,7 +9,6 @@ import com.akole.dividox.component.market.domain.model.MarketDividendEvent
 import com.akole.dividox.component.market.domain.repository.MarketRepository
 import com.akole.dividox.component.portfolio.domain.model.Holding
 import com.akole.dividox.component.portfolio.domain.model.HoldingId
-import com.akole.dividox.component.portfolio.domain.repository.PortfolioRepository
 import com.akole.dividox.integration.dividend.domain.usecase.SyncDividendHistoryFromHoldingsUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -23,12 +22,10 @@ import kotlin.test.assertTrue
 
 class SyncDividendHistoryFromHoldingsUseCaseTest {
 
-    private val portfolioRepository = mockk<PortfolioRepository>()
     private val marketRepository = mockk<MarketRepository>()
     private val dividendRepository = mockk<DividendRepository>(relaxed = true)
 
     private val useCase = SyncDividendHistoryFromHoldingsUseCase(
-        portfolioRepository = portfolioRepository,
         marketRepository = marketRepository,
         dividendRepository = dividendRepository,
     )
@@ -57,68 +54,49 @@ class SyncDividendHistoryFromHoldingsUseCaseTest {
     // ── Tests ─────────────────────────────────────────────────────────────────
 
     @Test
-    fun `empty portfolio persists nothing`() = runTest {
-        // GIVEN
-        coEvery { portfolioRepository.getPortfolio() } returns Result.success(emptyList())
-
+    fun `empty portfolio does not call replaceAllPayments`() = runTest {
         // WHEN
-        useCase()
+        useCase(emptyList())
 
-        // THEN
-        coVerify(exactly = 0) { dividendRepository.addDividendPayment(any()) }
+        // THEN — returns early; cache untouched
+        coVerify(exactly = 0) { dividendRepository.replaceAllPayments(any()) }
     }
 
     @Test
-    fun `portfolio fetch failure returns success without persisting`() = runTest {
-        // GIVEN
-        coEvery { portfolioRepository.getPortfolio() } returns Result.failure(RuntimeException("network"))
-
-        // WHEN
-        val result = useCase()
-
-        // THEN
-        assertTrue(result.isSuccess)
-        coVerify(exactly = 0) { dividendRepository.addDividendPayment(any()) }
-    }
-
-    @Test
-    fun `market API failure for ticker is skipped silently`() = runTest {
-        // GIVEN
-        coEvery { portfolioRepository.getPortfolio() } returns Result.success(
-            listOf(holding("AAPL", shares = 10.0)),
-        )
+    fun `market API failure for ticker replaces cache with empty list`() = runTest {
+        // GIVEN — API fails; no eligible payments collected
+        val holdings = listOf(holding("AAPL", shares = 10.0))
         coEvery {
             marketRepository.getHistoricalDividendEvents("AAPL", DividendHistoryRange.MAX)
         } returns Result.failure(RuntimeException("timeout"))
 
         // WHEN
-        val result = useCase()
+        val result = useCase(holdings)
 
-        // THEN
+        // THEN — sync completes; stale cache cleared
         assertTrue(result.isSuccess)
-        coVerify(exactly = 0) { dividendRepository.addDividendPayment(any()) }
+        coVerify(exactly = 1) { dividendRepository.replaceAllPayments(emptyList()) }
     }
 
     @Test
     fun `persists payment with correct amount and stable ID`() = runTest {
         // GIVEN
+        val purchaseDate = LocalDate(2024, 1, 1)
         val exDate = LocalDate(2024, 3, 15)
         val shares = 10.0
         val amountPerShare = 0.25
-        coEvery { portfolioRepository.getPortfolio() } returns Result.success(
-            listOf(holding("AAPL", shares = shares)),
-        )
+        val holdings = listOf(holding("AAPL", shares = shares, purchaseDateEpochMs = purchaseDate.toEpochMs()))
         coEvery {
             marketRepository.getHistoricalDividendEvents("AAPL", DividendHistoryRange.MAX)
         } returns Result.success(listOf(event("AAPL", amountPerShare, exDate)))
-        val slot = slot<DividendPayment>()
-        coEvery { dividendRepository.addDividendPayment(capture(slot)) } returns Unit
+        val slot = slot<List<DividendPayment>>()
+        coEvery { dividendRepository.replaceAllPayments(capture(slot)) } returns Unit
 
         // WHEN
-        useCase()
+        useCase(holdings)
 
         // THEN
-        val persisted = slot.captured
+        val persisted = slot.captured.single()
         assertEquals("AAPL-$exDate", persisted.id.value)
         assertEquals("AAPL", persisted.tickerId)
         assertEquals(shares * amountPerShare, persisted.amount)
@@ -127,112 +105,100 @@ class SyncDividendHistoryFromHoldingsUseCaseTest {
     }
 
     @Test
-    fun `dividend event before purchase date is still persisted (no lot filter in MVP)`() = runTest {
-        // GIVEN — ex-date is before the purchase date; MVP includes all historical dividends
+    fun `dividend event before purchase date is not persisted`() = runTest {
+        // GIVEN — ex-date is before the earliest purchase date for the ticker
         val exDate = LocalDate(2023, 6, 15)
-        val purchaseDate = LocalDate(2024, 1, 1) // purchased after ex-date
-        coEvery { portfolioRepository.getPortfolio() } returns Result.success(
-            listOf(holding("AAPL", shares = 10.0, purchaseDateEpochMs = purchaseDate.toEpochMs())),
-        )
+        val purchaseDate = LocalDate(2024, 1, 1)
+        val holdings = listOf(holding("AAPL", shares = 10.0, purchaseDateEpochMs = purchaseDate.toEpochMs()))
         coEvery {
             marketRepository.getHistoricalDividendEvents("AAPL", DividendHistoryRange.MAX)
         } returns Result.success(listOf(event("AAPL", 0.25, exDate)))
-        coEvery { dividendRepository.addDividendPayment(any()) } returns Unit
+        val slot = slot<List<DividendPayment>>()
+        coEvery { dividendRepository.replaceAllPayments(capture(slot)) } returns Unit
 
         // WHEN
-        useCase()
+        useCase(holdings)
 
-        // THEN — payment is persisted regardless of purchaseDate
-        coVerify(exactly = 1) { dividendRepository.addDividendPayment(any()) }
+        // THEN — cache replaced with empty list (pre-purchase dividend excluded)
+        assertTrue(slot.captured.isEmpty())
     }
 
     @Test
-    fun `dividend event on same day as purchase date is still persisted (no lot filter in MVP)`() = runTest {
-        // GIVEN
+    fun `dividend event on same day as purchase date is not persisted`() = runTest {
+        // GIVEN — buying on ex-date does not qualify per stock market convention
         val exDate = LocalDate(2024, 3, 15)
-        coEvery { portfolioRepository.getPortfolio() } returns Result.success(
-            listOf(holding("AAPL", shares = 10.0, purchaseDateEpochMs = exDate.toEpochMs())),
-        )
+        val holdings = listOf(holding("AAPL", shares = 10.0, purchaseDateEpochMs = exDate.toEpochMs()))
         coEvery {
             marketRepository.getHistoricalDividendEvents("AAPL", DividendHistoryRange.MAX)
         } returns Result.success(listOf(event("AAPL", 0.25, exDate)))
-        coEvery { dividendRepository.addDividendPayment(any()) } returns Unit
+        val slot = slot<List<DividendPayment>>()
+        coEvery { dividendRepository.replaceAllPayments(capture(slot)) } returns Unit
 
         // WHEN
-        useCase()
+        useCase(holdings)
 
         // THEN
-        coVerify(exactly = 1) { dividendRepository.addDividendPayment(any()) }
+        assertTrue(slot.captured.isEmpty())
     }
 
     @Test
-    fun `two lots of same ticker sum all shares for every event`() = runTest {
-        // GIVEN — total shares: 10 + 5 = 15, regardless of lot purchase dates
-        val exDate = LocalDate(2024, 3, 15)
+    fun `two lots of same ticker use earliest purchase date as cutoff`() = runTest {
+        // GIVEN — lot1 purchased 2023-01-01, lot2 purchased 2024-01-01
+        // ex-date 2023-06-15 is after lot1 → included, total shares = 10 + 5 = 15
+        val exDate = LocalDate(2023, 6, 15)
         val lot1 = holding("AAPL", shares = 10.0, purchaseDateEpochMs = LocalDate(2023, 1, 1).toEpochMs())
         val lot2 = holding("AAPL", shares = 5.0, purchaseDateEpochMs = LocalDate(2024, 1, 1).toEpochMs())
         val amountPerShare = 0.25
-        coEvery { portfolioRepository.getPortfolio() } returns Result.success(listOf(lot1, lot2))
         coEvery {
             marketRepository.getHistoricalDividendEvents("AAPL", DividendHistoryRange.MAX)
         } returns Result.success(listOf(event("AAPL", amountPerShare, exDate)))
-        val slot = slot<DividendPayment>()
-        coEvery { dividendRepository.addDividendPayment(capture(slot)) } returns Unit
+        val slot = slot<List<DividendPayment>>()
+        coEvery { dividendRepository.replaceAllPayments(capture(slot)) } returns Unit
 
         // WHEN
-        useCase()
+        useCase(listOf(lot1, lot2))
 
-        // THEN — 10 + 5 = 15 shares × 0.25
-        assertEquals(15.0 * amountPerShare, slot.captured.amount)
+        // THEN — eligible; total shares = 15 × 0.25
+        assertEquals(15.0 * amountPerShare, slot.captured.single().amount)
     }
 
     @Test
-    fun `multiple events for same ticker are each persisted with correct amounts`() = runTest {
-        // GIVEN — two dividend events in different quarters
+    fun `multiple events for same ticker are each included`() = runTest {
+        // GIVEN — two dividend events after purchase date
+        val purchaseDate = LocalDate(2024, 1, 1)
         val exDate1 = LocalDate(2024, 3, 15)
         val exDate2 = LocalDate(2024, 6, 15)
-        val shares = 10.0
-        val amountPerShare = 0.25
-        coEvery { portfolioRepository.getPortfolio() } returns Result.success(
-            listOf(holding("AAPL", shares = shares)),
-        )
+        val holdings = listOf(holding("AAPL", shares = 10.0, purchaseDateEpochMs = purchaseDate.toEpochMs()))
         coEvery {
             marketRepository.getHistoricalDividendEvents("AAPL", DividendHistoryRange.MAX)
         } returns Result.success(
-            listOf(
-                event("AAPL", amountPerShare, exDate1),
-                event("AAPL", amountPerShare, exDate2),
-            ),
+            listOf(event("AAPL", 0.25, exDate1), event("AAPL", 0.25, exDate2)),
         )
-        coEvery { dividendRepository.addDividendPayment(any()) } returns Unit
+        val slot = slot<List<DividendPayment>>()
+        coEvery { dividendRepository.replaceAllPayments(capture(slot)) } returns Unit
 
         // WHEN
-        useCase()
+        useCase(holdings)
 
-        // THEN — one call per event
-        coVerify(exactly = 1) {
-            dividendRepository.addDividendPayment(match { it.id.value == "AAPL-$exDate1" })
-        }
-        coVerify(exactly = 1) {
-            dividendRepository.addDividendPayment(match { it.id.value == "AAPL-$exDate2" })
-        }
+        // THEN — both events included
+        assertEquals(2, slot.captured.size)
+        assertTrue(slot.captured.any { it.id.value == "AAPL-$exDate1" })
+        assertTrue(slot.captured.any { it.id.value == "AAPL-$exDate2" })
     }
 
     @Test
     fun `multiple tickers each call market API with MAX range`() = runTest {
         // GIVEN
-        coEvery { portfolioRepository.getPortfolio() } returns Result.success(
-            listOf(
-                holding("AAPL", shares = 10.0),
-                holding("MSFT", shares = 5.0),
-            ),
+        val holdings = listOf(
+            holding("AAPL", shares = 10.0),
+            holding("MSFT", shares = 5.0),
         )
         coEvery {
             marketRepository.getHistoricalDividendEvents(any(), DividendHistoryRange.MAX)
         } returns Result.success(emptyList())
 
         // WHEN
-        useCase()
+        useCase(holdings)
 
         // THEN
         coVerify(exactly = 1) { marketRepository.getHistoricalDividendEvents("AAPL", DividendHistoryRange.MAX) }
@@ -242,12 +208,11 @@ class SyncDividendHistoryFromHoldingsUseCaseTest {
     @Test
     fun `one ticker API failure does not prevent other tickers from syncing`() = runTest {
         // GIVEN — MSFT fails, AAPL succeeds
+        val purchaseDate = LocalDate(2024, 1, 1)
         val exDate = LocalDate(2024, 3, 15)
-        coEvery { portfolioRepository.getPortfolio() } returns Result.success(
-            listOf(
-                holding("AAPL", shares = 10.0),
-                holding("MSFT", shares = 5.0),
-            ),
+        val holdings = listOf(
+            holding("AAPL", shares = 10.0, purchaseDateEpochMs = purchaseDate.toEpochMs()),
+            holding("MSFT", shares = 5.0, purchaseDateEpochMs = purchaseDate.toEpochMs()),
         )
         coEvery {
             marketRepository.getHistoricalDividendEvents("AAPL", DividendHistoryRange.MAX)
@@ -255,37 +220,37 @@ class SyncDividendHistoryFromHoldingsUseCaseTest {
         coEvery {
             marketRepository.getHistoricalDividendEvents("MSFT", DividendHistoryRange.MAX)
         } returns Result.failure(RuntimeException("API error"))
-        coEvery { dividendRepository.addDividendPayment(any()) } returns Unit
+        val slot = slot<List<DividendPayment>>()
+        coEvery { dividendRepository.replaceAllPayments(capture(slot)) } returns Unit
 
         // WHEN
-        val result = useCase()
+        val result = useCase(holdings)
 
-        // THEN — AAPL persisted, MSFT skipped, overall result is success
+        // THEN — AAPL payment included; MSFT skipped; overall success
         assertTrue(result.isSuccess)
-        coVerify(exactly = 1) { dividendRepository.addDividendPayment(match { it.tickerId == "AAPL" }) }
-        coVerify(exactly = 0) { dividendRepository.addDividendPayment(match { it.tickerId == "MSFT" }) }
+        assertEquals(1, slot.captured.size)
+        assertEquals("AAPL", slot.captured.single().tickerId)
     }
 
     @Test
-    fun `re-sync uses same stable ID so upsert is idempotent`() = runTest {
+    fun `re-sync produces same stable IDs so replace is idempotent`() = runTest {
         // GIVEN
+        val purchaseDate = LocalDate(2024, 1, 1)
         val exDate = LocalDate(2024, 3, 15)
-        coEvery { portfolioRepository.getPortfolio() } returns Result.success(
-            listOf(holding("AAPL", shares = 10.0)),
-        )
+        val holdings = listOf(holding("AAPL", shares = 10.0, purchaseDateEpochMs = purchaseDate.toEpochMs()))
         coEvery {
             marketRepository.getHistoricalDividendEvents("AAPL", DividendHistoryRange.MAX)
         } returns Result.success(listOf(event("AAPL", 0.25, exDate)))
-        coEvery { dividendRepository.addDividendPayment(any()) } returns Unit
+        coEvery { dividendRepository.replaceAllPayments(any()) } returns Unit
 
         // WHEN — sync twice
-        useCase()
-        useCase()
+        useCase(holdings)
+        useCase(holdings)
 
-        // THEN — same stable ID both times → upsert handles deduplication
+        // THEN — replaceAllPayments called twice with the same stable ID
         val expectedId = DividendPaymentId("AAPL-$exDate")
         coVerify(exactly = 2) {
-            dividendRepository.addDividendPayment(match { it.id == expectedId })
+            dividendRepository.replaceAllPayments(match { it.single().id == expectedId })
         }
     }
 }

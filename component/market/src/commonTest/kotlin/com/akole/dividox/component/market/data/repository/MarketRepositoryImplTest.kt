@@ -117,6 +117,43 @@ class MarketRepositoryImplTest {
         assertEquals(2, result.getOrNull()?.size)
     }
 
+    @Test
+    fun `SHOULD serve from cache WHEN called twice GIVEN single set of network responses`() = runTest(dispatcher) {
+        // GIVEN — only 2 responses queued; second call must be served fully from cache
+        val repo = buildRepoWithResponses(
+            "aapl" to CHART_JSON_AAPL,
+            "msft" to CHART_JSON_MSFT,
+        )
+
+        // WHEN
+        val first = repo.getMultipleQuotes(listOf("AAPL", "MSFT"))
+        val second = repo.getMultipleQuotes(listOf("AAPL", "MSFT"))
+
+        // THEN — both succeed, prices are identical (served from cache on second call)
+        assertTrue(first.isSuccess)
+        assertTrue(second.isSuccess)
+        val firstPrices = first.getOrNull()!!.associate { it.ticker to it.price }
+        val secondPrices = second.getOrNull()!!.associate { it.ticker to it.price }
+        assertEquals(firstPrices, secondPrices)
+    }
+
+    @Test
+    fun `SHOULD only fetch uncached tickers WHEN one ticker is already cached GIVEN mixed cache state`() = runTest(dispatcher) {
+        // GIVEN — AAPL is warmed up via getStockQuote; only MSFT needs a network call
+        val repo = buildRepoWithResponses(
+            "aapl" to CHART_JSON_AAPL,  // consumed by getStockQuote warm-up
+            "msft" to CHART_JSON_MSFT,  // consumed by getMultipleQuotes for MSFT only
+        )
+        repo.getStockQuote("AAPL") // warms cache
+
+        // WHEN — if AAPL were fetched again this would consume a 3rd response and crash
+        val result = repo.getMultipleQuotes(listOf("AAPL", "MSFT"))
+
+        // THEN
+        assertTrue(result.isSuccess)
+        assertEquals(2, result.getOrNull()?.size)
+    }
+
     // ── getDividendInfo ───────────────────────────────────────────────────────
 
     @Test

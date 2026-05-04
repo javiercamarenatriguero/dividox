@@ -16,16 +16,19 @@ import kotlinx.serialization.Transient
  * Persists watchlist entries at: `users/{userId}/watchlist/{tickerId}`
  * Document ID is the tickerId for simple existence checks.
  *
- * @property userId Current authenticated user ID—determines collection path
+ * The user ID is resolved lazily on each access via [userIdProvider], ensuring the correct
+ * authenticated user is always used even if the data source is created before auth completes.
+ *
+ * @property userIdProvider Provides the current authenticated user ID on demand.
  */
 class WatchlistFirestoreDataSource(
-    private val userId: String,
+    private val userIdProvider: () -> String,
 ) : WatchlistDataSource {
 
     private val collectionRef
         get() = Firebase.firestore
             .collection("users")
-            .document(userId)
+            .document(userIdProvider())
             .collection("watchlist")
 
     override fun observeWatchlist(): Flow<List<WatchlistEntry>> =

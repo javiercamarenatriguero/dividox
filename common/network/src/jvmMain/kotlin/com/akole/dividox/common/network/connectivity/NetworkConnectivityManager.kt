@@ -5,23 +5,17 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.withContext
-import java.net.InetAddress
+import java.net.InetSocketAddress
+import java.net.Socket
 
 /**
  * JVM (Desktop) implementation of [NetworkConnectivityManager].
  *
- * Uses polling via [InetAddress.isReachable] to detect connectivity.
- * Suitable for desktop applications where system-level APIs are not available.
- * Polls every 10 seconds and emits state changes with 500ms debounce.
- *
- * **Platform Details:**
- * - Polls Google DNS (8.8.8.8) every 10s for connectivity check (conservative to avoid CPU overhead)
- * - Uses timeout (3s) for isReachable()
- * - Runs on Dispatchers.IO to avoid blocking main thread
- * - Auto-detects initial state on subscription
+ * Uses TCP socket polling to detect connectivity (ICMP/isReachable requires root on most JVMs).
+ * Connects to Google DNS port 53 (TCP) which works without elevated privileges.
+ * Polls every 10 seconds and emits state changes.
  */
 actual class NetworkConnectivityManager {
 
@@ -30,19 +24,21 @@ actual class NetworkConnectivityManager {
             while (true) {
                 val isConnected = withContext(Dispatchers.IO) {
                     try {
-                        InetAddress.getByName("8.8.8.8").isReachable(3000)
+                        Socket().use { socket ->
+                            socket.connect(InetSocketAddress("8.8.8.8", 53), 3000)
+                            true
+                        }
                     } catch (e: Exception) {
                         false
                     }
                 }
                 trySend(isConnected)
-                delay(10000) // Poll every 10s for efficiency
+                delay(10_000)
             }
 
             @Suppress("UNREACHABLE_CODE")
             awaitClose { }
         }
-            .debounce(500)
             .distinctUntilChanged()
     }
 }

@@ -41,17 +41,16 @@ class DividendLocalDataSource(private val dao: DividendDao) {
         dao.observeUpcoming(today).map { entities -> entities.map { it.toDomain() } }
 
     /**
-     * Replaces the local cache with the given list of domain payments.
-     *
-     * Steps:
-     * 1. Converts domain models to entities via [toEntity].
-     * 2. Clears the existing cache.
-     * 3. Upserts the new list.
+     * Atomically replaces the local cache with the given list of domain payments.
+     * Delegates to [DividendDao.replaceAll] so Room emits a single notification.
      */
     suspend fun replaceAll(payments: List<DividendPayment>) {
-        val entities = payments.map { it.toEntity() }
+        dao.replaceAll(payments.map { it.toEntity() })
+    }
+
+    /** Deletes all cached payments. Call on sign-out to prevent data leaking across sessions. */
+    suspend fun clearAll() {
         dao.clearAll()
-        dao.upsert(entities)
     }
 
     /** Appends or updates a single payment in the cache. */

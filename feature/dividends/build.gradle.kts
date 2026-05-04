@@ -14,6 +14,8 @@ kotlin {
             implementation(project(":common:mvi"))
             implementation(project(":common:ui-resources"))
             implementation(project(":common:network"))
+            implementation(project(":common:settings"))
+            implementation(project(":common:currency"))
             implementation(project(":integration:dividend"))
             implementation(project(":component:dividend"))
             implementation(project(":component:market"))
