@@ -40,7 +40,10 @@ class SearchViewModel(
 
     override fun onViewEvent(viewEvent: SearchViewEvent) {
         when (viewEvent) {
-            is QueryChanged -> queryFlow.value = viewEvent.query
+            is QueryChanged -> {
+                updateViewState { copy(query = viewEvent.query) }
+                queryFlow.value = viewEvent.query
+            }
             is FavouriteToggled -> toggleFavourite(viewEvent.ticker)
             is SecurityClicked -> viewModelScope.emitSideEffect(
                 SearchSideEffect.Navigation.NavigateToSecurity(viewEvent.ticker)
@@ -53,10 +56,10 @@ class SearchViewModel(
         viewModelScope.launch {
             queryFlow.debounce(250L).collectLatest { query ->
                 if (query.isBlank()) {
-                    updateViewState { copy(query = query, results = emptyList(), isLoading = false, error = null) }
+                    updateViewState { copy(results = emptyList(), isLoading = false, error = null) }
                     return@collectLatest
                 }
-                updateViewState { copy(query = query, isLoading = true, error = null) }
+                updateViewState { copy(isLoading = true, error = null) }
                 searchSecurities(query)
                     .onSuccess { results ->
                         updateViewState { copy(results = results, isLoading = false) }
