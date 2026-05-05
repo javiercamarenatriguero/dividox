@@ -17,6 +17,7 @@ kotlin {
             implementation(project(":common:network"))
             implementation(project(":common:currency"))
             implementation(project(":component:watchlist"))
+            implementation(project(":component:market"))
             implementation(project(":integration:security"))
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.datetime)
