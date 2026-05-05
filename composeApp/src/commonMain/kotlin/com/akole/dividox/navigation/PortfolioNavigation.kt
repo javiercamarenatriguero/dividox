@@ -60,6 +60,11 @@ fun NavGraphBuilder.portfolioScreenNode(
         )
     }
 
+    addHoldingScreenNode(navController)
+    editHoldingScreenNode(navController)
+}
+
+fun NavGraphBuilder.addHoldingScreenNode(navController: NavController) {
     composable<AddHoldingRoute>(
         enterTransition = { slideInHorizontally { it } },
         popExitTransition = { slideOutHorizontally { it } },
@@ -75,7 +80,9 @@ fun NavGraphBuilder.portfolioScreenNode(
             onPositionDeleted = { navController.popBackStack() },
         )
     }
+}
 
+fun NavGraphBuilder.editHoldingScreenNode(navController: NavController) {
     composable<EditHoldingRoute>(
         enterTransition = { slideInHorizontally { it } },
         popExitTransition = { slideOutHorizontally { it } },
