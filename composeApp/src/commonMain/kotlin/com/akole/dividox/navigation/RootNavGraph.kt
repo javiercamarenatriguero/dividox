@@ -63,6 +63,7 @@ fun SetupRootNavGraph(navController: NavHostController) {
         mainGraphNode(navController)
         detailScreenNode(navController)
         securityDetailScreenNode(navController)
+        searchScreenNode(navController = navController, rootNavController = navController)
         addHoldingScreenNode(navController)
         editHoldingScreenNode(navController)
     }
