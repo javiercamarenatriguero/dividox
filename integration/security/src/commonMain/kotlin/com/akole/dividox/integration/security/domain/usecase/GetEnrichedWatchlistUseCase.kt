@@ -5,6 +5,8 @@ import com.akole.dividox.component.market.domain.usecase.GetMultipleQuotesUseCas
 import com.akole.dividox.component.portfolio.domain.usecase.GetPortfolioUseCase
 import com.akole.dividox.component.watchlist.domain.usecase.GetWatchlistUseCase
 import com.akole.dividox.integration.security.domain.model.EnrichedWatchlistEntry
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 
@@ -39,15 +41,19 @@ class GetEnrichedWatchlistUseCase(
                 .getOrElse { emptyList() }
             val quoteByTicker = quotes.associateBy { it.ticker }
 
-            watchlistEntries.map { entry ->
-                val quote = quoteByTicker[entry.tickerId]
-                val companyInfo = getCompanyInfoUseCase(entry.tickerId).getOrNull()
-                EnrichedWatchlistEntry(
-                    entry = entry,
-                    quote = quote,
-                    companyInfo = companyInfo,
-                    isInPortfolio = entry.tickerId in portfolioTickers,
-                )
+            coroutineScope {
+                watchlistEntries.map { entry ->
+                    async {
+                        val quote = quoteByTicker[entry.tickerId]
+                        val companyInfo = getCompanyInfoUseCase(entry.tickerId).getOrNull()
+                        EnrichedWatchlistEntry(
+                            entry = entry,
+                            quote = quote,
+                            companyInfo = companyInfo,
+                            isInPortfolio = entry.tickerId in portfolioTickers,
+                        )
+                    }
+                }.map { it.await() }
             }
         }
 }

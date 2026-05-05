@@ -110,3 +110,24 @@ fun Double.formatTwoDecimals(): String {
 
 private fun Double.formattedAbsIntAndDec(groupSep: Char): Pair<String, String> =
     abs(this).intAndDecFormatted(groupSep)
+
+/**
+ * Formats a large number with a compact suffix: B (billions), M (millions), K (thousands).
+ * Values below 1 000 are formatted with two decimal places and no suffix.
+ *
+ * Examples:
+ * - `1_234_567_890.0` → `"1.23B"`
+ * - `450_000_000.0` → `"450.00M"`
+ * - `12_300.0` → `"12.30K"`
+ * - `500.0` → `"500.00"`
+ */
+fun Double.formatLargeNumber(): String {
+    val absVal = abs(this)
+    val sign = if (this < 0.0) "-" else ""
+    return when {
+        absVal >= 1_000_000_000.0 -> "$sign${(absVal / 1_000_000_000.0).formatTwoDecimals()}B"
+        absVal >= 1_000_000.0 -> "$sign${(absVal / 1_000_000.0).formatTwoDecimals()}M"
+        absVal >= 1_000.0 -> "$sign${(absVal / 1_000.0).formatTwoDecimals()}K"
+        else -> "$sign${absVal.formatTwoDecimals()}"
+    }
+}

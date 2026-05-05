@@ -7,6 +7,8 @@ import com.akole.dividox.component.portfolio.domain.model.Holding
 import com.akole.dividox.component.portfolio.domain.usecase.GetPortfolioUseCase
 import com.akole.dividox.integration.security.domain.model.SecurityHolding
 import kotlin.time.Clock
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
@@ -53,23 +55,28 @@ class GetPortfolioWithQuotesUseCase(
                     }
 
                     val quoteByTicker = quotes.associateBy { it.ticker }
+                    val holdingsWithQuotes = holdings.filter { it.tickerId in quoteByTicker }
                     emit(
-                        holdings.mapNotNull { holding ->
-                            val quote = quoteByTicker[holding.tickerId] ?: return@mapNotNull null
-                            val dividendInfo = getDividendInfoUseCase(holding.tickerId).getOrNull()
-                            val costBasis = holding.shares * holding.purchasePrice
-                            val currentValue = holding.shares * quote.price
-                            val totalGainPercent = if (costBasis != 0.0) {
-                                (currentValue - costBasis) / costBasis * 100.0
-                            } else {
-                                0.0
-                            }
-                            SecurityHolding(
-                                holding = holding,
-                                quote = quote,
-                                dividendInfo = dividendInfo,
-                                totalGainPercent = totalGainPercent,
-                            )
+                        coroutineScope {
+                            holdingsWithQuotes.map { holding ->
+                                async {
+                                    val quote = quoteByTicker[holding.tickerId]!!
+                                    val dividendInfo = getDividendInfoUseCase(holding.tickerId).getOrNull()
+                                    val costBasis = holding.shares * holding.purchasePrice
+                                    val currentValue = holding.shares * quote.price
+                                    val totalGainPercent = if (costBasis != 0.0) {
+                                        (currentValue - costBasis) / costBasis * 100.0
+                                    } else {
+                                        0.0
+                                    }
+                                    SecurityHolding(
+                                        holding = holding,
+                                        quote = quote,
+                                        dividendInfo = dividendInfo,
+                                        totalGainPercent = totalGainPercent,
+                                    )
+                                }
+                            }.map { it.await() }
                         },
                     )
                 }.retryWhen { _, attempt ->

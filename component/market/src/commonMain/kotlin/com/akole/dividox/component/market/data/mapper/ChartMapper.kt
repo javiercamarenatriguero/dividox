@@ -8,9 +8,12 @@ import com.akole.dividox.component.market.domain.model.MarketDividendEvent
 import com.akole.dividox.component.market.domain.model.PricePoint
 import com.akole.dividox.component.market.domain.model.StockQuote
 import kotlin.math.pow
+import kotlin.math.roundToLong
 import kotlin.time.Clock
 import kotlin.time.Instant
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 
 private const val SECONDS_PER_HOUR = 3_600L
@@ -39,6 +42,11 @@ internal fun ChartMetaDto.toStockQuote(): StockQuote {
         currency = currency ?: "USD",
         lastUpdated = Instant.fromEpochSeconds(regularMarketTime ?: 0),
         name = longName ?: shortName,
+        fiftyTwoWeekHigh = fiftyTwoWeekHigh,
+        fiftyTwoWeekLow = fiftyTwoWeekLow,
+        volume = regularMarketVolume,
+        dayHigh = regularMarketDayHigh,
+        dayLow = regularMarketDayLow,
     )
 }
 
@@ -56,14 +64,24 @@ internal fun ChartMetaDto.toStockQuote(): StockQuote {
  */
 internal fun ChartResultDto.toDividendInfo(ticker: String): DividendInfo {
     val price = meta.regularMarketPrice
+    val nowSeconds = Clock.System.now().epochSeconds
     val dividends = events?.dividends?.values?.sortedBy { it.date } ?: emptyList()
+    val past = dividends.filter { it.date <= nowSeconds }
+    val future = dividends.filter { it.date > nowSeconds }
 
     val annualPayout = calculateAnnualPayout(dividends)
     val yieldValue = if (price > 0.0) (annualPayout / price) * 100.0 else 0.0
-    val fiveYearGrowth = calculateFiveYearGrowth(dividends)
-    val exDividendDate = dividends.lastOrNull()?.date?.let {
+    val fiveYearGrowth = calculateFiveYearGrowth(past.ifEmpty { dividends })
+
+    // exDividendDate = most recent past ex-div date
+    val exDividendDate = past.lastOrNull()?.date?.let {
         Instant.fromEpochSeconds(it).toLocalDateTime(TimeZone.UTC).date
     }
+
+    // nextDividendDate = first declared future date, or projected from past cadence
+    val nextDividendDate = future.firstOrNull()?.date?.let {
+        Instant.fromEpochSeconds(it).toLocalDateTime(TimeZone.UTC).date
+    } ?: projectNextDividendDate(past)
 
     return DividendInfo(
         ticker = ticker,
@@ -72,6 +90,7 @@ internal fun ChartResultDto.toDividendInfo(ticker: String): DividendInfo {
         payoutRatio = 0.0,
         fiveYearGrowth = fiveYearGrowth,
         exDividendDate = exDividendDate,
+        nextDividendDate = nextDividendDate,
     )
 }
 
@@ -86,6 +105,25 @@ private fun calculateAnnualPayout(
     val oneYearAgoSeconds = Clock.System.now().epochSeconds - ONE_YEAR_SECONDS
     val trailingYear = dividends.filter { it.date >= oneYearAgoSeconds }.sumOf { it.amount }
     return if (trailingYear > 0.0) trailingYear else dividends.lastOrNull()?.amount ?: 0.0
+}
+
+/**
+ * Projects the next ex-dividend date by computing the average interval between the last
+ * few payments and adding it to the most recent ex-dividend date.
+ * Returns null when there are fewer than 2 data points or the projection is in the past.
+ */
+private fun projectNextDividendDate(
+    dividends: List<com.akole.dividox.component.market.data.dto.DividendEventDto>,
+): kotlinx.datetime.LocalDate? {
+    if (dividends.size < 2) return null
+    val recent = dividends.takeLast(minOf(dividends.size, 4))
+    val avgIntervalSeconds = recent.zipWithNext { a, b -> b.date - a.date }.average()
+    val avgIntervalDays = (avgIntervalSeconds / (HOURS_PER_DAY * SECONDS_PER_HOUR)).roundToLong()
+    val lastDate = Instant.fromEpochSeconds(dividends.last().date)
+        .toLocalDateTime(TimeZone.UTC).date
+    val projected = lastDate.plus(avgIntervalDays, DateTimeUnit.DAY)
+    val today = Clock.System.now().toLocalDateTime(TimeZone.UTC).date
+    return projected.takeIf { it > today }
 }
 
 /**

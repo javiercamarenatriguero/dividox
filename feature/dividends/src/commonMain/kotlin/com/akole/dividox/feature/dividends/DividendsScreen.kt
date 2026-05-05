@@ -59,8 +59,6 @@ import com.akole.dividox.common.ui.resources.format.formatPercentSigned
 import com.akole.dividox.common.ui.resources.format.formatPrice
 import com.akole.dividox.common.ui.resources.format.formatShort
 import com.akole.dividox.common.ui.resources.format.monthFull
-import com.akole.dividox.common.ui.resources.format.monthShort
-import com.akole.dividox.common.ui.resources.format.monthShortWithYear
 import com.akole.dividox.common.ui.resources.theme.extendedColors
 import com.akole.dividox.common.ui.resources.theme.spacing
 import com.akole.dividox.feature.dividends.DividendsContract.DividendsSideEffect
@@ -520,7 +518,7 @@ private fun ProjectionChartSection(
 
             val entries: List<BarChartEntry> = bars.map { bar ->
                 BarChartEntry(
-                    label = bar.yearMonth.barLabel(selectedRange),
+                    label = bar.yearMonth.toBarLabel(selectedRange),
                     value = bar.amount.toFloat(),
                 )
             }
@@ -599,14 +597,6 @@ private fun DividendRangeSelectorRow(
             }
         }
     }
-}
-
-private fun LocalDate.barLabel(range: DividendHistoryRange): String = when (range) {
-    DividendHistoryRange.YTD,
-    DividendHistoryRange.ONE_YEAR -> monthShort()
-    DividendHistoryRange.TWO_YEARS -> monthShortWithYear()
-    DividendHistoryRange.FIVE_YEARS,
-    DividendHistoryRange.MAX -> year.toString()
 }
 
 private fun LocalDate.monthYearLabel(): String = "${monthFull()} $year"

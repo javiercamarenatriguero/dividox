@@ -3,6 +3,7 @@ package com.akole.dividox.di
 import com.akole.dividox.feature.auth.forgotpassword.ForgotPasswordViewModel
 import com.akole.dividox.feature.auth.login.LoginViewModel
 import com.akole.dividox.feature.auth.register.SignUpViewModel
+import com.akole.dividox.feature.analysis.SecurityDetailViewModel
 import com.akole.dividox.feature.dividends.DividendsViewModel
 import com.akole.dividox.feature.dashboard.DashboardViewModel
 import com.akole.dividox.feature.home.HomeViewModel
@@ -28,7 +29,25 @@ val viewModelModule: Module = module {
     viewModelOf(::DashboardViewModel)
     viewModelOf(::DividendsViewModel)
     viewModel { PortfolioViewModel(get(), get(), get(), get()) }
-    
+
+    // SecurityDetailViewModel with required ticker parameter
+    viewModel { params ->
+        SecurityDetailViewModel(
+            ticker = params.get(),
+            getSecurityDetail = get(),
+            getStockQuote = get(),
+            getHistoricalDividendEvents = get(),
+            getPriceHistory = get(),
+            isInWatchlist = get(),
+            addToWatchlist = get(),
+            removeFromWatchlist = get(),
+            connectivityManager = get(),
+            observeAppSettings = get(),
+            currencyConverter = get(),
+            refreshTracker = get(),
+        )
+    }
+
     // HoldingViewModel with optional holdingId parameter for Add/Edit modes
     viewModel { params ->
         val holdingIdValue: String? = params.getOrNull()

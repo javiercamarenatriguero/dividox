@@ -19,7 +19,7 @@ fun NavController.navigateToDashboard(navOptions: NavOptions? = null) {
     this.navigate(DashboardRoute, navOptions)
 }
 
-fun NavGraphBuilder.dashboardScreenNode(navController: NavController) {
+fun NavGraphBuilder.dashboardScreenNode(navController: NavController, rootNavController: NavController) {
     composable<DashboardRoute> {
         val viewModel = koinViewModel<DashboardViewModel>()
         val state by collectViewState(viewModel.viewState)
@@ -31,7 +31,7 @@ fun NavGraphBuilder.dashboardScreenNode(navController: NavController) {
             onNavigation = { navigation ->
                 when (navigation) {
                     is DashboardSideEffect.Navigation.NavigateToSecurity ->
-                        navController.navigate(SecurityDetailRoute(ticker = navigation.ticker))
+                        rootNavController.navigateToSecurityDetail(ticker = navigation.ticker)
                     DashboardSideEffect.Navigation.NavigateToFavorites ->
                         navController.navigate(FavoritesRoute)
                 }
@@ -39,9 +39,6 @@ fun NavGraphBuilder.dashboardScreenNode(navController: NavController) {
         )
     }
 }
-
-@Serializable
-data class SecurityDetailRoute(val ticker: String)
 
 @Serializable
 data object FavoritesRoute

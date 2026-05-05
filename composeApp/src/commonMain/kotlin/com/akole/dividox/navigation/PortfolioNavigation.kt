@@ -32,6 +32,7 @@ fun NavController.navigateToEditHolding(holdingId: String) {
 
 fun NavGraphBuilder.portfolioScreenNode(
     navController: NavController,
+    rootNavController: NavController,
     onRegisterFabClick: ((() -> Unit) -> Unit) = {},
 ) {
     composable<PortfolioRoute> {
@@ -49,7 +50,7 @@ fun NavGraphBuilder.portfolioScreenNode(
             onNavigation = { navigation ->
                 when (navigation) {
                     is PortfolioSideEffect.Navigation.NavigateToSecurity ->
-                        navController.navigate(SecurityDetailRoute(ticker = navigation.ticker))
+                        rootNavController.navigateToSecurityDetail(ticker = navigation.ticker)
                     is PortfolioSideEffect.Navigation.NavigateToAddHolding ->
                         navController.navigateToAddHolding()
                     is PortfolioSideEffect.Navigation.NavigateToEditHolding ->
