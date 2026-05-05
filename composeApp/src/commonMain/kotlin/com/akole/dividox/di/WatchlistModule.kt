@@ -10,13 +10,17 @@ import com.akole.dividox.component.watchlist.domain.usecase.GetWatchlistUseCase
 import com.akole.dividox.component.watchlist.domain.usecase.IsInWatchlistUseCase
 import com.akole.dividox.component.watchlist.domain.usecase.RemoveFromWatchlistUseCase
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.StateFlow
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.factoryOf
 import org.koin.dsl.module
 
 val watchlistModule: Module = module {
     single<WatchlistDataSource> {
-        WatchlistFirestoreDataSource(userIdProvider = { get<GetCurrentUserIdUseCase>()() })
+        WatchlistFirestoreDataSource(
+            userIdProvider = { get<GetCurrentUserIdUseCase>()() },
+            authUserIdFlow = get<StateFlow<String?>>(),
+        )
     }
     single<WatchlistRepository> {
         WatchlistRepositoryImpl(

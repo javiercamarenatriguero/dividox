@@ -12,8 +12,9 @@ import kotlinx.datetime.LocalDate
 interface DividendRepository {
 
     /**
-     * Observes all dividend payments, ordered by payment date descending.
-     * Emits the cached list immediately, then re-emits on remote changes.
+     * Observes only confirmed historical dividend payments (payment date ≤ today),
+     * ordered by payment date descending.
+     * Future-projected events from the market API are excluded — use [getUpcomingPayments] for those.
      */
     fun getDividendHistory(): Flow<List<DividendPayment>>
 

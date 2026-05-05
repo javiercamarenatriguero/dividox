@@ -22,6 +22,8 @@ import com.akole.dividox.feature.dashboard.DashboardContract.DashboardViewEvent.
 import com.akole.dividox.feature.dashboard.DashboardContract.DashboardViewEvent.ViewAllFavouritesClicked
 import com.akole.dividox.feature.dashboard.DashboardContract.DashboardViewState
 import com.akole.dividox.integration.dividend.domain.usecase.GetPeriodDividendsUseCase
+import com.akole.dividox.integration.dividend.domain.usecase.ObservePortfolioChangesUseCase
+import com.akole.dividox.integration.dividend.domain.usecase.SyncDividendHistoryFromHoldingsUseCase
 import com.akole.dividox.integration.security.domain.model.EnrichedWatchlistEntry
 import com.akole.dividox.integration.security.domain.model.PortfolioSummary
 import com.akole.dividox.integration.security.domain.usecase.GetEnrichedWatchlistUseCase
@@ -54,6 +56,8 @@ class DashboardViewModel(
     private val currencyConverter: CurrencyConverter,
     private val connectivityManager: NetworkConnectivityManager,
     private val refreshTracker: AppRefreshTracker,
+    private val observePortfolioChanges: ObservePortfolioChangesUseCase,
+    private val syncDividendHistory: SyncDividendHistoryFromHoldingsUseCase,
 ) : ViewModel(),
     MVI<DashboardViewState, DashboardViewEvent, DashboardSideEffect> by mvi(DashboardViewState()) {
 
@@ -65,9 +69,18 @@ class DashboardViewModel(
     private val lifetimeDividendsFlow = MutableStateFlow(0.0) // USD, unconverted
 
     init {
+        observePortfolioAndSync()
         observeData()
         observeConnectivity()
         observeRefreshTracker()
+    }
+
+    private fun observePortfolioAndSync() {
+        viewModelScope.launch {
+            observePortfolioChanges().collect { holdings ->
+                syncDividendHistory(holdings)
+            }
+        }
     }
 
     override fun onViewEvent(viewEvent: DashboardViewEvent) {

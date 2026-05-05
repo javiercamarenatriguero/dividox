@@ -142,9 +142,9 @@ class SyncDividendHistoryFromHoldingsUseCaseTest {
     }
 
     @Test
-    fun `two lots of same ticker use earliest purchase date as cutoff`() = runTest {
+    fun `two lots of same ticker — only lot purchased before ex-date counts`() = runTest {
         // GIVEN — lot1 purchased 2023-01-01, lot2 purchased 2024-01-01
-        // ex-date 2023-06-15 is after lot1 → included, total shares = 10 + 5 = 15
+        // ex-date 2023-06-15: lot1 is before ex-date (qualifies), lot2 is after (excluded)
         val exDate = LocalDate(2023, 6, 15)
         val lot1 = holding("AAPL", shares = 10.0, purchaseDateEpochMs = LocalDate(2023, 1, 1).toEpochMs())
         val lot2 = holding("AAPL", shares = 5.0, purchaseDateEpochMs = LocalDate(2024, 1, 1).toEpochMs())
@@ -158,7 +158,27 @@ class SyncDividendHistoryFromHoldingsUseCaseTest {
         // WHEN
         useCase(listOf(lot1, lot2))
 
-        // THEN — eligible; total shares = 15 × 0.25
+        // THEN — only lot1 shares (10) count for this ex-date; lot2 bought later is excluded
+        assertEquals(10.0 * amountPerShare, slot.captured.single().amount)
+    }
+
+    @Test
+    fun `two lots of same ticker — both lots count when both predate ex-date`() = runTest {
+        // GIVEN — both lots purchased before ex-date
+        val exDate = LocalDate(2025, 3, 15)
+        val lot1 = holding("AAPL", shares = 10.0, purchaseDateEpochMs = LocalDate(2023, 1, 1).toEpochMs())
+        val lot2 = holding("AAPL", shares = 5.0, purchaseDateEpochMs = LocalDate(2024, 1, 1).toEpochMs())
+        val amountPerShare = 0.25
+        coEvery {
+            marketRepository.getHistoricalDividendEvents("AAPL", DividendHistoryRange.MAX)
+        } returns Result.success(listOf(event("AAPL", amountPerShare, exDate)))
+        val slot = slot<List<DividendPayment>>()
+        coEvery { dividendRepository.replaceAllPayments(capture(slot)) } returns Unit
+
+        // WHEN
+        useCase(listOf(lot1, lot2))
+
+        // THEN — all 15 shares qualify
         assertEquals(15.0 * amountPerShare, slot.captured.single().amount)
     }
 

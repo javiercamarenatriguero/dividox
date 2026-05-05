@@ -10,13 +10,17 @@ import com.akole.dividox.component.portfolio.domain.usecase.GetPortfolioUseCase
 import com.akole.dividox.component.portfolio.domain.usecase.RemoveHoldingUseCase
 import com.akole.dividox.component.portfolio.domain.usecase.UpdateHoldingUseCase
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.StateFlow
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.factoryOf
 import org.koin.dsl.module
 
 val portfolioModule: Module = module {
     single<PortfolioDataSource> {
-        FirestorePortfolioDataSource(userIdProvider = { get<GetCurrentUserIdUseCase>()() })
+        FirestorePortfolioDataSource(
+            userIdProvider = { get<GetCurrentUserIdUseCase>()() },
+            authUserIdFlow = get<StateFlow<String?>>(),
+        )
     }
     single<PortfolioRepository> {
         PortfolioRepositoryImpl(

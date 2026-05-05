@@ -24,22 +24,30 @@ class DividendRepositoryImpl(
     private val local: DividendLocalDataSource,
 ) : DividendRepository {
 
-    override fun getDividendHistory(): Flow<List<DividendPayment>> = local.observeAll()
+    override fun getDividendHistory(): Flow<List<DividendPayment>> {
+        val today = Clock.System.todayIn(TimeZone.UTC).toString()
+        return local.observePast(today)
+    }
 
-    override fun getLifetimeDividends(): Flow<Double> =
-        local.observeAll().map { payments -> payments.sumOf { it.amount } }
+    override fun getLifetimeDividends(): Flow<Double> {
+        val today = Clock.System.todayIn(TimeZone.UTC).toString()
+        return local.observePast(today).map { payments -> payments.sumOf { it.amount } }
+    }
 
     override fun getYtdDividends(): Flow<Double> {
-        val currentYear = Clock.System.todayIn(TimeZone.UTC).year
-        return local.observeAll().map { payments ->
+        val today = Clock.System.todayIn(TimeZone.UTC)
+        return local.observePast(today.toString()).map { payments ->
+            val currentYear = today.year
             payments.filter { it.paymentDate.year == currentYear }.sumOf { it.amount }
         }
     }
 
-    override fun getDividendsSince(from: LocalDate): Flow<Double> =
-        local.observeAll().map { payments ->
+    override fun getDividendsSince(from: LocalDate): Flow<Double> {
+        val today = Clock.System.todayIn(TimeZone.UTC).toString()
+        return local.observePast(today).map { payments ->
             payments.filter { it.paymentDate >= from }.sumOf { it.amount }
         }
+    }
 
     override fun getUpcomingPayments(): Flow<List<DividendPayment>> {
         val today = Clock.System.todayIn(TimeZone.UTC).toString()

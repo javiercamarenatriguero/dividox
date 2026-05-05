@@ -23,6 +23,15 @@ interface DividendDao {
     fun observeAll(): Flow<List<DividendPaymentEntity>>
 
     /**
+     * Observes only past dividend payments (payment_date ≤ today), newest first.
+     * Excludes future-projected events returned by the market API.
+     *
+     * @param today Today's date in ISO-8601 format (YYYY-MM-DD).
+     */
+    @Query("SELECT * FROM dividend_payments WHERE payment_date <= :today ORDER BY payment_date DESC")
+    fun observePast(today: String): Flow<List<DividendPaymentEntity>>
+
+    /**
      * Returns the sum of payments for a given year.
      *
      * @param year Four-digit year string, e.g. "2025".

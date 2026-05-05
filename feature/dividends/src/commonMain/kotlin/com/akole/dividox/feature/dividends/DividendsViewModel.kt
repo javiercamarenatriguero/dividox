@@ -57,6 +57,9 @@ class DividendsViewModel(
     /** Full unfiltered bar list — ViewModel filters by [DividendsViewState.selectedRange]. */
     private var allBars: List<MonthBar> = emptyList()
 
+    /** Last known holdings — used to force re-sync on connectivity recovery. */
+    private var lastHoldings: List<com.akole.dividox.component.portfolio.domain.model.Holding> = emptyList()
+
     init {
         observePortfolioAndSync()
         observeData()
@@ -71,6 +74,7 @@ class DividendsViewModel(
     private fun observePortfolioAndSync() {
         viewModelScope.launch {
             observePortfolioChanges().collect { holdings ->
+                lastHoldings = holdings
                 syncDividendHistory(holdings).onFailure { e ->
                     updateViewState { copy(error = "Sync failed: ${e.message}") }
                 }
@@ -149,6 +153,10 @@ class DividendsViewModel(
             connectivityManager.observeConnectivity().collect { isConnected ->
                 updateViewState { copy(isOffline = !isConnected) }
                 if (!previousConnected && isConnected) {
+                    // Force re-sync dividends from API with current holdings
+                    if (lastHoldings.isNotEmpty()) {
+                        syncDividendHistory(lastHoldings)
+                    }
                     observeData()
                 }
                 previousConnected = isConnected

@@ -209,6 +209,8 @@ class DividendsViewModelTest {
                 id = DividendPaymentId("$ticker-${date}"),
                 tickerId = ticker,
                 amount = 1.0,
+                amountPerShare = 0.0,
+                shares = 0.0,
                 currency = "USD",
                 paymentDate = date,
             ),

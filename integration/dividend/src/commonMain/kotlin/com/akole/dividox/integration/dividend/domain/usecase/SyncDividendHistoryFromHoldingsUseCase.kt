@@ -16,15 +16,15 @@ import kotlinx.datetime.toLocalDateTime
  * For each ticker in the portfolio, all historical dividend events are fetched and persisted
  * as [DividendPayment] records using the current total share count for that ticker.
  *
- * **Eligibility — earliest purchase date per ticker:**
- * Only events with `exDividendDate >= earliest purchase date` for that ticker are stored.
- * Dividends that occurred before the user ever held the stock are excluded — there is no
- * point showing activity the user did not participate in.
- * Share counts are the total current shares (buy-and-hold MVP, no per-lot tracking).
+ * **Eligibility — per-event share count:**
+ * For each ex-dividend date, only lots purchased *strictly before* that date are counted.
+ * This matches stock market convention (you must own shares before the ex-date to receive
+ * the dividend) and produces accurate historical amounts when the user built up their
+ * position over time.
  *
  * **Re-sync behaviour:**
  * If a user adds an older holding for a ticker (earlier purchase date), re-syncing will
- * populate the previously-excluded historical dividends automatically.
+ * automatically raise the share count for events that fall after that earlier purchase date.
  *
  * **Currency:**
  * Amounts are stored in the security's native trading currency as reported by Yahoo Finance.
@@ -54,23 +54,25 @@ class SyncDividendHistoryFromHoldingsUseCase(
                 range = DividendHistoryRange.MAX,
             ).getOrNull() ?: continue
 
-            val totalShares = tickerHoldings.sumOf { it.shares }
-            if (totalShares <= 0.0) continue
-
-            // Only include dividends from the date the user first held this ticker onwards
-            val earliestPurchaseDate = Instant
-                .fromEpochMilliseconds(tickerHoldings.minOf { it.purchaseDate })
-                .toLocalDateTime(TimeZone.UTC)
-                .date
-
             for (event in events) {
-                // Must own the stock strictly before the ex-dividend date to be eligible
-                if (event.exDividendDate <= earliestPurchaseDate) continue
+                // Only count shares from lots purchased strictly before the ex-dividend date.
+                // Stock market convention: you must own the stock before ex-date to receive it.
+                val sharesOnExDate = tickerHoldings
+                    .filter { holding ->
+                        Instant.fromEpochMilliseconds(holding.purchaseDate)
+                            .toLocalDateTime(TimeZone.UTC)
+                            .date < event.exDividendDate
+                    }
+                    .sumOf { it.shares }
+
+                if (sharesOnExDate <= 0.0) continue
 
                 eligiblePayments += DividendPayment(
                     id = DividendPaymentId("$ticker-${event.exDividendDate}"),
                     tickerId = ticker,
-                    amount = event.amountPerShare * totalShares,
+                    amount = event.amountPerShare * sharesOnExDate,
+                    amountPerShare = event.amountPerShare,
+                    shares = sharesOnExDate,
                     currency = event.currency,
                     paymentDate = event.exDividendDate,
                 )

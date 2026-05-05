@@ -89,6 +89,8 @@ class GetEnrichedPaymentHistoryUseCaseTest {
             id = DividendPaymentId(id),
             tickerId = ticker,
             amount = 30.0,
+            amountPerShare = 0.0,
+            shares = 0.0,
             currency = "USD",
             paymentDate = date,
         )

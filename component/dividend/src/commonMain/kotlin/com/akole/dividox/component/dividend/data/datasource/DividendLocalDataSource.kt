@@ -18,9 +18,18 @@ import kotlinx.coroutines.flow.map
  */
 class DividendLocalDataSource(private val dao: DividendDao) {
 
-    /** Observes all cached payments, newest first, as domain models. */
+    /** Observes all cached payments (past and future), newest first, as domain models. */
     fun observeAll(): Flow<List<DividendPayment>> =
         dao.observeAll().map { entities -> entities.map { it.toDomain() } }
+
+    /**
+     * Observes only past payments (payment date ≤ today) as domain models.
+     * Future-projected events from the market API are excluded.
+     *
+     * @param today Today's ISO-8601 date string.
+     */
+    fun observePast(today: String): Flow<List<DividendPayment>> =
+        dao.observePast(today).map { entities -> entities.map { it.toDomain() } }
 
     /** Returns the lifetime sum of CASH payments. */
     suspend fun sumLifetime(): Double = dao.sumLifetime()
