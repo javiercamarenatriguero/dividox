@@ -9,6 +9,7 @@ import com.akole.dividox.component.market.domain.model.CompanyInfo
 import com.akole.dividox.component.market.domain.model.DividendInfo
 import com.akole.dividox.component.market.domain.model.PricePoint
 import com.akole.dividox.component.market.domain.model.StockQuote
+import com.akole.dividox.component.portfolio.domain.model.HoldingId
 import kotlin.time.Instant
 import kotlinx.datetime.LocalDate
 
@@ -30,6 +31,7 @@ interface SecurityDetailContract {
         val isDividendChartPercentage: Boolean = false,
         val dividendGrowthData: List<DividendGrowthBar> = emptyList(),
         val isInPortfolio: Boolean = false,
+        val holdingId: HoldingId? = null,
         val error: String? = null,
     ) : ViewState
 
@@ -47,13 +49,14 @@ interface SecurityDetailContract {
         data class ChartPeriodSelected(val period: ChartPeriod) : SecurityDetailViewEvent
         data object ToggleDividendChartMode : SecurityDetailViewEvent
         data object OnAddSecurityClicked : SecurityDetailViewEvent
+        data object OnEditHoldingClicked : SecurityDetailViewEvent
     }
 
     sealed interface SecurityDetailSideEffect : SideEffect {
         sealed interface Navigation : SecurityDetailSideEffect {
             data object NavigateBack : Navigation
             data class NavigateToAddSecurity(val ticker: String) : Navigation
-            data class NavigateToEditHolding(val ticker: String) : Navigation
+            data class NavigateToEditHolding(val holdingId: HoldingId) : Navigation
         }
 
         sealed interface Message : SecurityDetailSideEffect {
