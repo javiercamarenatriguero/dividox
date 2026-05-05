@@ -73,14 +73,10 @@ fun NavGraphBuilder.mainGraphNode(rootNavController: NavController) {
         val selectedTab = when {
             currentRoute?.contains(DashboardRoute::class.simpleName ?: "") == true -> BottomTab.DASHBOARD
             currentRoute?.contains(PortfolioRoute::class.simpleName ?: "") == true -> BottomTab.PORTFOLIO
-            currentRoute?.contains(AddHoldingRoute::class.simpleName ?: "") == true -> BottomTab.PORTFOLIO
-            currentRoute?.contains(EditHoldingRoute::class.simpleName ?: "") == true -> BottomTab.PORTFOLIO
             currentRoute?.contains(DividendsRoute::class.simpleName ?: "") == true -> BottomTab.DIVIDENDS
             currentRoute?.contains(SettingsRoute::class.simpleName ?: "") == true -> BottomTab.SETTINGS
             else -> BottomTab.DASHBOARD
         }
-        val isHoldingRoute = currentRoute?.contains(AddHoldingRoute::class.simpleName ?: "") == true ||
-            currentRoute?.contains(EditHoldingRoute::class.simpleName ?: "") == true
 
         Scaffold(
             contentWindowInsets = WindowInsets(0),
@@ -115,13 +111,11 @@ fun NavGraphBuilder.mainGraphNode(rootNavController: NavController) {
                         }
                     }
                     BottomTab.PORTFOLIO -> {
-                        if (!isHoldingRoute) {
-                            FloatingActionButton(onClick = portfolioFabClick) {
-                                Icon(
-                                    imageVector = Icons.Default.Add,
-                                    contentDescription = stringResource(Res.string.portfolio_add_holding),
-                                )
-                            }
+                        FloatingActionButton(onClick = portfolioFabClick) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = stringResource(Res.string.portfolio_add_holding),
+                            )
                         }
                     }
                     else -> {}

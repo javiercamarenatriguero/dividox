@@ -72,7 +72,7 @@ import dividox.common.ui_resources.generated.resources.label_price_per_share
 import dividox.common.ui_resources.generated.resources.label_purchase_date
 import dividox.common.ui_resources.generated.resources.label_shares
 import dividox.common.ui_resources.generated.resources.label_unknown_position
-import dividox.common.ui_resources.generated.resources.search_security_hint
+import dividox.common.ui_resources.generated.resources.holding_search_security_hint
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -304,7 +304,7 @@ private fun SearchSecurityField(
         OutlinedTextField(
             value = query,
             onValueChange = onQueryChanged,
-            label = { Text(stringResource(Res.string.search_security_hint)) },
+            label = { Text(stringResource(Res.string.holding_search_security_hint)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             enabled = selectedSecurity == null,

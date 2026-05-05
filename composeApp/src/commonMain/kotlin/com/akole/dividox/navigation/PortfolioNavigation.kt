@@ -52,16 +52,14 @@ fun NavGraphBuilder.portfolioScreenNode(
                     is PortfolioSideEffect.Navigation.NavigateToSecurity ->
                         rootNavController.navigateToSecurityDetail(ticker = navigation.ticker)
                     is PortfolioSideEffect.Navigation.NavigateToAddHolding ->
-                        navController.navigateToAddHolding()
+                        rootNavController.navigateToAddHolding()
                     is PortfolioSideEffect.Navigation.NavigateToEditHolding ->
-                        navController.navigateToEditHolding(navigation.holdingId)
+                        rootNavController.navigateToEditHolding(navigation.holdingId)
                 }
             },
         )
     }
 
-    addHoldingScreenNode(navController)
-    editHoldingScreenNode(navController)
 }
 
 fun NavGraphBuilder.addHoldingScreenNode(navController: NavController) {
