@@ -581,7 +581,10 @@ private fun CtaButton(
     onEvent: (SecurityDetailViewEvent) -> Unit,
 ) {
     Button(
-        onClick = { onEvent(SecurityDetailViewEvent.OnAddSecurityClicked) },
+        onClick = {
+            if (state.isInPortfolio) onEvent(SecurityDetailViewEvent.OnEditHoldingClicked)
+            else onEvent(SecurityDetailViewEvent.OnAddSecurityClicked)
+        },
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = MaterialTheme.spacing.medium)
