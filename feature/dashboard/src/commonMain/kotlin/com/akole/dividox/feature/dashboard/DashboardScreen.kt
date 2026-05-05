@@ -20,7 +20,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -29,7 +28,6 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -51,6 +49,7 @@ import com.akole.dividox.common.mvi.CollectSideEffect
 import com.akole.dividox.common.currency.domain.model.Currency
 import com.akole.dividox.common.ui.resources.components.AnimatedValueText
 import com.akole.dividox.common.ui.resources.components.DividoxPullToRefreshBox
+import com.akole.dividox.common.ui.resources.components.SecurityCard
 import com.akole.dividox.common.ui.resources.components.DividoxTopAppBar
 import com.akole.dividox.common.ui.resources.components.LastUpdatedBar
 import com.akole.dividox.common.ui.resources.components.connectivity.ConnectivityBannerHost
@@ -564,91 +563,19 @@ private fun FavouritesSection(
             )
         } else {
             watchlist.take(2).forEach { entry ->
-                WatchlistEntryRow(
-                    entry = entry,
-                    convertedPrice = convertedPrices[entry.entry.tickerId],
-                    displayCurrency = displayCurrency,
-                    onFavouriteToggled = onFavouriteToggled,
-                    onSecurityClicked = onSecurityClicked,
+                val ticker = entry.entry.tickerId
+                SecurityCard(
+                    ticker = ticker,
+                    companyName = entry.companyInfo?.name,
+                    price = convertedPrices[ticker] ?: entry.quote?.price,
+                    changePercent = entry.quote?.changePercent,
+                    currency = displayCurrency,
+                    isFavorite = true,
+                    isInPortfolio = entry.isInPortfolio,
+                    onFavoriteToggle = { onFavouriteToggled(ticker) },
+                    onClick = { onSecurityClicked(ticker) },
                 )
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.xSmall))
-            }
-        }
-    }
-}
-
-@Composable
-private fun WatchlistEntryRow(
-    entry: EnrichedWatchlistEntry,
-    convertedPrice: Double?,
-    displayCurrency: Currency,
-    onFavouriteToggled: (String) -> Unit,
-    onSecurityClicked: (String) -> Unit,
-) {
-    val ticker = entry.entry.tickerId
-    val price = entry.quote?.price
-    val changePercent = entry.quote?.changePercent
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onSecurityClicked(ticker) },
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-        ),
-        shape = RoundedCornerShape(10.dp),
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = MaterialTheme.spacing.medium, vertical = MaterialTheme.spacing.small),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = ticker,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                val name = entry.companyInfo?.name
-                if (name != null) {
-                    Text(
-                        text = name,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
-
-            if (price != null) {
-                val displayPrice = convertedPrice ?: price
-                Column(horizontalAlignment = Alignment.End) {
-                    AnimatedValueText(
-                        value = displayPrice.formatPrice(displayCurrency),
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
-                    )
-                    if (changePercent != null) {
-                        Text(
-                            text = changePercent.formatPercentSigned(),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = if (changePercent >= 0) MaterialTheme.extendedColors.profit else MaterialTheme.colorScheme.error,
-                        )
-                    }
-                }
-            }
-
-            IconButton(
-                onClick = { onFavouriteToggled(ticker) },
-                modifier = Modifier.size(MaterialTheme.spacing.iconMedium + 8.dp),
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Favorite,
-                    contentDescription = stringResource(Res.string.cd_remove_from_favourites),
-                    tint = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.size(MaterialTheme.spacing.iconSmall),
-                )
             }
         }
     }

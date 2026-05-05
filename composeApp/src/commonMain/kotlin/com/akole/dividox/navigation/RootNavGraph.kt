@@ -2,9 +2,6 @@ package com.akole.dividox.navigation
 
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -12,8 +9,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -22,10 +17,7 @@ import androidx.navigation.compose.composable
 import com.akole.dividox.component.auth.domain.model.SessionState
 import com.akole.dividox.component.auth.domain.usecase.ObserveSessionUseCase
 import com.akole.dividox.common.mvi.collectViewState
-import dividox.common.ui_resources.generated.resources.Res
-import dividox.common.ui_resources.generated.resources.section_favourites
 import kotlinx.coroutines.delay
-import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 
 private const val SPLASH_DURATION_MS = 2000L
@@ -71,10 +63,5 @@ fun SetupRootNavGraph(navController: NavHostController) {
         mainGraphNode(navController)
         detailScreenNode(navController)
         securityDetailScreenNode(navController)
-        composable<FavoritesRoute> {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(stringResource(Res.string.section_favourites))
-            }
-        }
     }
 }

@@ -64,6 +64,7 @@ kotlin {
             implementation(projects.feature.portfolio)
             implementation(projects.feature.dividends)
             implementation(projects.feature.analysis)
+            implementation(projects.feature.favorites)
             implementation(projects.component.dividend)
             implementation(libs.androidx.navigation.compose)
             implementation(libs.kotlinx.serialization.core)
