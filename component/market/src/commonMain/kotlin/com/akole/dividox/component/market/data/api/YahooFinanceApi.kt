@@ -7,13 +7,10 @@ import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
 
-/**
- * Low-level HTTP client for Yahoo Finance public endpoints.
- *
- * All endpoints are unauthenticated and subject to rate limiting (HTTP 429).
- * Only `v8/finance/chart` is reliably accessible without a crumb/session cookie.
- */
-internal class YahooFinanceApi(private val client: HttpClient) {
+/** Low-level HTTP client for Yahoo Finance v8 public endpoints (no auth required). */
+internal class YahooFinanceApi(
+    private val client: HttpClient,
+) {
 
     /**
      * Fetches OHLCV chart data for [ticker].

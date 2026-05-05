@@ -47,6 +47,11 @@ internal data class ChartMetaDto(
     val regularMarketTime: Long? = null,
     /** Exchange identifier (e.g. "NMS", "NYQ"). */
     val exchangeName: String? = null,
+    val fiftyTwoWeekHigh: Double? = null,
+    val fiftyTwoWeekLow: Double? = null,
+    val regularMarketVolume: Long? = null,
+    val regularMarketDayHigh: Double? = null,
+    val regularMarketDayLow: Double? = null,
 )
 
 /** Corporate events embedded in the chart response when `events=dividends` is requested. */

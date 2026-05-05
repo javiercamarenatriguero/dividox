@@ -30,6 +30,7 @@ import com.akole.dividox.integration.security.domain.usecase.GetEnrichedWatchlis
 import com.akole.dividox.integration.security.domain.usecase.GetPortfolioPeriodGainUseCase
 import com.akole.dividox.integration.security.domain.usecase.GetPortfolioSummaryUseCase
 import com.akole.dividox.integration.security.domain.usecase.GetPortfolioWithQuotesUseCase
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlin.time.Clock
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,6 +45,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.todayIn
 
+@Suppress("LongParameterList", "TooManyFunctions")
 class DashboardViewModel(
     private val getPortfolioWithQuotes: GetPortfolioWithQuotesUseCase,
     private val getPortfolioSummary: GetPortfolioSummaryUseCase,
@@ -104,6 +106,7 @@ class DashboardViewModel(
         }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private fun observeData() {
         dataJob?.cancel()
         dataJob = viewModelScope.launch {
@@ -134,7 +137,8 @@ class DashboardViewModel(
             }
 
             // 3. Main combine — period-independent data + derived period StateFlows, always fast
-            val dividendPairFlow = combine(periodDividendsFlow, lifetimeDividendsFlow) { period, lifetime -> period to lifetime }
+            val dividendPairFlow =
+                combine(periodDividendsFlow, lifetimeDividendsFlow) { period, lifetime -> period to lifetime }
             combine(
                 getPortfolioSummary(),
                 getEnrichedWatchlist(),

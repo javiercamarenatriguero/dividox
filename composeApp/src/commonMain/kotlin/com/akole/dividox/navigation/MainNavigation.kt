@@ -134,19 +134,20 @@ fun NavGraphBuilder.mainGraphNode(rootNavController: NavController) {
                 startDestination = DashboardRoute,
                 modifier = Modifier.padding(innerPadding),
             ) {
-                dashboardScreenNode(rootNavController)
+                dashboardScreenNode(navController = innerNavController, rootNavController = rootNavController)
                 portfolioScreenNode(
                     navController = innerNavController,
+                    rootNavController = rootNavController,
                     onRegisterFabClick = { callback -> portfolioFabClick = callback },
                 )
-                dividendsScreenNode(innerNavController)
+                dividendsScreenNode(navController = innerNavController, rootNavController = rootNavController)
                 settingsScreenNode()
             }
         }
     }
 }
 
-fun NavGraphBuilder.dividendsScreenNode(navController: NavController) {
+fun NavGraphBuilder.dividendsScreenNode(navController: NavController, rootNavController: NavController) {
     composable<DividendsRoute> {
         val viewModel = koinViewModel<DividendsViewModel>()
         val state by collectViewState(viewModel.viewState)
@@ -158,7 +159,7 @@ fun NavGraphBuilder.dividendsScreenNode(navController: NavController) {
             onNavigation = { navigation ->
                 when (navigation) {
                     is DividendsSideEffect.Navigation.NavigateToSecurity ->
-                        navController.navigate(SecurityDetailRoute(ticker = navigation.ticker))
+                        rootNavController.navigateToSecurityDetail(ticker = navigation.ticker)
                 }
             },
         )

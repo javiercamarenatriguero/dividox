@@ -9,4 +9,5 @@ data class DividendInfo(
     val payoutRatio: Double,
     val fiveYearGrowth: Double,
     val exDividendDate: LocalDate?,
+    val nextDividendDate: LocalDate? = null,
 )

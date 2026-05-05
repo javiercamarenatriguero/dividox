@@ -14,11 +14,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavController
+import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.akole.dividox.component.auth.domain.model.SessionState
 import com.akole.dividox.component.auth.domain.usecase.ObserveSessionUseCase
+import com.akole.dividox.common.mvi.collectViewState
 import dividox.common.ui_resources.generated.resources.Res
 import dividox.common.ui_resources.generated.resources.section_favourites
 import kotlinx.coroutines.delay
@@ -67,6 +70,7 @@ fun SetupRootNavGraph(navController: NavHostController) {
         forgotPasswordScreenNode(navController)
         mainGraphNode(navController)
         detailScreenNode(navController)
+        securityDetailScreenNode(navController)
         composable<FavoritesRoute> {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(stringResource(Res.string.section_favourites))

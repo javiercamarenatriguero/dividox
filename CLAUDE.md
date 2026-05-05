@@ -71,6 +71,25 @@ Reusable Compose components that appear across two or more features belong in `:
 
 Feature-specific components (e.g. a card that only appears in one screen) stay inside their `:feature:*` module.
 
+### Spacing & Dimensions
+
+**Never hardcode padding/height/width values.** Use theme spacing constants defined in `DividoxSpacing`:
+- `MaterialTheme.spacing.xSmall` (4.dp)
+- `MaterialTheme.spacing.small` (8.dp)
+- `MaterialTheme.spacing.medium` (16.dp)
+- `MaterialTheme.spacing.large` (24.dp)
+- `MaterialTheme.spacing.xLarge` (32.dp)
+- `MaterialTheme.spacing.xxLarge` (48.dp)
+- `MaterialTheme.spacing.iconSmall` (18.dp)
+- `MaterialTheme.spacing.iconMedium` (24.dp)
+- `MaterialTheme.spacing.buttonMinHeight` (56.dp)
+
+Example: `.padding(horizontal = MaterialTheme.spacing.medium)` not `.padding(horizontal = 16.dp)`
+
+### Strings & Resources
+
+**All UI text must come from `strings.xml`.** Add new strings to `/common/ui-resources/src/commonMain/composeResources/values/strings.xml`, then reference via `stringResource(Res.string.key_name)`. Never hardcode strings like `"Add Security"` or `"Refreshed X min ago"` in composables.
+
 ## Key Tech
 
 - Kotlin 2.3.20, Compose Multiplatform 1.10.2, AGP 9.1.0, Gradle 9.3.1
