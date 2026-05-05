@@ -22,8 +22,8 @@ fun NavController.navigateToPortfolio(navOptions: NavOptions? = null) {
     this.navigate(PortfolioRoute, navOptions)
 }
 
-fun NavController.navigateToAddHolding() {
-    this.navigate(AddHoldingRoute)
+fun NavController.navigateToAddHolding(ticker: String? = null) {
+    this.navigate(AddHoldingRoute(ticker))
 }
 
 fun NavController.navigateToEditHolding(holdingId: String) {
@@ -66,9 +66,10 @@ fun NavGraphBuilder.addHoldingScreenNode(navController: NavController) {
     composable<AddHoldingRoute>(
         enterTransition = { slideInHorizontally { it } },
         popExitTransition = { slideOutHorizontally { it } },
-    ) {
+    ) { backStackEntry ->
+        val route = backStackEntry.toRoute<AddHoldingRoute>()
         val viewModel = koinViewModel<HoldingViewModel>(
-            parameters = { parametersOf(null) }
+            parameters = { parametersOf(null, route.ticker) }
         )
 
         HoldingScreen(

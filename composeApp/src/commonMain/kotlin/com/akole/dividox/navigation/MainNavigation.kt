@@ -48,7 +48,7 @@ data object MainGraphRoute
 data object PortfolioRoute
 
 @Serializable
-data object AddHoldingRoute
+data class AddHoldingRoute(val ticker: String? = null)
 
 @Serializable
 data class EditHoldingRoute(val holdingId: String)

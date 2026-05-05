@@ -23,6 +23,7 @@ import kotlinx.coroutines.launch
 
 class HoldingViewModel(
     private val holdingId: HoldingId?,
+    private val prefillTicker: String? = null,
     private val searchSecurities: SearchSecuritiesUseCase,
     private val getStockQuote: GetStockQuoteUseCase,
     private val addHolding: AddHoldingUseCase,
@@ -51,6 +52,8 @@ class HoldingViewModel(
         }
         if (holdingId != null) {
             loadExistingHolding(holdingId)
+        } else if (prefillTicker != null) {
+            prefillSecurity(prefillTicker)
         }
     }
 
@@ -135,6 +138,23 @@ class HoldingViewModel(
                 purchaseDateMillis = holding.purchaseDate,
             )
             recalculateTotal()
+        }
+    }
+
+    private fun prefillSecurity(ticker: String) {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(searchQuery = ticker, isSearching = true)
+            val quote = getStockQuote(ticker).getOrNull() ?: run {
+                _state.value = _state.value.copy(isSearching = false)
+                return@launch
+            }
+            _state.value = _state.value.copy(
+                selectedSecurity = quote,
+                searchQuery = ticker,
+                searchResults = emptyList(),
+                isSearching = false,
+            )
+            checkPortfolioForExistingHolding(ticker)
         }
     }
 
