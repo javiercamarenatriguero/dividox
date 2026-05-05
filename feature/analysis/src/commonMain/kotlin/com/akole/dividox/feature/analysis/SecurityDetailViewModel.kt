@@ -63,6 +63,7 @@ class SecurityDetailViewModel(
             is SecurityDetailViewEvent.ChartPeriodSelected -> selectChartPeriod(viewEvent.period)
             SecurityDetailViewEvent.ToggleDividendChartMode -> toggleDividendChartMode()
             SecurityDetailViewEvent.OnAddSecurityClicked -> navigateToAddSecurity()
+            SecurityDetailViewEvent.OnEditHoldingClicked -> navigateToEditHolding()
         }
     }
 
@@ -114,6 +115,7 @@ class SecurityDetailViewModel(
                             priceHistory = detail.priceHistory,
                             renderedChartPeriod = period,
                             isInPortfolio = detail.isInPortfolio,
+                            holdingId = detail.holdingId,
                             lastUpdated = Clock.System.now(),
                             isLoading = false,
                         )
@@ -183,6 +185,13 @@ class SecurityDetailViewModel(
     private fun navigateToAddSecurity() {
         viewModelScope.emitSideEffect(
             SecurityDetailSideEffect.Navigation.NavigateToAddSecurity(ticker)
+        )
+    }
+
+    private fun navigateToEditHolding() {
+        val holdingId = viewState.value.holdingId ?: return
+        viewModelScope.emitSideEffect(
+            SecurityDetailSideEffect.Navigation.NavigateToEditHolding(holdingId)
         )
     }
 }
