@@ -117,4 +117,7 @@
     <string name="period_1y">1Y</string>
     <string name="period_5y">5Y</string>
     <string name="period_all">ALL</string>
+    <string name="search_title">Search</string>
+    <string name="search_placeholder_hint">Search by ticker or company name</string>
+    <string name="search_no_results">No results for \"%1$s\"</string>
 </resources>
