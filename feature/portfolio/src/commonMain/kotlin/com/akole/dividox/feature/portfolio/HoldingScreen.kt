@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -257,7 +258,7 @@ private fun HoldingScreenContent(
                         onClick = { onEvent(HoldingContract.HoldingViewEvent.DeleteClicked) },
                         modifier = Modifier
                             .weight(1f)
-                            .padding(vertical = MaterialTheme.spacing.small),
+                            .heightIn(min = MaterialTheme.spacing.buttonMinHeight),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.errorContainer,
                             contentColor = MaterialTheme.colorScheme.error,
@@ -273,7 +274,7 @@ private fun HoldingScreenContent(
                     onClick = { onEvent(HoldingContract.HoldingViewEvent.ConfirmClicked) },
                     modifier = Modifier
                         .weight(1f)
-                        .padding(vertical = MaterialTheme.spacing.small),
+                        .heightIn(min = MaterialTheme.spacing.buttonMinHeight),
                     enabled = state.selectedSecurity != null &&
                               state.shares.isNotBlank() && state.pricePerShare.isNotBlank(),
                 ) {
@@ -509,9 +510,7 @@ private fun DeleteConfirmationDialog(
         onDismissRequest = onCancel,
     ) {
         Surface(
-            modifier = Modifier
-                .fillMaxWidth(0.9f)
-                .padding(MaterialTheme.spacing.large),
+            modifier = Modifier.fillMaxWidth(),
             shape = MaterialTheme.shapes.large,
             color = MaterialTheme.colorScheme.surface,
         ) {
@@ -520,12 +519,12 @@ private fun DeleteConfirmationDialog(
                 verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
             ) {
                 Text(
-                    text = "Remove Position?",
+                    text = stringResource(Res.string.dialog_remove_title),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                 )
                 Text(
-                    text = "Remove $ticker from your portfolio? This cannot be undone.",
+                    text = stringResource(Res.string.dialog_remove_message, ticker),
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 Row(
@@ -536,19 +535,23 @@ private fun DeleteConfirmationDialog(
                 ) {
                     OutlinedButton(
                         onClick = onCancel,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .heightIn(min = MaterialTheme.spacing.buttonMinHeight),
                     ) {
-                        Text("Cancel")
+                        Text(stringResource(Res.string.action_cancel))
                     }
                     Button(
                         onClick = onConfirm,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .heightIn(min = MaterialTheme.spacing.buttonMinHeight),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.errorContainer,
                             contentColor = MaterialTheme.colorScheme.error,
                         ),
                     ) {
-                        Text("Delete")
+                        Text(stringResource(Res.string.action_delete))
                     }
                 }
             }
