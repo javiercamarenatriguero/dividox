@@ -12,7 +12,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -21,6 +20,8 @@ import com.akole.dividox.common.ui.resources.components.DisclaimerBanner
 import com.akole.dividox.common.ui.resources.components.DividoxTopAppBar
 import com.akole.dividox.common.ui.resources.components.SearchBar
 import com.akole.dividox.common.ui.resources.components.SecurityCard
+import com.akole.dividox.common.ui.resources.components.connectivity.ConnectivityBannerHost
+import com.akole.dividox.common.ui.resources.components.connectivity.LocalNetworkConnectivityManager
 import com.akole.dividox.common.ui.resources.theme.spacing
 import com.akole.dividox.feature.favorites.FavoritesContract.FavoritesSideEffect
 import com.akole.dividox.feature.favorites.FavoritesContract.FavoritesSideEffect.Navigation
@@ -49,6 +50,8 @@ fun FavoritesScreen(
         if (effect is Navigation) onNavigation(effect)
     }
 
+    val connectivityManager = LocalNetworkConnectivityManager.current
+
     Scaffold(
         topBar = {
             DividoxTopAppBar(
@@ -75,6 +78,10 @@ fun FavoritesScreen(
                 .padding(innerPadding),
             contentPadding = PaddingValues(bottom = MaterialTheme.spacing.medium),
         ) {
+            item {
+                ConnectivityBannerHost(connectivityFlow = connectivityManager.observeConnectivity())
+            }
+
             item {
                 SearchBar(
                     query = state.searchQuery,
