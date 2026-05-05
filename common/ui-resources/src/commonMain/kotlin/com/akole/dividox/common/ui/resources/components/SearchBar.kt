@@ -12,7 +12,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import com.akole.dividox.common.ui.resources.theme.spacing
 import dividox.common.ui_resources.generated.resources.Res
@@ -25,11 +29,16 @@ fun SearchBar(
     onQueryChange: (String) -> Unit,
     placeholder: String,
     modifier: Modifier = Modifier,
+    autoFocus: Boolean = false,
 ) {
+    val focusRequester = remember { FocusRequester() }
+    if (autoFocus) {
+        LaunchedEffect(Unit) { focusRequester.requestFocus() }
+    }
     TextField(
         value = query,
         onValueChange = onQueryChange,
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth().focusRequester(focusRequester),
         placeholder = {
             Text(
                 text = placeholder,

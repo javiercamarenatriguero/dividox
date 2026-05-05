@@ -107,7 +107,7 @@ fun NavGraphBuilder.mainGraphNode(rootNavController: NavController) {
             floatingActionButton = {
                 when (selectedTab) {
                     BottomTab.DASHBOARD -> {
-                        FloatingActionButton(onClick = { /* TK-026 */ }) {
+                        FloatingActionButton(onClick = { innerNavController.navigate(SearchRoute) }) {
                             Icon(
                                 imageVector = Icons.Default.Search,
                                 contentDescription = null,
@@ -142,6 +142,7 @@ fun NavGraphBuilder.mainGraphNode(rootNavController: NavController) {
                 )
                 dividendsScreenNode(navController = innerNavController, rootNavController = rootNavController)
                 favoritesScreenNode(navController = innerNavController, rootNavController = rootNavController)
+                searchScreenNode(navController = innerNavController, rootNavController = rootNavController)
                 settingsScreenNode()
             }
         }
