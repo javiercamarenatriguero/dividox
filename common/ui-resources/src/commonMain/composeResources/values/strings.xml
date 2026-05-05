@@ -41,6 +41,10 @@
     <string name="action_view_all">VIEW ALL</string>
     <string name="favourites_empty_hint">No favourites yet. Search for a security to add one.</string>
     <string name="cd_remove_from_favourites">Remove from favourites</string>
+    <string name="cd_add_to_favourites">Add to favourites</string>
+    <string name="label_in_portfolio">In portfolio</string>
+    <string name="cd_clear_search">Clear search</string>
+    <string name="favorites_title">Favourites</string>
     <string name="disclaimer_prices_delayed">Prices delayed 15 minutes</string>
     <string name="portfolio_search_placeholder">Filter holdings...</string>
     <string name="portfolio_add_holding">Add holding</string>
