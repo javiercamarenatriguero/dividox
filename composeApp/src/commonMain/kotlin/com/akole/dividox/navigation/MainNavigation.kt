@@ -141,6 +141,7 @@ fun NavGraphBuilder.mainGraphNode(rootNavController: NavController) {
                     onRegisterFabClick = { callback -> portfolioFabClick = callback },
                 )
                 dividendsScreenNode(navController = innerNavController, rootNavController = rootNavController)
+                favoritesScreenNode(navController = innerNavController, rootNavController = rootNavController)
                 settingsScreenNode()
             }
         }

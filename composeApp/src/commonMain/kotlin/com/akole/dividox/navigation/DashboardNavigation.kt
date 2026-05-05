@@ -39,6 +39,3 @@ fun NavGraphBuilder.dashboardScreenNode(navController: NavController, rootNavCon
         )
     }
 }
-
-@Serializable
-data object FavoritesRoute
