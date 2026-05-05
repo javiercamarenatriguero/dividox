@@ -40,9 +40,8 @@ fun NavGraphBuilder.securityDetailScreenNode(navController: NavController) {
                     is SecurityDetailSideEffect.Navigation.NavigateToAddSecurity -> {
                         navController.navigate(AddHoldingRoute)
                     }
-                    is SecurityDetailSideEffect.Navigation.NavigateToEditHolding -> {
-                        // TK-025
-                    }
+                    is SecurityDetailSideEffect.Navigation.NavigateToEditHolding ->
+                        navController.navigateToEditHolding(navigation.holdingId.value)
                 }
             },
         )
