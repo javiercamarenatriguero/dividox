@@ -31,6 +31,14 @@ actual class AuthDataSource actual constructor() {
         Firebase.auth.authStateChanged.map { it?.toAuthUser() }
 
     actual fun getCurrentUserId(): String? = Firebase.auth.currentUser?.uid
+
+    actual suspend fun ensureTokenReady() {
+        try {
+            Firebase.auth.currentUser?.getIdToken(false)
+        } catch (_: Exception) {
+            // No-op on Desktop if token fetch is unsupported.
+        }
+    }
 }
 
 private fun FirebaseUser.toAuthUser(): AuthUser = AuthUser(

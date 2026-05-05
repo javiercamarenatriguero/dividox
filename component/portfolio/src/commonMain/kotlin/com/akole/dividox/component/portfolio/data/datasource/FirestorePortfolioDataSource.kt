@@ -12,6 +12,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.retryWhen
@@ -23,12 +25,16 @@ import kotlinx.coroutines.flow.retryWhen
  * @property userIdProvider Provides the current authenticated user ID for write operations.
  * @property authUserIdFlow Emits the authenticated user ID (or null when signed out).
  *   [observePortfolio] reacts to this flow so that the Firestore subscription is automatically
- *   created on login and cancelled on logout — eliminating the race condition between
- *   Firebase Auth token propagation and the first Firestore read on a fresh install.
+ *   created on login and cancelled on logout.
+ * @property tokenReadyProvider Called once per login before subscribing to Firestore to ensure
+ *   the Firebase ID token has propagated. Eliminates the PERMISSION_DENIED race condition that
+ *   occurs on fresh installs when the Firestore snapshot listener starts before the auth token
+ *   is attached to the first network request.
  */
 class FirestorePortfolioDataSource(
     private val userIdProvider: () -> String,
     private val authUserIdFlow: Flow<String?>,
+    private val tokenReadyProvider: suspend () -> Unit = {},
 ) : PortfolioDataSource {
 
     private val collectionRef: CollectionReference
@@ -60,7 +66,10 @@ class FirestorePortfolioDataSource(
                 if (userId == null) {
                     flowOf(Result.success(emptyList()))
                 } else {
-                    observePortfolioForUser(userId)
+                    flow {
+                        tokenReadyProvider()
+                        emitAll(observePortfolioForUser(userId))
+                    }
                 }
             }
 
@@ -85,8 +94,7 @@ class FirestorePortfolioDataSource(
                 )
             }
             .retryWhen { cause, attempt ->
-                // Emit failure so downstream can react (e.g. show stale state) rather than
-                // silently blocking the combine while we wait for the retry.
+                println("FirestorePortfolio: attempt=$attempt error=${cause::class.simpleName} msg=${cause.message}")
                 emit(Result.failure(cause))
                 delay(minOf(2_000L * (attempt + 1), 10_000L))
                 true

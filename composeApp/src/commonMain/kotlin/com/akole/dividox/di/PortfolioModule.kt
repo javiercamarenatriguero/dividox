@@ -1,5 +1,6 @@
 package com.akole.dividox.di
 
+import com.akole.dividox.component.auth.domain.repository.AuthRepository
 import com.akole.dividox.component.auth.domain.usecase.GetCurrentUserIdUseCase
 import com.akole.dividox.component.portfolio.data.datasource.FirestorePortfolioDataSource
 import com.akole.dividox.component.portfolio.data.datasource.PortfolioDataSource
@@ -20,6 +21,7 @@ val portfolioModule: Module = module {
         FirestorePortfolioDataSource(
             userIdProvider = { get<GetCurrentUserIdUseCase>()() },
             authUserIdFlow = get<StateFlow<String?>>(),
+            tokenReadyProvider = { get<AuthRepository>().ensureTokenReady() },
         )
     }
     single<PortfolioRepository> {

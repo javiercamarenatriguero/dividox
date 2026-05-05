@@ -50,7 +50,7 @@
     <string name="portfolio_sort_date">Date</string>
     <string name="portfolio_edit">Edit</string>
     <string name="portfolio_shares_format">%1$s shares</string>
-    <string name="portfolio_yield_label">Dividend: %1$s</string>
+    <string name="portfolio_yield_label">Dividend Yield: %1$s</string>
     <string name="action_add_position">Add Position</string>
     <string name="action_update_position">Update Position</string>
     <string name="action_delete">Delete</string>

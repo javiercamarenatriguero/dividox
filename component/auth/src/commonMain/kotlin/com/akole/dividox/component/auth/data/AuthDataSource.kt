@@ -58,4 +58,12 @@ expect class AuthDataSource() {
      * @return UID string or null when unauthenticated
      */
     fun getCurrentUserId(): String?
+
+    /**
+     * Ensures the Firebase ID token is attached and ready for Firestore requests.
+     * Call before making the first Firestore read after login to avoid PERMISSION_DENIED
+     * caused by the auth token not yet propagating to Firestore on a fresh install.
+     * No-op when unauthenticated or on Desktop.
+     */
+    suspend fun ensureTokenReady()
 }
