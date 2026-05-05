@@ -111,6 +111,8 @@ class GetDividendProjectionBarsUseCaseTest {
             id = DividendPaymentId(id),
             tickerId = ticker,
             amount = amount,
+            amountPerShare = 0.0,
+            shares = 0.0,
             currency = "USD",
             paymentDate = date,
         )

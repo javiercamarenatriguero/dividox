@@ -16,6 +16,8 @@ internal fun DividendPaymentEntity.toDomain(): DividendPayment = DividendPayment
     id = DividendPaymentId(id),
     tickerId = tickerId,
     amount = amount,
+    amountPerShare = amountPerShare,
+    shares = shares,
     currency = currency,
     paymentDate = LocalDate.parse(paymentDate),
 )
@@ -25,6 +27,8 @@ internal fun DividendPayment.toEntity(): DividendPaymentEntity = DividendPayment
     id = id.value,
     tickerId = tickerId,
     amount = amount,
+    amountPerShare = amountPerShare,
+    shares = shares,
     currency = currency,
     paymentDate = paymentDate.toString(),
 )

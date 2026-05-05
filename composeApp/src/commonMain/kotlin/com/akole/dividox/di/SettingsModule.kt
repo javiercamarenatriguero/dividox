@@ -1,5 +1,6 @@
 package com.akole.dividox.di
 
+import com.akole.dividox.common.settings.AppRefreshTracker
 import com.akole.dividox.common.settings.data.datastore.AppSettingsDataStoreImpl
 import com.akole.dividox.common.settings.data.datastore.createDataStore
 import com.akole.dividox.common.settings.domain.datastore.AppSettingsDataStore
@@ -12,6 +13,7 @@ internal expect fun dataStorePath(): String
 val settingsModule = module {
     single { createDataStore(::dataStorePath) }
     single<AppSettingsDataStore> { AppSettingsDataStoreImpl(get()) }
+    single { AppRefreshTracker() }
     factory { ObserveAppSettingsUseCase(get()) }
     factory { SetCurrencyUseCase(get()) }
 }

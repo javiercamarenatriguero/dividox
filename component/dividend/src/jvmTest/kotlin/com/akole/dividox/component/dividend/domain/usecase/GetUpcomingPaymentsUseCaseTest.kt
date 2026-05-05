@@ -39,6 +39,8 @@ class GetUpcomingPaymentsUseCaseTest {
             id = DividendPaymentId("p1"),
             tickerId = "AAPL",
             amount = 50.0,
+            amountPerShare = 0.0,
+            shares = 0.0,
             currency = "USD",
             paymentDate = LocalDate(2026, 12, 31),
         )

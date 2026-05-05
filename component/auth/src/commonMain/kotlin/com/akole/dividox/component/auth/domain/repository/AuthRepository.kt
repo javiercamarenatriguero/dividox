@@ -54,4 +54,11 @@ interface AuthRepository {
      * @return UID string or null
      */
     fun getCurrentUserId(): String?
+
+    /**
+     * Ensures the Firebase ID token is ready for Firestore requests.
+     * Call once after login before the first Firestore read to prevent PERMISSION_DENIED
+     * caused by the auth token not yet propagating on a fresh install.
+     */
+    suspend fun ensureTokenReady()
 }

@@ -28,6 +28,7 @@ kotlinx-datetime = "0.7.1"
 kotlinx-serialization = "1.11.0"
 ksp = "2.3.7"
 room = "2.7.2"
+jetco-kmp = "1.1.1-beta"
 sqlite = "2.6.2"
 material3 = "1.10.0-alpha05"
 runtime = "1.10.3"
@@ -109,6 +110,9 @@ androidx-navigation-compose = { module = "org.jetbrains.androidx.navigation:navi
 # Test
 junit = { module = "junit:junit", version.ref = "junit" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+
+# JetCo
+jetco-charts = { module = "com.developerstring.jetco-kmp:ui", version.ref = "jetco-kmp" }
 
 [plugins]
 # External plugins

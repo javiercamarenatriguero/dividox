@@ -104,6 +104,8 @@ class GetEnrichedUpcomingPaymentsUseCaseTest {
             id = DividendPaymentId(id),
             tickerId = ticker,
             amount = 25.0,
+            amountPerShare = 0.0,
+            shares = 0.0,
             currency = "USD",
             paymentDate = date,
         )

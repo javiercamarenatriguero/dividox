@@ -2,6 +2,7 @@ package com.akole.dividox.component.dividend.data.db
 
 import androidx.room.Dao
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
 
@@ -20,6 +21,15 @@ interface DividendDao {
      */
     @Query("SELECT * FROM dividend_payments ORDER BY payment_date DESC")
     fun observeAll(): Flow<List<DividendPaymentEntity>>
+
+    /**
+     * Observes only past dividend payments (payment_date ≤ today), newest first.
+     * Excludes future-projected events returned by the market API.
+     *
+     * @param today Today's date in ISO-8601 format (YYYY-MM-DD).
+     */
+    @Query("SELECT * FROM dividend_payments WHERE payment_date <= :today ORDER BY payment_date DESC")
+    fun observePast(today: String): Flow<List<DividendPaymentEntity>>
 
     /**
      * Returns the sum of payments for a given year.
@@ -45,7 +55,16 @@ interface DividendDao {
     fun observeUpcoming(today: String): Flow<List<DividendPaymentEntity>>
 
     /**
-     * Inserts or updates a list of payment entities.
+     * Atomically replaces all cached payments.
+     * Using [Transaction] ensures Room emits only once (after upsert), not twice.
+     */
+    @Transaction
+    suspend fun replaceAll(payments: List<DividendPaymentEntity>) {
+        clearAll()
+        upsert(payments)
+    }
+
+    /** Inserts or updates a list of payment entities.
      * Conflict strategy: replace on primary key collision.
      */
     @Upsert

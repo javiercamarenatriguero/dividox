@@ -1,18 +1,25 @@
 package com.akole.dividox.feature.dashboard
 
 import com.akole.dividox.common.network.connectivity.NetworkConnectivityManager
+import com.akole.dividox.common.settings.AppRefreshTracker
 import com.akole.dividox.common.settings.domain.model.AppSettings
 import com.akole.dividox.common.settings.domain.usecase.ObserveAppSettingsUseCase
 import com.akole.dividox.common.currency.CurrencyConverter
 import com.akole.dividox.common.currency.domain.model.Currency
 import com.akole.dividox.common.settings.domain.usecase.SetCurrencyUseCase
+import com.akole.dividox.component.portfolio.domain.model.Holding
 import com.akole.dividox.component.watchlist.domain.model.WatchlistEntry
 import com.akole.dividox.feature.dashboard.DashboardContract.DashboardSideEffect
 import com.akole.dividox.feature.dashboard.DashboardContract.DashboardViewEvent
+import com.akole.dividox.integration.dividend.domain.usecase.GetPeriodDividendsUseCase
+import com.akole.dividox.integration.dividend.domain.usecase.ObservePortfolioChangesUseCase
+import com.akole.dividox.integration.dividend.domain.usecase.SyncDividendHistoryFromHoldingsUseCase
 import com.akole.dividox.integration.security.domain.model.EnrichedWatchlistEntry
 import com.akole.dividox.integration.security.domain.model.PortfolioSummary
 import com.akole.dividox.integration.security.domain.usecase.GetEnrichedWatchlistUseCase
+import com.akole.dividox.integration.security.domain.usecase.GetPortfolioPeriodGainUseCase
 import com.akole.dividox.integration.security.domain.usecase.GetPortfolioSummaryUseCase
+import com.akole.dividox.integration.security.domain.usecase.GetPortfolioWithQuotesUseCase
 import com.akole.dividox.component.watchlist.domain.usecase.RemoveFromWatchlistUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -44,21 +51,33 @@ class DashboardViewModelTest {
 
     private val testDispatcher = UnconfinedTestDispatcher()
 
+    private val getPortfolioWithQuotes: GetPortfolioWithQuotesUseCase = mockk()
     private val getPortfolioSummary: GetPortfolioSummaryUseCase = mockk()
+    private val getPortfolioPeriodGain: GetPortfolioPeriodGainUseCase = mockk()
+    private val getPeriodDividends: GetPeriodDividendsUseCase = mockk()
     private val getEnrichedWatchlist: GetEnrichedWatchlistUseCase = mockk()
     private val removeFromWatchlist: RemoveFromWatchlistUseCase = mockk()
     private val observeAppSettings: ObserveAppSettingsUseCase = mockk()
     private val setCurrency: SetCurrencyUseCase = mockk()
     private val currencyConverter: CurrencyConverter = mockk()
     private val connectivityManager: NetworkConnectivityManager = mockk()
+    private val refreshTracker: AppRefreshTracker = AppRefreshTracker()
+    private val observePortfolioChanges: ObservePortfolioChangesUseCase = mockk()
+    private val syncDividendHistory: SyncDividendHistoryFromHoldingsUseCase = mockk()
 
     @BeforeTest
     fun setup() {
         Dispatchers.setMain(testDispatcher)
+        every { getPortfolioWithQuotes() } returns emptyFlow()
         every { getPortfolioSummary() } returns emptyFlow()
+        coEvery { getPortfolioPeriodGain(any(), any()) } returns (0.0 to 0.0)
+        every { getPeriodDividends(null) } returns emptyFlow()
+        every { getPeriodDividends(any()) } returns emptyFlow()
         every { getEnrichedWatchlist() } returns emptyFlow()
         every { observeAppSettings() } returns flowOf(AppSettings())
         every { connectivityManager.observeConnectivity() } returns emptyFlow()
+        every { observePortfolioChanges() } returns emptyFlow()
+        coEvery { syncDividendHistory(any()) } returns Result.success(Unit)
         coEvery { setCurrency(any()) } just Runs
         coEvery { currencyConverter.convert(any(), any(), any()) } answers { Result.success(firstArg()) }
     }
@@ -69,13 +88,19 @@ class DashboardViewModelTest {
     }
 
     private fun viewModel() = DashboardViewModel(
+        getPortfolioWithQuotes = getPortfolioWithQuotes,
         getPortfolioSummary = getPortfolioSummary,
+        getPortfolioPeriodGain = getPortfolioPeriodGain,
+        getPeriodDividends = getPeriodDividends,
         getEnrichedWatchlist = getEnrichedWatchlist,
         removeFromWatchlist = removeFromWatchlist,
         observeAppSettings = observeAppSettings,
         setCurrency = setCurrency,
         currencyConverter = currencyConverter,
         connectivityManager = connectivityManager,
+        refreshTracker = refreshTracker,
+        observePortfolioChanges = observePortfolioChanges,
+        syncDividendHistory = syncDividendHistory,
     )
 
     // ─── Initial state ────────────────────────────────────────────────────────
@@ -206,40 +231,34 @@ class DashboardViewModelTest {
         assertEquals(ChartPeriod.YEAR_TO_DATE, vm.viewState.value.selectedPeriod)
     }
 
-    // ─── CurrencyToggled ──────────────────────────────────────────────────────
+    // ─── CurrencySelected ────────────────────────────────────────────────────
 
     @Test
-    fun `SHOULD call setCurrency with USD WHEN CurrencyToggled GIVEN current currency is EUR`() = runTest {
+    fun `SHOULD call setCurrency with EUR WHEN CurrencySelected GIVEN EUR`() = runTest {
         // GIVEN
-        every { getPortfolioSummary() } returns flowOf(emptySummary)
-        every { getEnrichedWatchlist() } returns flowOf(emptyList())
-        every { observeAppSettings() } returns flowOf(AppSettings(currency = Currency.EUR))
         val vm = viewModel()
         advanceUntilIdle()
 
         // WHEN
-        vm.onViewEvent(DashboardViewEvent.CurrencyToggled)
-        advanceUntilIdle()
-
-        // THEN
-        coVerify { setCurrency(Currency.USD) }
-    }
-
-    @Test
-    fun `SHOULD call setCurrency with EUR WHEN CurrencyToggled GIVEN current currency is USD`() = runTest {
-        // GIVEN
-        every { getPortfolioSummary() } returns flowOf(emptySummary)
-        every { getEnrichedWatchlist() } returns flowOf(emptyList())
-        every { observeAppSettings() } returns flowOf(AppSettings(currency = Currency.USD))
-        val vm = viewModel()
-        advanceUntilIdle()
-
-        // WHEN
-        vm.onViewEvent(DashboardViewEvent.CurrencyToggled)
+        vm.onViewEvent(DashboardViewEvent.CurrencySelected(Currency.EUR))
         advanceUntilIdle()
 
         // THEN
         coVerify { setCurrency(Currency.EUR) }
+    }
+
+    @Test
+    fun `SHOULD call setCurrency with USD WHEN CurrencySelected GIVEN USD`() = runTest {
+        // GIVEN
+        val vm = viewModel()
+        advanceUntilIdle()
+
+        // WHEN
+        vm.onViewEvent(DashboardViewEvent.CurrencySelected(Currency.USD))
+        advanceUntilIdle()
+
+        // THEN
+        coVerify { setCurrency(Currency.USD) }
     }
 
     // ─── FavouriteToggled ─────────────────────────────────────────────────────

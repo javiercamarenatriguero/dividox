@@ -44,6 +44,8 @@ internal class FakeAuthRepository(private val user: AuthUser? = null) : AuthRepo
     }
 
     override fun getCurrentUserId(): String? = user?.uid
+
+    override suspend fun ensureTokenReady() = Unit
 }
 
 /**
@@ -68,4 +70,6 @@ internal class FailingAuthRepository : AuthRepository {
         Result.failure(IllegalStateException("Sign out failed"))
 
     override fun getCurrentUserId(): String? = null
+
+    override suspend fun ensureTokenReady() = Unit
 }

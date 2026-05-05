@@ -30,6 +30,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -176,9 +181,18 @@ private fun SearchBar(
     onQueryChanged: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // Local state so TextField updates instantly without waiting for the ViewModel round-trip.
+    // LaunchedEffect syncs back if the query is cleared externally (e.g. on screen reset).
+    var localQuery by remember { mutableStateOf(query) }
+    LaunchedEffect(query) {
+        if (localQuery != query) localQuery = query
+    }
     TextField(
-        value = query,
-        onValueChange = onQueryChanged,
+        value = localQuery,
+        onValueChange = {
+            localQuery = it
+            onQueryChanged(it)
+        },
         modifier = modifier
             .fillMaxWidth(),
         placeholder = { Text(stringResource(Res.string.portfolio_search_placeholder)) },

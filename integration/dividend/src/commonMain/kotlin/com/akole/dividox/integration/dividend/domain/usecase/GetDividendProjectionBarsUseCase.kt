@@ -92,7 +92,7 @@ class GetDividendProjectionBarsUseCase(
     }
 
     companion object {
-        const val DEFAULT_PAST_MONTHS: Int = 12
+        const val DEFAULT_PAST_MONTHS: Int = 120 // 10 years — ViewModel filters by selected range
         const val DEFAULT_FUTURE_MONTHS: Int = 3
     }
 }

@@ -49,4 +49,6 @@ class AuthRepositoryImpl(
     }
 
     override fun getCurrentUserId(): String? = dataSource.getCurrentUserId()
+
+    override suspend fun ensureTokenReady() = dataSource.ensureTokenReady()
 }

@@ -52,6 +52,14 @@ actual class AuthDataSource actual constructor() {
     /** Returns UID of currently authenticated user, or null if unauthenticated. */
     actual fun getCurrentUserId(): String? = auth.currentUser?.uid
 
+    actual suspend fun ensureTokenReady() {
+        try {
+            auth.currentUser?.getIdToken(false)?.await()
+        } catch (_: Exception) {
+            // Best effort — if token fetch fails, proceed and let Firestore retry handle it.
+        }
+    }
+
     /**
      * Emits the current [AuthUser] whenever the Firebase auth state changes.
      * Emits `null` when the user is signed out.

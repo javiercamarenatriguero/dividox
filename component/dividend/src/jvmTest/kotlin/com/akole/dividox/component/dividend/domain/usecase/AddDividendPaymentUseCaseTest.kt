@@ -24,6 +24,8 @@ class AddDividendPaymentUseCaseTest {
             id = DividendPaymentId("p1"),
             tickerId = "AAPL",
             amount = 100.0,
+            amountPerShare = 0.0,
+            shares = 0.0,
             currency = "USD",
             paymentDate = LocalDate(2025, 3, 15),
         )

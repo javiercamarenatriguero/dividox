@@ -13,7 +13,7 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.datetime)
             implementation(projects.component.dividend)
-            implementation(projects.component.portfolio)
+            api(projects.component.portfolio)
             implementation(projects.component.market)
         }
         commonTest.dependencies {

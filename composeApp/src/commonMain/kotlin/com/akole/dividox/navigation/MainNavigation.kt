@@ -33,8 +33,13 @@ import dividox.common.ui_resources.generated.resources.portfolio_add_holding
 import dividox.common.ui_resources.generated.resources.section_dividends
 import dividox.common.ui_resources.generated.resources.section_portfolio
 import dividox.common.ui_resources.generated.resources.section_settings
+import com.akole.dividox.common.mvi.collectViewState
+import com.akole.dividox.feature.dividends.DividendsContract.DividendsSideEffect
+import com.akole.dividox.feature.dividends.DividendsScreen
+import com.akole.dividox.feature.dividends.DividendsViewModel
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.viewmodel.koinViewModel
 
 @Serializable
 data object MainGraphRoute
@@ -134,18 +139,29 @@ fun NavGraphBuilder.mainGraphNode(rootNavController: NavController) {
                     navController = innerNavController,
                     onRegisterFabClick = { callback -> portfolioFabClick = callback },
                 )
-                dividendsScreenNode()
+                dividendsScreenNode(innerNavController)
                 settingsScreenNode()
             }
         }
     }
 }
 
-fun NavGraphBuilder.dividendsScreenNode() {
+fun NavGraphBuilder.dividendsScreenNode(navController: NavController) {
     composable<DividendsRoute> {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text(stringResource(Res.string.section_dividends))
-        }
+        val viewModel = koinViewModel<DividendsViewModel>()
+        val state by collectViewState(viewModel.viewState)
+
+        DividendsScreen(
+            state = state,
+            onEvent = viewModel::onViewEvent,
+            sideEffects = viewModel.sideEffect,
+            onNavigation = { navigation ->
+                when (navigation) {
+                    is DividendsSideEffect.Navigation.NavigateToSecurity ->
+                        navController.navigate(SecurityDetailRoute(ticker = navigation.ticker))
+                }
+            },
+        )
     }
 }
 

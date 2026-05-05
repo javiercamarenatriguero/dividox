@@ -125,7 +125,8 @@ class PortfolioViewModel(
         if (query.isBlank()) return holdings
         val lowerQuery = query.lowercase()
         return holdings.filter { holding ->
-            holding.holding.tickerId.lowercase().contains(lowerQuery)
+            holding.holding.tickerId.lowercase().contains(lowerQuery) ||
+                holding.quote.name?.lowercase()?.contains(lowerQuery) == true
         }
     }
 

@@ -20,11 +20,6 @@ kotlin {
             api(libs.sqlite.bundled)
             implementation(libs.kotlinx.datetime)
             implementation(libs.kotlinx.coroutines.core)
-            implementation(libs.firebase.kotlin.firestore)
-            implementation(libs.kotlinx.serialization.core)
-        }
-        androidMain.dependencies {
-            implementation(project.dependencies.platform(libs.firebase.bom))
         }
         jvmTest.dependencies {
             implementation(libs.kotlin.test)

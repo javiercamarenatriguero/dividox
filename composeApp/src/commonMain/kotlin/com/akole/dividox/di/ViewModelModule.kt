@@ -3,6 +3,7 @@ package com.akole.dividox.di
 import com.akole.dividox.feature.auth.forgotpassword.ForgotPasswordViewModel
 import com.akole.dividox.feature.auth.login.LoginViewModel
 import com.akole.dividox.feature.auth.register.SignUpViewModel
+import com.akole.dividox.feature.dividends.DividendsViewModel
 import com.akole.dividox.feature.dashboard.DashboardViewModel
 import com.akole.dividox.feature.home.HomeViewModel
 import com.akole.dividox.feature.portfolio.HoldingViewModel
@@ -25,6 +26,7 @@ val viewModelModule: Module = module {
     viewModelOf(::SignUpViewModel)
     viewModelOf(::ForgotPasswordViewModel)
     viewModelOf(::DashboardViewModel)
+    viewModelOf(::DividendsViewModel)
     viewModel { PortfolioViewModel(get(), get(), get(), get()) }
     
     // HoldingViewModel with optional holdingId parameter for Add/Edit modes

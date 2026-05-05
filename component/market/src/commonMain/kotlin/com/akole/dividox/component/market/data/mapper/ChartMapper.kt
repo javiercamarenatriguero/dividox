@@ -4,6 +4,7 @@ import com.akole.dividox.component.market.data.dto.ChartMetaDto
 import com.akole.dividox.component.market.data.dto.ChartResultDto
 import com.akole.dividox.component.market.domain.model.CompanyInfo
 import com.akole.dividox.component.market.domain.model.DividendInfo
+import com.akole.dividox.component.market.domain.model.MarketDividendEvent
 import com.akole.dividox.component.market.domain.model.PricePoint
 import com.akole.dividox.component.market.domain.model.StockQuote
 import kotlin.math.pow
@@ -128,5 +129,31 @@ internal fun ChartResultDto.toPricePoints(): List<PricePoint> {
         .mapNotNull { (ts, close) ->
             close?.let { PricePoint(timestamp = Instant.fromEpochSeconds(ts), close = it) }
         }
+}
+
+/**
+ * Extracts per-event dividend history from `events.dividends`.
+ *
+ * Events are sorted by ex-dividend date ascending. The Yahoo Finance API key for each
+ * event is the Unix timestamp in seconds, used as the stable event identifier to
+ * build deterministic [MarketDividendEvent] instances.
+ *
+ * @param ticker Yahoo Finance symbol used as the [MarketDividendEvent.ticker] key.
+ */
+internal fun ChartResultDto.toMarketDividendEvents(ticker: String): List<MarketDividendEvent> {
+    val currency = meta.currency ?: "USD"
+    return events?.dividends
+        ?.values
+        ?.sortedBy { it.date }
+        ?.map { dto ->
+            MarketDividendEvent(
+                ticker = ticker,
+                amountPerShare = dto.amount,
+                exDividendDate = Instant.fromEpochSeconds(dto.date)
+                    .toLocalDateTime(TimeZone.UTC).date,
+                currency = currency,
+            )
+        }
+        .orEmpty()
 }
 

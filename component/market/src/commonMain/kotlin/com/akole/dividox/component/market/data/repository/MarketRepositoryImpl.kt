@@ -4,11 +4,14 @@ import com.akole.dividox.component.market.data.api.YahooFinanceApi
 import io.ktor.client.HttpClient
 import com.akole.dividox.component.market.data.mapper.toCompanyInfo
 import com.akole.dividox.component.market.data.mapper.toDividendInfo
+import com.akole.dividox.component.market.data.mapper.toMarketDividendEvents
 import com.akole.dividox.component.market.data.mapper.toPricePoints
 import com.akole.dividox.component.market.data.mapper.toStockQuote
 import com.akole.dividox.component.market.domain.model.ChartPeriod
 import com.akole.dividox.component.market.domain.model.CompanyInfo
+import com.akole.dividox.component.market.domain.model.DividendHistoryRange
 import com.akole.dividox.component.market.domain.model.DividendInfo
+import com.akole.dividox.component.market.domain.model.MarketDividendEvent
 import com.akole.dividox.component.market.domain.model.MarketError
 import com.akole.dividox.component.market.domain.model.PricePoint
 import com.akole.dividox.component.market.domain.model.StockQuote
@@ -29,10 +32,10 @@ class MarketRepositoryImpl(
 
     private val api = YahooFinanceApi(httpClient)
 
-    // TTL: 60s for quotes, 1h for dividend/company info
     private val quoteCache = mutableMapOf<String, Pair<StockQuote, Long>>()
     private val dividendCache = mutableMapOf<String, Pair<DividendInfo, Long>>()
     private val companyCache = mutableMapOf<String, Pair<CompanyInfo, Long>>()
+    private val historicalDividendCache = mutableMapOf<String, Pair<List<MarketDividendEvent>, Long>>()
 
     override suspend fun getStockQuote(ticker: String): Result<StockQuote> = withContext(ioDispatcher) {
         val cached = quoteCache[ticker]
@@ -49,13 +52,27 @@ class MarketRepositoryImpl(
         withContext(ioDispatcher) {
             runCatching {
                 coroutineScope {
-                    tickers.map { ticker -> async { api.getChart(ticker) } }
+                    val now = Clock.System.now().toEpochMilliseconds()
+                    val fromCache = mutableListOf<StockQuote>()
+                    val toFetch = mutableListOf<String>()
+                    tickers.forEach { ticker ->
+                        val cached = quoteCache[ticker]
+                        if (cached != null && !isExpired(cached.second, QUOTE_TTL_MS)) {
+                            fromCache += cached.first
+                        } else {
+                            toFetch += ticker
+                        }
+                    }
+                    val fromApi = toFetch
+                        .map { ticker -> async { api.getChart(ticker) to ticker } }
                         .map { deferred ->
-                            val dto = deferred.await()
-                            val meta = dto.chart.result?.firstOrNull()?.meta
-                            meta?.toStockQuote()
+                            val (dto, ticker) = deferred.await()
+                            dto.chart.result?.firstOrNull()?.meta
+                                ?.toStockQuote()
+                                ?.also { quote -> quoteCache[ticker] = quote to now }
                         }
                         .filterNotNull()
+                    fromCache + fromApi
                 }
             }.mapError()
         }
@@ -90,6 +107,24 @@ class MarketRepositoryImpl(
         }.mapError()
     }
 
+    override suspend fun getHistoricalDividendEvents(
+        ticker: String,
+        range: DividendHistoryRange,
+    ): Result<List<MarketDividendEvent>> = withContext(ioDispatcher) {
+        val cacheKey = "$ticker:${range.apiValue}"
+        val cached = historicalDividendCache[cacheKey]
+        if (cached != null && !isExpired(cached.second, HISTORICAL_DIVIDEND_TTL_MS)) {
+            return@withContext Result.success(cached.first)
+        }
+        runCatching {
+            val dto = api.getChartWithEvents(ticker, range = range.apiValue)
+            val result = dto.chart.result?.firstOrNull() ?: return@runCatching emptyList()
+            result.toMarketDividendEvents(ticker).also { events ->
+                historicalDividendCache[cacheKey] = events to Clock.System.now().toEpochMilliseconds()
+            }
+        }.mapError()
+    }
+
     override fun getPriceHistory(ticker: String, period: ChartPeriod): Flow<List<PricePoint>> =
         flow {
             val (range, interval) = period.toRangeInterval()
@@ -101,19 +136,30 @@ class MarketRepositoryImpl(
     override suspend fun searchSecurities(query: String): Result<List<StockQuote>> = withContext(ioDispatcher) {
         runCatching {
             val dto = api.search(query)
-            dto.quotes?.filter { it.quoteType == "EQUITY" }?.map { quote ->
-                StockQuote(
-                    ticker = quote.symbol,
-                    price = 0.0,
-                    change = 0.0,
-                    changePercent = 0.0,
-                    currency = "",
-                    lastUpdated = Clock.System.now(),
-                    name = quote.shortname ?: quote.longname,
-                    exchange = quote.exchDisp,
-                )
-            } ?: emptyList()
+            val acceptedTypes = setOf("EQUITY", "ETF", "MUTUALFUND")
+            dto.quotes
+                ?.filter { it.quoteType?.uppercase() in acceptedTypes }
+                ?.map { quote ->
+                    StockQuote(
+                        ticker = quote.symbol,
+                        price = 0.0,
+                        change = 0.0,
+                        changePercent = 0.0,
+                        currency = "",
+                        lastUpdated = Clock.System.now(),
+                        name = quote.shortname ?: quote.longname,
+                        exchange = quote.exchDisp,
+                    )
+                }
+                ?.sortedBy { exchangePriority(it.exchange) }
+                ?: emptyList()
         }.mapError()
+    }
+
+    private fun exchangePriority(exchange: String?): Int {
+        val e = exchange?.uppercase() ?: return Int.MAX_VALUE
+        return EXCHANGE_PRIORITY.indexOfFirst { e.contains(it) }
+            .takeIf { it >= 0 } ?: Int.MAX_VALUE
     }
 
     private fun isExpired(timestamp: Long, ttlMs: Long): Boolean =
@@ -128,8 +174,28 @@ class MarketRepositoryImpl(
     }
 
     companion object {
-        private const val QUOTE_TTL_MS = 60_000L
-        private const val DIVIDEND_TTL_MS = 3_600_000L
+        private const val QUOTE_TTL_MS = 300_000L              // 5 minutes
+        private const val DIVIDEND_TTL_MS = 3_600_000L         // 1 hour
+        private const val HISTORICAL_DIVIDEND_TTL_MS = 86_400_000L  // 24 hours
+
+        /**
+         * Main exchange tiers, ordered from highest to lowest priority.
+         * Yahoo Finance returns exchDisp values like "NASDAQ", "NYSE", "LSE", etc.
+         * Unlisted or exotic exchanges fall to Int.MAX_VALUE and stay at the bottom.
+         */
+        private val EXCHANGE_PRIORITY = listOf(
+            "NASDAQ", "NYSE",            // US — tier 1
+            "LSE",                       // UK
+            "XETRA", "FSX", "FRA",      // Germany
+            "EURONEXT", "PAR", "AMS",   // Euronext
+            "BME", "MCE",               // Spain
+            "MIL",                       // Italy
+            "SIX", "SWX",               // Switzerland
+            "TSX",                       // Canada
+            "ASX",                       // Australia
+            "TSE", "OSE",               // Japan
+            "HKEX", "HKG",              // Hong Kong
+        )
     }
 }
 
