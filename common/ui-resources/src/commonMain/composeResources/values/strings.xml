@@ -111,5 +111,6 @@
     <string name="period_1m">1M</string>
     <string name="period_ytd">YTD</string>
     <string name="period_1y">1Y</string>
+    <string name="period_5y">5Y</string>
     <string name="period_all">ALL</string>
 </resources>

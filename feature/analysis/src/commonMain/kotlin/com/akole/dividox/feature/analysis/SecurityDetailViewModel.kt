@@ -3,13 +3,15 @@ package com.akole.dividox.feature.analysis
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.akole.dividox.common.currency.CurrencyConverter
-import com.akole.dividox.common.currency.domain.model.Currency
 import com.akole.dividox.common.mvi.viewmodel.MVI
 import com.akole.dividox.common.mvi.viewmodel.mvi
 import com.akole.dividox.common.network.connectivity.NetworkConnectivityManager
 import com.akole.dividox.common.settings.AppRefreshTracker
 import com.akole.dividox.common.settings.domain.usecase.ObserveAppSettingsUseCase
 import com.akole.dividox.component.market.domain.model.ChartPeriod
+import com.akole.dividox.component.market.domain.model.DividendHistoryRange
+import com.akole.dividox.component.market.domain.usecase.GetHistoricalDividendEventsUseCase
+import com.akole.dividox.component.market.domain.usecase.GetPriceHistoryUseCase
 import com.akole.dividox.component.market.domain.usecase.GetStockQuoteUseCase
 import com.akole.dividox.component.watchlist.domain.usecase.AddToWatchlistUseCase
 import com.akole.dividox.component.watchlist.domain.usecase.IsInWatchlistUseCase
@@ -20,17 +22,23 @@ import com.akole.dividox.feature.analysis.SecurityDetailContract.SecurityDetailV
 import com.akole.dividox.feature.analysis.SecurityDetailContract.SecurityDetailViewState
 import com.akole.dividox.integration.security.domain.usecase.GetSecurityDetailUseCase
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlin.math.pow
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
 
 class SecurityDetailViewModel(
     val ticker: String,
     private val getSecurityDetail: GetSecurityDetailUseCase,
     private val getStockQuote: GetStockQuoteUseCase,
+    private val getHistoricalDividendEvents: GetHistoricalDividendEventsUseCase,
+    private val getPriceHistory: GetPriceHistoryUseCase,
     private val isInWatchlist: IsInWatchlistUseCase,
     private val addToWatchlist: AddToWatchlistUseCase,
     private val removeFromWatchlist: RemoveFromWatchlistUseCase,
@@ -89,6 +97,7 @@ class SecurityDetailViewModel(
             updateViewState { copy(isLoading = true) }
             observeSecurityDetail(viewState.value.selectedChartPeriod)
         }
+        loadHistoricalDividendGrowth()
     }
 
     private fun observeSecurityDetail(period: ChartPeriod) {
@@ -105,15 +114,61 @@ class SecurityDetailViewModel(
                             companyInfo = detail.companyInfo,
                             dividendInfo = detail.dividendInfo,
                             priceHistory = detail.priceHistory,
+                            renderedChartPeriod = period,
                             isInPortfolio = detail.isInPortfolio,
                             lastUpdated = Clock.System.now(),
                             isLoading = false,
                         )
                     }
-                    detail.dividendInfo?.let {
-                        generateDividendGrowthBars(it.annualPayout)
-                    }
                 }
+        }
+    }
+
+    private fun loadHistoricalDividendGrowth() {
+        viewModelScope.launch {
+            runCatching {
+                coroutineScope {
+                    val eventsDeferred = async {
+                        getHistoricalDividendEvents(ticker, DividendHistoryRange.MAX).getOrNull()
+                    }
+                    val pricePointsDeferred = async {
+                        getPriceHistory(ticker, ChartPeriod.ALL)
+                            .catch { /* ignore; bars without price data are skipped */ }
+                            .first()
+                    }
+                    val events = eventsDeferred.await() ?: return@coroutineScope
+                    val pricePoints = pricePointsDeferred.await()
+
+                    val dividendsByYear = events
+                        .groupBy { it.exDividendDate.year }
+                        .mapValues { (_, evts) -> evts.sumOf { it.amountPerShare } }
+
+                    val priceByYear = pricePoints
+                        .groupBy { it.timestamp.toLocalDateTime(TimeZone.UTC).year }
+                        .mapValues { (_, pts) ->
+                            pts.maxByOrNull { it.timestamp }?.close ?: 0.0
+                        }
+
+                    val currentYear = Clock.System.now().toLocalDateTime(TimeZone.UTC).year
+                    val bars = (0..9).mapNotNull { yearOffset ->
+                        val year = currentYear - yearOffset
+                        val payout = dividendsByYear[year] ?: return@mapNotNull null
+                        if (payout <= 0.0) return@mapNotNull null
+                        val price = priceByYear[year]
+                            ?: priceByYear.entries.filter { it.key <= year }
+                                .maxByOrNull { it.key }?.value
+                            ?: return@mapNotNull null
+                        if (price <= 0.0) return@mapNotNull null
+                        DividendGrowthBar(
+                            year = year,
+                            absoluteValue = payout,
+                            percentageOfPrice = (payout / price) * 100,
+                        )
+                    }.reversed()
+
+                    updateViewState { copy(dividendGrowthData = bars) }
+                }
+            }
         }
     }
 
@@ -158,23 +213,6 @@ class SecurityDetailViewModel(
 
     private fun toggleDividendChartMode() {
         updateViewState { copy(isDividendChartPercentage = !viewState.value.isDividendChartPercentage) }
-    }
-
-    private fun generateDividendGrowthBars(currentPayout: Double) {
-        // Generate 10 years of dividend growth data (mock implementation)
-        // In real implementation, this would come from the repository/API
-        val currentYear = 2024
-        val bars = (0..9).map { yearOffset ->
-            val year = currentYear - yearOffset
-            val value = currentPayout * (0.95.pow(yearOffset.toDouble()))
-            DividendGrowthBar(
-                year = year,
-                absoluteValue = value,
-                percentageOfPrice = (value / (viewState.value.quote?.price ?: 1.0)) * 100,
-            )
-        }.reversed()
-
-        updateViewState { copy(dividendGrowthData = bars) }
     }
 
     private fun navigateToAddSecurity() {

@@ -65,6 +65,8 @@ fun BarChart(
     popupLabelFormatter: ((BarChartEntry) -> String)? = null,
     onBarClicked: ((BarChartEntry) -> Unit)? = null,
 ) {
+    val onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
+    val axisLabelStyle = MaterialTheme.typography.labelSmall.copy(color = onSurfaceVariant)
     var popupEntry: BarChartEntry? by remember { mutableStateOf(null) }
     var tapPosition by remember { mutableStateOf(Offset.Zero) }
     var popupSize by remember { mutableStateOf(IntSize.Zero) }
@@ -77,7 +79,8 @@ fun BarChart(
     val entryKeyMap: Map<String, BarChartEntry> = remember(entries, skipAlternateXLabels) {
         buildMap {
             entries.forEachIndexed { index, entry ->
-                val key = if (skipAlternateXLabels && index % 2 != 0) {
+                val reverseIndex = entries.size - 1 - index
+                val key = if (skipAlternateXLabels && reverseIndex % 2 != 0) {
                     "\u200B".repeat(index + 1)
                 } else {
                     entry.label
@@ -112,8 +115,13 @@ fun BarChart(
                 width = barWidth,
                 shape = barShape,
             ),
-            yAxisConfig = BarChartDefaults.yAxisConfig(isAxisScaleEnabled = false),
-            xAxisConfig = BarChartDefaults.xAxisConfig(),
+            yAxisConfig = BarChartDefaults.yAxisConfig(
+                isAxisScaleEnabled = true,
+                textStyle = axisLabelStyle,
+            ),
+            xAxisConfig = BarChartDefaults.xAxisConfig(
+                textStyle = axisLabelStyle,
+            ),
             popUpConfig = BarChartDefaults.popUpConfig(
                 enableBarPopUp = false,
                 enableXAxisPopUp = false,

@@ -205,5 +205,6 @@ private fun ChartPeriod.toRangeInterval(): Pair<String, String> = when (this) {
     ChartPeriod.ONE_MONTH -> "1mo" to "1d"
     ChartPeriod.YTD -> "ytd" to "1d"
     ChartPeriod.ONE_YEAR -> "1y" to "1wk"
+    ChartPeriod.FIVE_YEARS -> "5y" to "1mo"
     ChartPeriod.ALL -> "max" to "1mo"
 }

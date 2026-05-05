@@ -1,6 +1,5 @@
 package com.akole.dividox.feature.analysis
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,6 +22,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -32,16 +32,24 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.akole.dividox.common.mvi.CollectSideEffect
+import com.akole.dividox.common.ui.resources.charts.BarChart
+import com.akole.dividox.common.ui.resources.charts.BarChartEntry
+import com.akole.dividox.common.ui.resources.charts.LineChart
+import com.akole.dividox.common.ui.resources.charts.LineChartEntry
 import com.akole.dividox.common.ui.resources.components.DividoxTopAppBar
+import com.akole.dividox.common.ui.resources.format.formatBarChartPopupLabel
 import com.akole.dividox.common.ui.resources.format.formatLargeNumber
 import com.akole.dividox.common.ui.resources.format.formatPercentSigned
 import com.akole.dividox.common.ui.resources.format.formatPrice
 import com.akole.dividox.common.ui.resources.format.formatTwoDecimals
+import com.akole.dividox.common.ui.resources.format.monthShort
+import com.akole.dividox.common.ui.resources.format.monthShortWithYear
 import com.akole.dividox.common.ui.resources.theme.extendedColors
 import com.akole.dividox.common.ui.resources.theme.spacing
 import com.akole.dividox.feature.analysis.SecurityDetailContract.SecurityDetailSideEffect
@@ -74,14 +82,50 @@ import dividox.common.ui_resources.generated.resources.period_1d
 import dividox.common.ui_resources.generated.resources.period_1m
 import dividox.common.ui_resources.generated.resources.period_1w
 import dividox.common.ui_resources.generated.resources.period_1y
+import dividox.common.ui_resources.generated.resources.period_5y
 import dividox.common.ui_resources.generated.resources.period_all
 import dividox.common.ui_resources.generated.resources.period_ytd
 import com.akole.dividox.component.market.domain.model.ChartPeriod
+import com.akole.dividox.component.market.domain.model.PricePoint
 import kotlinx.coroutines.flow.Flow
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.stringResource
 
-private val PriceChartPlaceholderHeight = 200.dp
-private val DividendChartPlaceholderHeight = 250.dp
+private val PriceChartHeight = 200.dp
+private val DividendChartHeight = 250.dp
+
+private fun PricePoint.toChartLabel(period: ChartPeriod): String {
+    val dt = timestamp.toLocalDateTime(TimeZone.UTC)
+    return when (period) {
+        ChartPeriod.ONE_DAY -> "${dt.hour}:${dt.minute.toString().padStart(2, '0')}"
+        ChartPeriod.ONE_WEEK, ChartPeriod.ONE_MONTH -> "${dt.dayOfMonth} ${dt.date.monthShort()}"
+        ChartPeriod.YTD, ChartPeriod.ONE_YEAR -> dt.date.monthShort()
+        ChartPeriod.FIVE_YEARS -> dt.date.monthShortWithYear()
+        ChartPeriod.ALL -> dt.year.toString()
+    }
+}
+
+// Thin data to reduce chart points for dense periods.
+// FIVE_YEARS: 1 point per quarter (~20 pts). ALL: 1 point per year, last 15 years.
+private fun List<PricePoint>.thinForPeriod(period: ChartPeriod): List<PricePoint> {
+    return when (period) {
+        ChartPeriod.FIVE_YEARS -> groupBy {
+            val dt = it.timestamp.toLocalDateTime(TimeZone.UTC)
+            "${dt.year}-Q${(dt.monthNumber - 1) / 3}"
+        }.entries.sortedBy { it.key }.mapNotNull { it.value.lastOrNull() }
+
+        ChartPeriod.ALL -> {
+            val maxYear = maxOfOrNull { it.timestamp.toLocalDateTime(TimeZone.UTC).year } ?: return this
+            filter { it.timestamp.toLocalDateTime(TimeZone.UTC).year >= maxYear - 14 }
+                .groupBy { it.timestamp.toLocalDateTime(TimeZone.UTC).year }
+                .entries.sortedBy { it.key }
+                .mapNotNull { it.value.lastOrNull() }
+        }
+
+        else -> this
+    }
+}
 
 @Composable
 fun SecurityDetailScreen(
@@ -279,6 +323,7 @@ private fun ChartSection(
                         ChartPeriod.ONE_MONTH -> stringResource(Res.string.period_1m)
                         ChartPeriod.YTD -> stringResource(Res.string.period_ytd)
                         ChartPeriod.ONE_YEAR -> stringResource(Res.string.period_1y)
+                        ChartPeriod.FIVE_YEARS -> stringResource(Res.string.period_5y)
                         ChartPeriod.ALL -> stringResource(Res.string.period_all)
                     }
                     Surface(
@@ -310,17 +355,54 @@ private fun ChartSection(
                 }
             }
             Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(PriceChartPlaceholderHeight)
-                    .background(
-                        color = MaterialTheme.colorScheme.surfaceVariant,
-                        shape = MaterialTheme.shapes.medium,
-                    ),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(stringResource(Res.string.analysis_price_chart))
+            val isChartTransitioning = state.selectedChartPeriod != state.renderedChartPeriod
+            val chartPeriod = state.renderedChartPeriod
+            val thinned = state.priceHistory.thinForPeriod(chartPeriod)
+            val minPrice = thinned.minOfOrNull { it.close.toFloat() } ?: 0f
+            val maxPrice = thinned.maxOfOrNull { it.close.toFloat() } ?: minPrice
+            val priceRange = maxPrice - minPrice
+            val floorPrice = (minPrice - priceRange * 0.1f).coerceAtLeast(0f)
+            Box(modifier = Modifier.fillMaxWidth()) {
+                LineChart(
+                    entries = thinned.mapIndexed { index, point ->
+                        val reverseIndex = thinned.size - 1 - index
+                        val dt = point.timestamp.toLocalDateTime(TimeZone.UTC)
+                        val sparseLabel = chartPeriod == ChartPeriod.ALL ||
+                            chartPeriod == ChartPeriod.FIVE_YEARS
+                        val label = when {
+                            chartPeriod == ChartPeriod.ONE_DAY &&
+                                dt.minute != 0 ->
+                                "​".repeat(index + 1)
+                            chartPeriod == ChartPeriod.ONE_MONTH &&
+                                dt.dayOfMonth % 5 != 0 ->
+                                "​".repeat(index + 1)
+                            sparseLabel && reverseIndex % 2 != 0 ->
+                                "​".repeat(index + 1)
+                            else -> point.toChartLabel(chartPeriod)
+                        }
+                        LineChartEntry(
+                            label = label,
+                            value = point.close.toFloat() - floorPrice,
+                            tooltipLabel = point.toChartLabel(chartPeriod),
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .alpha(if (isChartTransitioning) 0.4f else 1f),
+                    height = PriceChartHeight,
+                    yAxisValueOffset = floorPrice,
+                    popupFormatter = { label, value ->
+                        val formattedValue = (value + floorPrice).toDouble().formatPrice(state.currency.code)
+                        "$formattedValue · $label"
+                    },
+                )
+                if (isChartTransitioning) {
+                    LinearProgressIndicator(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.BottomCenter),
+                    )
+                }
             }
         }
     }
@@ -452,18 +534,30 @@ private fun DividendGrowthSection(
             Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
             Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
 
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(DividendChartPlaceholderHeight)
-                    .background(
-                        color = MaterialTheme.colorScheme.surfaceVariant,
-                        shape = MaterialTheme.shapes.medium,
-                    ),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(stringResource(Res.string.analysis_dividend_growth))
-            }
+            BarChart(
+                entries = state.dividendGrowthData.map { bar ->
+                    BarChartEntry(
+                        label = bar.year.toString(),
+                        value = if (state.isDividendChartPercentage) {
+                            bar.percentageOfPrice.toFloat()
+                        } else {
+                            bar.absoluteValue.toFloat()
+                        },
+                    )
+                },
+                modifier = Modifier.fillMaxWidth(),
+                barHeight = DividendChartHeight,
+                barWidth = 16.dp,
+                minBarSlotWidth = 28.dp,
+                skipAlternateXLabels = true,
+                popupLabelFormatter = { entry ->
+                    if (state.isDividendChartPercentage) {
+                        "${entry.value.toDouble().formatTwoDecimals()}%"
+                    } else {
+                        formatBarChartPopupLabel(entry.value, state.currency.code, entry.label)
+                    }
+                },
+            )
         }
     }
 }

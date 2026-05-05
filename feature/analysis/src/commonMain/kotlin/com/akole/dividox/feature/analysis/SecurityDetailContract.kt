@@ -26,6 +26,7 @@ interface SecurityDetailContract {
         val isFavorite: Boolean = false,
         val selectedChartPeriod: ChartPeriod = ChartPeriod.ONE_YEAR,
         val priceHistory: List<PricePoint> = emptyList(),
+        val renderedChartPeriod: ChartPeriod = ChartPeriod.ONE_YEAR,
         val isDividendChartPercentage: Boolean = false,
         val dividendGrowthData: List<DividendGrowthBar> = emptyList(),
         val isInPortfolio: Boolean = false,
