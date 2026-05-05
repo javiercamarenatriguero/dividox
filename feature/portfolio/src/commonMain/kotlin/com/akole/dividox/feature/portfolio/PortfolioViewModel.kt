@@ -3,7 +3,6 @@ package com.akole.dividox.feature.portfolio
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.akole.dividox.common.currency.CurrencyConverter
-import com.akole.dividox.common.currency.domain.model.Currency
 import com.akole.dividox.common.mvi.viewmodel.MVI
 import com.akole.dividox.common.mvi.viewmodel.mvi
 import com.akole.dividox.common.network.connectivity.NetworkConnectivityManager
@@ -73,9 +72,9 @@ class PortfolioViewModel(
             ) { holdings, query, order, settings ->
                 rawHoldings.value = holdings
                 val targetCurrency = settings.currency
-                val filtered = filterHoldings(holdings, query)
-                val sorted = sortHoldings(filtered, order)
-                val convertedPrices = convertHoldingPrices(holdings, targetCurrency)
+                val filtered = holdings.filterByQuery(query)
+                val sorted = filtered.sortBy(order)
+                val convertedPrices = currencyConverter.convertHoldingPrices(holdings, targetCurrency)
                 viewState.value.copy(
                     isLoading = false,
                     holdings = sorted,
@@ -103,9 +102,9 @@ class PortfolioViewModel(
                         val query = searchQuery.value
                         val order = sortOrder.value
                         val targetCurrency = viewState.value.currency
-                        val filtered = filterHoldings(holdings, query)
-                        val sorted = sortHoldings(filtered, order)
-                        val convertedPrices = convertHoldingPrices(holdings, targetCurrency)
+                        val filtered = holdings.filterByQuery(query)
+                        val sorted = filtered.sortBy(order)
+                        val convertedPrices = currencyConverter.convertHoldingPrices(holdings, targetCurrency)
                         updateViewState {
                             copy(
                                 isLoading = false,
@@ -121,41 +120,4 @@ class PortfolioViewModel(
         }
     }
 
-    private fun filterHoldings(holdings: List<SecurityHolding>, query: String): List<SecurityHolding> {
-        if (query.isBlank()) return holdings
-        val lowerQuery = query.lowercase()
-        return holdings.filter { holding ->
-            holding.holding.tickerId.lowercase().contains(lowerQuery) ||
-                holding.quote.name?.lowercase()?.contains(lowerQuery) == true
-        }
-    }
-
-    private fun sortHoldings(
-        holdings: List<SecurityHolding>,
-        sortOrder: SortOrder,
-    ): List<SecurityHolding> {
-        val comparator: Comparator<SecurityHolding> = when (sortOrder.field) {
-            SortField.GAIN -> compareBy { it.totalGainPercent }
-            SortField.YIELD -> compareBy { it.dividendInfo?.yield ?: 0.0 }
-            SortField.DATE -> compareBy { it.holding.purchaseDate }
-        }
-        return if (sortOrder.ascending) {
-            holdings.sortedWith(comparator)
-        } else {
-            holdings.sortedWith(comparator.reversed())
-        }
-    }
-
-    private suspend fun convertHoldingPrices(
-        holdings: List<SecurityHolding>,
-        to: Currency,
-    ): Map<String, Double> = buildMap {
-        holdings.forEach { holding ->
-            val ticker = holding.holding.tickerId
-            val price = holding.quote.price
-            val from = Currency.entries.firstOrNull { it.code == holding.quote.currency } ?: Currency.USD
-            val converted = currencyConverter.convert(price, from, to).getOrElse { price }
-            put(ticker, converted)
-        }
-    }
 }

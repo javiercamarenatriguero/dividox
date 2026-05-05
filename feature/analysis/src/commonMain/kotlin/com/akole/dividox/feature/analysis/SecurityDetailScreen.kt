@@ -41,15 +41,12 @@ import com.akole.dividox.common.mvi.CollectSideEffect
 import com.akole.dividox.common.ui.resources.charts.BarChart
 import com.akole.dividox.common.ui.resources.charts.BarChartEntry
 import com.akole.dividox.common.ui.resources.charts.LineChart
-import com.akole.dividox.common.ui.resources.charts.LineChartEntry
 import com.akole.dividox.common.ui.resources.components.DividoxTopAppBar
 import com.akole.dividox.common.ui.resources.format.formatBarChartPopupLabel
 import com.akole.dividox.common.ui.resources.format.formatLargeNumber
 import com.akole.dividox.common.ui.resources.format.formatPercentSigned
 import com.akole.dividox.common.ui.resources.format.formatPrice
 import com.akole.dividox.common.ui.resources.format.formatTwoDecimals
-import com.akole.dividox.common.ui.resources.format.monthShort
-import com.akole.dividox.common.ui.resources.format.monthShortWithYear
 import com.akole.dividox.common.ui.resources.theme.extendedColors
 import com.akole.dividox.common.ui.resources.theme.spacing
 import com.akole.dividox.feature.analysis.SecurityDetailContract.SecurityDetailSideEffect
@@ -86,46 +83,11 @@ import dividox.common.ui_resources.generated.resources.period_5y
 import dividox.common.ui_resources.generated.resources.period_all
 import dividox.common.ui_resources.generated.resources.period_ytd
 import com.akole.dividox.component.market.domain.model.ChartPeriod
-import com.akole.dividox.component.market.domain.model.PricePoint
 import kotlinx.coroutines.flow.Flow
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.stringResource
 
 private val PriceChartHeight = 200.dp
 private val DividendChartHeight = 250.dp
-
-private fun PricePoint.toChartLabel(period: ChartPeriod): String {
-    val dt = timestamp.toLocalDateTime(TimeZone.UTC)
-    return when (period) {
-        ChartPeriod.ONE_DAY -> "${dt.hour}:${dt.minute.toString().padStart(2, '0')}"
-        ChartPeriod.ONE_WEEK, ChartPeriod.ONE_MONTH -> "${dt.dayOfMonth} ${dt.date.monthShort()}"
-        ChartPeriod.YTD, ChartPeriod.ONE_YEAR -> dt.date.monthShort()
-        ChartPeriod.FIVE_YEARS -> dt.date.monthShortWithYear()
-        ChartPeriod.ALL -> dt.year.toString()
-    }
-}
-
-// Thin data to reduce chart points for dense periods.
-// FIVE_YEARS: 1 point per quarter (~20 pts). ALL: 1 point per year, last 15 years.
-private fun List<PricePoint>.thinForPeriod(period: ChartPeriod): List<PricePoint> {
-    return when (period) {
-        ChartPeriod.FIVE_YEARS -> groupBy {
-            val dt = it.timestamp.toLocalDateTime(TimeZone.UTC)
-            "${dt.year}-Q${(dt.monthNumber - 1) / 3}"
-        }.entries.sortedBy { it.key }.mapNotNull { it.value.lastOrNull() }
-
-        ChartPeriod.ALL -> {
-            val maxYear = maxOfOrNull { it.timestamp.toLocalDateTime(TimeZone.UTC).year } ?: return this
-            filter { it.timestamp.toLocalDateTime(TimeZone.UTC).year >= maxYear - 14 }
-                .groupBy { it.timestamp.toLocalDateTime(TimeZone.UTC).year }
-                .entries.sortedBy { it.key }
-                .mapNotNull { it.value.lastOrNull() }
-        }
-
-        else -> this
-    }
-}
 
 @Composable
 fun SecurityDetailScreen(
@@ -356,36 +318,10 @@ private fun ChartSection(
             }
             Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
             val isChartTransitioning = state.selectedChartPeriod != state.renderedChartPeriod
-            val chartPeriod = state.renderedChartPeriod
-            val thinned = state.priceHistory.thinForPeriod(chartPeriod)
-            val minPrice = thinned.minOfOrNull { it.close.toFloat() } ?: 0f
-            val maxPrice = thinned.maxOfOrNull { it.close.toFloat() } ?: minPrice
-            val priceRange = maxPrice - minPrice
-            val floorPrice = (minPrice - priceRange * 0.1f).coerceAtLeast(0f)
+            val (chartEntries, floorPrice) = state.priceHistory.toPriceChartData(state.renderedChartPeriod)
             Box(modifier = Modifier.fillMaxWidth()) {
                 LineChart(
-                    entries = thinned.mapIndexed { index, point ->
-                        val reverseIndex = thinned.size - 1 - index
-                        val dt = point.timestamp.toLocalDateTime(TimeZone.UTC)
-                        val sparseLabel = chartPeriod == ChartPeriod.ALL ||
-                            chartPeriod == ChartPeriod.FIVE_YEARS
-                        val label = when {
-                            chartPeriod == ChartPeriod.ONE_DAY &&
-                                dt.minute != 0 ->
-                                "​".repeat(index + 1)
-                            chartPeriod == ChartPeriod.ONE_MONTH &&
-                                dt.dayOfMonth % 5 != 0 ->
-                                "​".repeat(index + 1)
-                            sparseLabel && reverseIndex % 2 != 0 ->
-                                "​".repeat(index + 1)
-                            else -> point.toChartLabel(chartPeriod)
-                        }
-                        LineChartEntry(
-                            label = label,
-                            value = point.close.toFloat() - floorPrice,
-                            tooltipLabel = point.toChartLabel(chartPeriod),
-                        )
-                    },
+                    entries = chartEntries,
                     modifier = Modifier
                         .fillMaxWidth()
                         .alpha(if (isChartTransitioning) 0.4f else 1f),
