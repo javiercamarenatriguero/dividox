@@ -159,15 +159,9 @@ class SecurityDetailViewModel(
             val current = viewState.value.isFavorite
             try {
                 if (current) {
-                    updateViewState { copy(isFavorite = false) }
-                    viewModelScope.emitSideEffect(
-                        SecurityDetailSideEffect.Message.ShowSuccess("Removed from favorites")
-                    )
+                    removeFromWatchlist(ticker)
                 } else {
-                    updateViewState { copy(isFavorite = true) }
-                    viewModelScope.emitSideEffect(
-                        SecurityDetailSideEffect.Message.ShowSuccess("Added to favorites")
-                    )
+                    addToWatchlist(ticker)
                 }
             } catch (e: Exception) {
                 viewModelScope.emitSideEffect(
