@@ -27,14 +27,18 @@ import com.akole.dividox.integration.security.domain.usecase.GetEnrichedWatchlis
 import com.akole.dividox.integration.security.domain.usecase.GetPortfolioPeriodGainUseCase
 import com.akole.dividox.integration.security.domain.usecase.GetPortfolioSummaryUseCase
 import com.akole.dividox.integration.security.domain.usecase.GetPortfolioWithQuotesUseCase
+import com.akole.dividox.integration.security.domain.model.PortfolioSummary
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlin.time.Clock
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
 
 @Suppress("LongParameterList", "TooManyFunctions")
@@ -58,7 +62,8 @@ class DashboardViewModel(
     private var dataJob: Job? = null
     private val periodFlow = MutableStateFlow(ChartPeriod.ALL)
     // Internal flows updated by separate coroutines so slow API calls don't block main UI data
-    private val periodGainFlow = MutableStateFlow(0.0 to 0.0) // (absoluteUsd, percent)
+    private val summaryFlow = MutableStateFlow<PortfolioSummary?>(null)         // null until portfolio API calls complete
+    private val periodGainFlow = MutableStateFlow<Pair<Double, Double>?>(null)  // null until first gain result
     private val periodDividendsFlow = MutableStateFlow(0.0)   // USD, unconverted
     private val lifetimeDividendsFlow = MutableStateFlow(0.0) // USD, unconverted
 
@@ -102,6 +107,11 @@ class DashboardViewModel(
     private fun observeData() {
         dataJob?.cancel()
         dataJob = viewModelScope.launch {
+            // Single upstream shared between gain coroutine and summary — no double API calls.
+            val portfolioShared = getPortfolioWithQuotes()
+                .filter { it.isNotEmpty() }
+                .shareIn(this, SharingStarted.WhileSubscribed(), replay = 1)
+
             // 1. Period dividends — Room query, fast, restarts on period change
             launch {
                 periodFlow.flatMapLatest { period ->
@@ -118,9 +128,17 @@ class DashboardViewModel(
                 }
             }
 
-            // 2. Period gain — potentially slow API calls, cancelled on new emission (collectLatest)
+            // 2. Portfolio summary — slowest flow (requires all quote API calls to complete).
+            // Feeds summaryFlow; isLoading stays true until first emission.
             launch {
-                combine(getPortfolioWithQuotes(), periodFlow) { holdings, period ->
+                getPortfolioSummary(portfolioShared).collect { summary ->
+                    summaryFlow.value = summary
+                }
+            }
+
+            // 3. Period gain — cancelled and restarted on new portfolio or period emission.
+            launch {
+                combine(portfolioShared, periodFlow) { holdings, period ->
                     holdings to period
                 }.collectLatest { (holdings, period) ->
                     val (abs, pct) = getPortfolioPeriodGain(holdings, period.toMarketPeriod())
@@ -128,21 +146,24 @@ class DashboardViewModel(
                 }
             }
 
-            // 3. Main combine — period-independent data + derived period StateFlows, always fast
+            // 4. Main combine — skeleton stays until summaryFlow has its first real value.
             val dividendPairFlow =
                 combine(periodDividendsFlow, lifetimeDividendsFlow) { period, lifetime -> period to lifetime }
             combine(
-                getPortfolioSummary(),
+                summaryFlow,
                 getEnrichedWatchlist(),
                 observeAppSettings(),
                 dividendPairFlow,
                 periodGainFlow,
-            ) { summary, watchlist, settings, (dividends, lifetime), (gainAbs, gainPct) ->
+            ) { summary, watchlist, settings, dividendPair, gainPair ->
+                val (dividends, lifetime) = dividendPair
+                val gainAbs = gainPair?.first ?: 0.0
+                val gainPct = gainPair?.second ?: 0.0
                 val targetCurrency = settings.currency
-                val convertedSummary = currencyConverter.convertSummary(summary, targetCurrency)
+                val convertedSummary = summary?.let { currencyConverter.convertSummary(it, targetCurrency) }
                 val convertedWatchlistPrices = currencyConverter.convertWatchlistPrices(watchlist, targetCurrency)
                 viewState.value.copy(
-                    isLoading = false,
+                    isLoading = summary == null || gainPair == null || summary.totalValue == 0.0,
                     isRefreshing = false,
                     summary = convertedSummary,
                     watchlist = watchlist,

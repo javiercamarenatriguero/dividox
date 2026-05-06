@@ -23,6 +23,8 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import kotlin.time.Clock
 
@@ -32,6 +34,9 @@ class MarketRepositoryImpl(
 ) : MarketRepository {
 
     private val api = YahooFinanceApi(httpClient)
+
+    // Limits concurrent Yahoo Finance requests to avoid rate-limiting on large portfolios.
+    private val apiSemaphore = Semaphore(MAX_CONCURRENT_REQUESTS)
 
     private val quoteCache = mutableMapOf<String, Pair<StockQuote, Long>>()
     private val dividendCache = mutableMapOf<String, Pair<DividendInfo, Long>>()
@@ -64,15 +69,22 @@ class MarketRepositoryImpl(
                             toFetch += ticker
                         }
                     }
+                    // Semaphore caps concurrent requests to avoid Yahoo Finance rate-limiting.
+                    // Per-ticker runCatching means one failed ticker doesn't kill the whole batch.
                     val fromApi = toFetch
-                        .map { ticker -> async { api.getChart(ticker) to ticker } }
-                        .map { deferred ->
-                            val (dto, ticker) = deferred.await()
+                        .map { ticker ->
+                            async {
+                                apiSemaphore.withPermit {
+                                    runCatching { api.getChart(ticker) to ticker }.getOrNull()
+                                }
+                            }
+                        }
+                        .mapNotNull { deferred ->
+                            val (dto, ticker) = deferred.await() ?: return@mapNotNull null
                             dto.chart.result?.firstOrNull()?.meta
                                 ?.toStockQuote()
                                 ?.also { quote -> quoteCache[ticker] = quote to now }
                         }
-                        .filterNotNull()
                     fromCache + fromApi
                 }
             }.mapError()
@@ -81,12 +93,14 @@ class MarketRepositoryImpl(
     override suspend fun getDividendInfo(ticker: String): Result<DividendInfo> = withContext(ioDispatcher) {
         val cached = dividendCache[ticker]
         if (cached != null && !isExpired(cached.second, DIVIDEND_TTL_MS)) return@withContext Result.success(cached.first)
-        runCatching {
-            val dto = api.getChartWithEvents(ticker)
-            val result = dto.chart.result?.firstOrNull()
-                ?: throw MarketError.NotFound(ticker)
-            result.toDividendInfo(ticker).also { dividendCache[ticker] = it to Clock.System.now().toEpochMilliseconds() }
-        }.mapError()
+        apiSemaphore.withPermit {
+            runCatching {
+                val dto = api.getChartWithEvents(ticker)
+                val result = dto.chart.result?.firstOrNull()
+                    ?: throw MarketError.NotFound(ticker)
+                result.toDividendInfo(ticker).also { dividendCache[ticker] = it to Clock.System.now().toEpochMilliseconds() }
+            }.mapError()
+        }
     }
 
     override suspend fun getCompanyInfo(ticker: String): Result<CompanyInfo> = withContext(ioDispatcher) {
@@ -184,6 +198,7 @@ class MarketRepositoryImpl(
         private const val QUOTE_TTL_MS = 300_000L              // 5 minutes
         private const val DIVIDEND_TTL_MS = 3_600_000L         // 1 hour
         private const val HISTORICAL_DIVIDEND_TTL_MS = 86_400_000L  // 24 hours
+        private const val MAX_CONCURRENT_REQUESTS = 8
 
         /**
          * Main exchange tiers, ordered from highest to lowest priority.

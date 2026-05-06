@@ -2,13 +2,10 @@ package com.akole.dividox.integration.security.domain.usecase
 
 import com.akole.dividox.common.currency.CurrencyConverter
 import com.akole.dividox.common.currency.domain.model.Currency
-import com.akole.dividox.component.market.domain.model.StockQuote
 import com.akole.dividox.component.market.domain.usecase.GetDividendInfoUseCase
 import com.akole.dividox.component.market.domain.usecase.GetMultipleQuotesUseCase
-import com.akole.dividox.component.portfolio.domain.model.Holding
 import com.akole.dividox.component.portfolio.domain.usecase.GetPortfolioUseCase
 import com.akole.dividox.integration.security.domain.model.SecurityHolding
-import kotlin.time.Clock
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
@@ -50,10 +47,8 @@ class GetPortfolioWithQuotesUseCase(
                     val quotes = getMultipleQuotesUseCase(tickers).getOrNull()
 
                     if (quotes == null || (quotes.isEmpty() && tickers.isNotEmpty())) {
-                        // Offline or API unavailable: emit holdings with purchase price as
-                        // fallback so the portfolio list is visible. isLive=false lets the UI
-                        // hide price-sensitive fields (gain %, current value).
-                        emit(holdings.map { it.toOfflineFallback() })
+                        // Don't emit stale/fallback data — keep skeleton visible until real
+                        // quotes arrive. retryWhen handles back-off and re-fetch.
                         throw IllegalStateException("Market quotes unavailable, will retry")
                     }
 
@@ -95,17 +90,4 @@ class GetPortfolioWithQuotesUseCase(
                 }
             }
 
-    private fun Holding.toOfflineFallback(): SecurityHolding = SecurityHolding(
-        holding = this,
-        quote = StockQuote(
-            ticker = tickerId,
-            price = purchasePrice,
-            change = 0.0,
-            changePercent = 0.0,
-            currency = "USD",
-            lastUpdated = Clock.System.now(),
-        ),
-        dividendInfo = null,
-        totalGainPercent = 0.0,
-    )
 }

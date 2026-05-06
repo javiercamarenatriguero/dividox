@@ -90,6 +90,7 @@ import org.jetbrains.compose.resources.stringResource
 private val PriceChartHeight = 200.dp
 private val DividendChartHeight = 250.dp
 
+@Suppress("LongMethod")
 @Composable
 fun SecurityDetailScreen(
     state: SecurityDetailViewState,
@@ -452,19 +453,28 @@ private fun DividendGrowthSection(
                     fontWeight = FontWeight.SemiBold,
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xSmall)) {
-                    listOf(false to quoteCurrency.symbol, true to stringResource(Res.string.analysis_view_as_percent)).forEach { (isPercent, label) ->
+                    listOf(
+                        false to quoteCurrency.symbol,
+                        true to stringResource(Res.string.analysis_view_as_percent)).forEach { (isPercent, label) ->
                         val isSelected = state.isDividendChartPercentage == isPercent
                         Surface(
                             shape = RoundedCornerShape(6.dp),
-                            color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
-                            modifier = Modifier.clickable { if (!isSelected) onEvent(SecurityDetailViewEvent.ToggleDividendChartMode) },
+                            color = if (isSelected) MaterialTheme.colorScheme.primaryContainer
+                            else MaterialTheme.colorScheme.surfaceContainerHigh,
+                            modifier = Modifier.clickable {
+                                if (!isSelected) onEvent(SecurityDetailViewEvent.ToggleDividendChartMode)
+                                                          },
                         ) {
                             Text(
                                 text = label,
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.padding(horizontal = MaterialTheme.spacing.small, vertical = MaterialTheme.spacing.xSmall),
+                                color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer
+                                else MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.padding(
+                                    horizontal = MaterialTheme.spacing.small,
+                                    vertical = MaterialTheme.spacing.xSmall,
+                                ),
                             )
                         }
                     }
@@ -565,12 +575,12 @@ private fun FundamentalsSection(state: SecurityDetailViewState) {
             ) {
                 MetricCard(
                     label = stringResource(Res.string.metric_ex_dividend_date),
-                    value = dividendInfo?.exDividendDate?.toString() ?: "N/A",
+                    value = dividendInfo.exDividendDate?.toString() ?: "N/A",
                     modifier = Modifier.weight(1f).fillMaxHeight(),
                 )
                 MetricCard(
                     label = stringResource(Res.string.metric_next_dividend_date),
-                    value = dividendInfo?.nextDividendDate?.toString() ?: "N/A",
+                    value = dividendInfo.nextDividendDate?.toString() ?: "N/A",
                     modifier = Modifier.weight(1f).fillMaxHeight(),
                 )
             }

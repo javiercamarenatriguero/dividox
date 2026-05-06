@@ -3,6 +3,7 @@ package com.akole.dividox.integration.security.domain.usecase
 import com.akole.dividox.common.currency.CurrencyConverter
 import com.akole.dividox.common.currency.domain.model.Currency
 import com.akole.dividox.integration.security.domain.model.PortfolioSummary
+import com.akole.dividox.integration.security.domain.model.SecurityHolding
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -18,8 +19,10 @@ class GetPortfolioSummaryUseCase(
     private val getPortfolioWithQuotesUseCase: GetPortfolioWithQuotesUseCase,
     private val currencyConverter: CurrencyConverter,
 ) {
-    operator fun invoke(): Flow<PortfolioSummary> =
-        getPortfolioWithQuotesUseCase().map { securityHoldings ->
+    operator fun invoke(): Flow<PortfolioSummary> = invoke(getPortfolioWithQuotesUseCase())
+
+    operator fun invoke(portfolioFlow: Flow<List<SecurityHolding>>): Flow<PortfolioSummary> =
+        portfolioFlow.map { securityHoldings ->
             if (securityHoldings.isEmpty()) {
                 return@map PortfolioSummary(
                     totalValue = 0.0,
