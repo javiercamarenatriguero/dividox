@@ -90,16 +90,23 @@ class GetPortfolioWithQuotesUseCaseTest {
 
     @Test
     fun `SHOULD exclude holding WHEN quote fetch fails GIVEN unavailable ticker`() = runTest {
-        // GIVEN — quote not registered → getMultipleQuotes returns empty
-        val holding = FakePortfolioRepository.holding(tickerId = "UNKNOWN")
-        portfolioRepo.setHoldings(listOf(holding))
-        // No quote set for UNKNOWN — FakeMarketRepository.getMultipleQuotes returns empty list
+        // GIVEN — two holdings, only AAPL has a quote; UNKNOWN is excluded from the result
+        portfolioRepo.setHoldings(
+            listOf(
+                FakePortfolioRepository.holding(id = "h1", tickerId = "AAPL", shares = 10.0, purchasePrice = 100.0),
+                FakePortfolioRepository.holding(id = "h2", tickerId = "UNKNOWN", shares = 5.0, purchasePrice = 50.0),
+            ),
+        )
+        marketRepo.setQuote("AAPL", FakeMarketRepository.quote(ticker = "AAPL", price = 150.0))
+        marketRepo.setDividendInfo("AAPL", FakeMarketRepository.dividendInfo("AAPL"))
+        // No quote set for UNKNOWN → excluded by filter in GetPortfolioWithQuotesUseCase
 
         // WHEN
         val result = sut().first()
 
-        // THEN — no SecurityHolding emitted because quote is missing
-        assertTrue(result.isEmpty())
+        // THEN — only AAPL holding emitted; UNKNOWN is excluded because its quote is missing
+        assertEquals(1, result.size)
+        assertEquals("AAPL", result.first().holding.tickerId)
     }
 
     @Test

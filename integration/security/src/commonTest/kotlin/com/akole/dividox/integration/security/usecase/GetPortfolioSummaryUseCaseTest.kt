@@ -1,5 +1,11 @@
 package com.akole.dividox.integration.security.usecase
 
+import com.akole.dividox.common.currency.CurrencyConverter
+import com.akole.dividox.common.currency.domain.model.Currency
+import com.akole.dividox.common.currency.domain.model.ExchangeRates
+import com.akole.dividox.common.currency.domain.repository.ExchangeRateRepository
+import com.akole.dividox.common.currency.domain.usecase.GetExchangeRatesUseCase
+import kotlinx.datetime.LocalDate
 import com.akole.dividox.component.market.domain.usecase.GetDividendInfoUseCase
 import com.akole.dividox.component.market.domain.usecase.GetMultipleQuotesUseCase
 import com.akole.dividox.component.portfolio.domain.usecase.GetPortfolioUseCase
@@ -23,7 +29,23 @@ class GetPortfolioSummaryUseCaseTest {
         getDividendInfoUseCase = GetDividendInfoUseCase(marketRepo),
     )
 
-    private val sut = GetPortfolioSummaryUseCase(getPortfolioWithQuotesUseCase)
+    // Identity rates — returns 1:1 for all pairs. USD→USD short-circuits before calling this.
+    private val currencyConverter = CurrencyConverter(
+        GetExchangeRatesUseCase(
+            object : ExchangeRateRepository {
+                override suspend fun getExchangeRates(base: Currency): Result<ExchangeRates> =
+                    Result.success(
+                        ExchangeRates(
+                            base = base,
+                            date = LocalDate(2024, 1, 1),
+                            rates = Currency.entries.associateWith { 1.0 },
+                        )
+                    )
+            }
+        )
+    )
+
+    private val sut = GetPortfolioSummaryUseCase(getPortfolioWithQuotesUseCase, currencyConverter)
 
     @Test
     fun `SHOULD emit zero summary WHEN portfolio is empty GIVEN no holdings`() = runTest {
