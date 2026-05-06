@@ -54,9 +54,18 @@ private fun PricePoint.toChartLabel(period: ChartPeriod): String {
 
 private fun List<PricePoint>.thinForPeriod(period: ChartPeriod): List<PricePoint> {
     return when (period) {
-        // ONE_YEAR uses weekly data with monthly labels — deduplicate to one point per month
-        // so the library's chartData size matches entries.size (no label collision in the map).
-        ChartPeriod.ONE_YEAR, ChartPeriod.YTD -> groupBy {
+        // ONE_YEAR uses weekly data spanning 2 calendar years (e.g. Jun 2024 – May 2025).
+        // Grouping by month produces 13 groups where the boundary month name appears twice
+        // (e.g. "May" for both 2024 and 2025). Taking the last 12 guarantees 12 consecutive
+        // months with no duplicate short-name labels, so the library's chartData map size
+        // matches entries.size and the scrubber overlay stays aligned.
+        ChartPeriod.ONE_YEAR -> groupBy {
+            val dt = it.timestamp.toLocalDateTime(TimeZone.UTC)
+            "${dt.year}-${(dt.month.ordinal + 1).toString().padStart(2, '0')}"
+        }.entries.sortedBy { it.key }.takeLast(12).mapNotNull { it.value.lastOrNull() }
+
+        // YTD spans only the current calendar year — months are always unique within a year.
+        ChartPeriod.YTD -> groupBy {
             val dt = it.timestamp.toLocalDateTime(TimeZone.UTC)
             "${dt.year}-${(dt.month.ordinal + 1).toString().padStart(2, '0')}"
         }.entries.sortedBy { it.key }.mapNotNull { it.value.lastOrNull() }
