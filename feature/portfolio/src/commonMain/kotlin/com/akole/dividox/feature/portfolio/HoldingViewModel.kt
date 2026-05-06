@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.akole.dividox.common.settings.domain.usecase.ObserveAppSettingsUseCase
 import com.akole.dividox.common.ui.resources.components.ExchangeMarket
+import com.akole.dividox.component.market.domain.model.SecurityType
 import com.akole.dividox.component.market.domain.model.StockQuote
 import com.akole.dividox.component.market.domain.usecase.GetStockQuoteUseCase
 import com.akole.dividox.component.market.domain.usecase.SearchSecuritiesUseCase
@@ -70,7 +71,14 @@ class HoldingViewModel(
             is HoldingContract.HoldingViewEvent.MarketFilterChanged -> {
                 _state.value = _state.value.copy(
                     selectedMarket = event.market,
-                    searchResults = allSearchResults.filterByMarket(event.market),
+                    searchResults = allSearchResults.filterByMarket(event.market).filterByType(_state.value.selectedType),
+                )
+            }
+
+            is HoldingContract.HoldingViewEvent.TypeFilterChanged -> {
+                _state.value = _state.value.copy(
+                    selectedType = event.type,
+                    searchResults = allSearchResults.filterByMarket(_state.value.selectedMarket).filterByType(event.type),
                 )
             }
 
@@ -200,7 +208,7 @@ class HoldingViewModel(
                     val results = searchSecurities(query, market.region).getOrElse { emptyList() }
                     allSearchResults = results
                     _state.value = _state.value.copy(
-                        searchResults = results.filterByMarket(market),
+                        searchResults = results.filterByMarket(market).filterByType(_state.value.selectedType),
                         isSearching = false,
                     )
                 } catch (e: Exception) {
@@ -216,6 +224,9 @@ class HoldingViewModel(
 
     private fun List<StockQuote>.filterByMarket(market: ExchangeMarket): List<StockQuote> =
         if (market == ExchangeMarket.ALL) this else filter { market.matches(it.exchange) }
+
+    private fun List<StockQuote>.filterByType(type: SecurityType?): List<StockQuote> =
+        if (type == null) this else filter { it.type == type }
 
     private fun recalculateTotal() {
         val shares = _state.value.shares.toDoubleOrNull() ?: 0.0

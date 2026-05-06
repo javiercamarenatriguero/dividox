@@ -17,7 +17,9 @@ import com.akole.dividox.feature.search.SearchContract.SearchViewEvent.MarketFil
 import com.akole.dividox.feature.search.SearchContract.SearchViewEvent.QueryChanged
 import com.akole.dividox.feature.search.SearchContract.SearchViewEvent.SecurityClicked
 import com.akole.dividox.feature.search.SearchContract.SearchViewState
+import com.akole.dividox.component.market.domain.model.SecurityType
 import com.akole.dividox.component.market.domain.model.StockQuote
+import com.akole.dividox.feature.search.SearchContract.SearchViewEvent.TypeFilterChanged
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
@@ -51,7 +53,15 @@ class SearchViewModel(
                 updateViewState {
                     copy(
                         selectedMarket = viewEvent.market,
-                        results = allResults.filterByMarket(viewEvent.market),
+                        results = allResults.filterByMarket(viewEvent.market).filterByType(selectedType),
+                    )
+                }
+            }
+            is TypeFilterChanged -> {
+                updateViewState {
+                    copy(
+                        selectedType = viewEvent.type,
+                        results = allResults.filterByMarket(selectedMarket).filterByType(viewEvent.type),
                     )
                 }
             }
@@ -76,7 +86,8 @@ class SearchViewModel(
                 searchSecurities(query, market.region)
                     .onSuccess { results ->
                         allResults = results
-                        updateViewState { copy(results = results.filterByMarket(market), isLoading = false) }
+                        val type = viewState.value.selectedType
+                        updateViewState { copy(results = results.filterByMarket(market).filterByType(type), isLoading = false) }
                     }
                     .onFailure { e ->
                         allResults = emptyList()
@@ -88,6 +99,9 @@ class SearchViewModel(
 
     private fun List<StockQuote>.filterByMarket(market: ExchangeMarket): List<StockQuote> =
         if (market == ExchangeMarket.ALL) this else filter { market.matches(it.exchange) }
+
+    private fun List<StockQuote>.filterByType(type: SecurityType?): List<StockQuote> =
+        if (type == null) this else filter { it.type == type }
 
     private fun observeWatchlist() {
         viewModelScope.launch {

@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -25,6 +27,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -60,6 +63,7 @@ import com.akole.dividox.common.ui.resources.format.formatPrice
 import com.akole.dividox.common.ui.resources.format.formatTwoDecimals
 import com.akole.dividox.common.ui.resources.theme.DividoxTheme
 import com.akole.dividox.common.ui.resources.theme.spacing
+import com.akole.dividox.component.market.domain.model.SecurityType
 import com.akole.dividox.component.market.domain.model.StockQuote
 import com.akole.dividox.component.market.domain.model.displayName
 import com.akole.dividox.component.portfolio.domain.model.HoldingId
@@ -77,6 +81,9 @@ import dividox.common.ui_resources.generated.resources.label_purchase_date
 import dividox.common.ui_resources.generated.resources.label_shares
 import dividox.common.ui_resources.generated.resources.label_unknown_position
 import dividox.common.ui_resources.generated.resources.holding_search_security_hint
+import dividox.common.ui_resources.generated.resources.security_type_all
+import dividox.common.ui_resources.generated.resources.security_type_etf
+import dividox.common.ui_resources.generated.resources.security_type_fund
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -178,12 +185,16 @@ private fun HoldingScreenContent(
             results = state.searchResults,
             selectedSecurity = state.selectedSecurity,
             selectedMarket = state.selectedMarket,
+            selectedType = state.selectedType,
             isLoading = state.isSearching,
             onQueryChanged = { query ->
                 onEvent(HoldingContract.HoldingViewEvent.SearchQueryChanged(query))
             },
             onMarketSelected = { market ->
                 onEvent(HoldingContract.HoldingViewEvent.MarketFilterChanged(market))
+            },
+            onTypeSelected = { type ->
+                onEvent(HoldingContract.HoldingViewEvent.TypeFilterChanged(type))
             },
             onSecuritySelected = { quote ->
                 onEvent(HoldingContract.HoldingViewEvent.SecuritySelected(quote))
@@ -305,9 +316,11 @@ private fun SearchSecurityField(
     results: List<StockQuote>,
     selectedSecurity: StockQuote?,
     selectedMarket: ExchangeMarket,
+    selectedType: SecurityType?,
     isLoading: Boolean,
     onQueryChanged: (String) -> Unit,
     onMarketSelected: (ExchangeMarket) -> Unit,
+    onTypeSelected: (SecurityType?) -> Unit,
     onSecuritySelected: (StockQuote) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small)) {
@@ -322,6 +335,11 @@ private fun SearchSecurityField(
             MarketFilterRow(
                 selectedMarket = selectedMarket,
                 onMarketSelected = onMarketSelected,
+                contentPadding = PaddingValues(0.dp),
+            )
+            SecurityTypeFilterRow(
+                selectedType = selectedType,
+                onTypeSelected = onTypeSelected,
                 contentPadding = PaddingValues(0.dp),
             )
         }
@@ -366,11 +384,24 @@ private fun SecurityResultItem(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = quote.ticker,
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold,
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xSmall),
+            ) {
+                Text(
+                    text = quote.ticker,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                )
+                val typeLabel = quote.type.label()
+                if (typeLabel != null) {
+                    Text(
+                        text = typeLabel,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
             if (quote.name != null) {
                 Text(
                     text = quote.name!!,
@@ -762,4 +793,37 @@ private fun HoldingScreenAddDarkPreview() {
             onEvent = {},
         )
     }
+}
+
+@Composable
+private fun SecurityTypeFilterRow(
+    selectedType: SecurityType?,
+    onTypeSelected: (SecurityType?) -> Unit,
+    contentPadding: PaddingValues = PaddingValues(0.dp),
+) {
+    val options: List<SecurityType?> = listOf(null) + SecurityType.entries
+    LazyRow(
+        contentPadding = contentPadding,
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
+    ) {
+        items(options, key = { it?.name ?: "ALL" }) { type ->
+            FilterChip(
+                selected = selectedType == type,
+                onClick = { onTypeSelected(type) },
+                label = {
+                    Text(
+                        text = type.label() ?: stringResource(Res.string.security_type_all),
+                        style = MaterialTheme.typography.labelSmall,
+                    )
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun SecurityType?.label(): String? = when (this) {
+    SecurityType.ETF -> stringResource(Res.string.security_type_etf)
+    SecurityType.MUTUAL_FUND -> stringResource(Res.string.security_type_fund)
+    null -> null
 }

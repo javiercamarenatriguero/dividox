@@ -8,6 +8,7 @@ import com.akole.dividox.component.market.data.mapper.toMarketDividendEvents
 import com.akole.dividox.component.market.data.mapper.toPricePoints
 import com.akole.dividox.component.market.data.mapper.toStockQuote
 import com.akole.dividox.component.market.domain.model.ChartPeriod
+import com.akole.dividox.component.market.domain.model.SecurityType
 import com.akole.dividox.component.market.domain.model.CompanyInfo
 import com.akole.dividox.component.market.domain.model.DividendHistoryRange
 import com.akole.dividox.component.market.domain.model.DividendInfo
@@ -136,7 +137,7 @@ class MarketRepositoryImpl(
     override suspend fun searchSecurities(query: String, region: String?): Result<List<StockQuote>> = withContext(ioDispatcher) {
         runCatching {
             val dto = api.search(query, region)
-            val acceptedTypes = setOf("EQUITY")
+            val acceptedTypes = setOf("EQUITY", "ETF", "MUTUALFUND")
             dto.quotes
                 ?.filter { it.quoteType?.uppercase() in acceptedTypes }
                 ?.map { quote ->
@@ -149,6 +150,11 @@ class MarketRepositoryImpl(
                         lastUpdated = Clock.System.now(),
                         name = quote.shortname ?: quote.longname,
                         exchange = quote.exchDisp,
+                        type = when (quote.quoteType?.uppercase()) {
+                            "ETF" -> SecurityType.ETF
+                            "MUTUALFUND" -> SecurityType.MUTUAL_FUND
+                            else -> null
+                        },
                     )
                 }
                 ?.sortedBy { exchangePriority(it.exchange) }
