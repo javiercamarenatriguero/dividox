@@ -44,6 +44,7 @@
     <string name="cd_add_to_favourites">Add to favourites</string>
     <string name="label_in_portfolio">In portfolio</string>
     <string name="security_type_all">All</string>
+    <string name="security_type_equity">Stock</string>
     <string name="security_type_etf">ETF</string>
     <string name="security_type_fund">Fund</string>
     <string name="cd_clear_search">Clear search</string>

@@ -44,6 +44,7 @@ import dividox.common.ui_resources.generated.resources.search_no_results
 import dividox.common.ui_resources.generated.resources.search_placeholder_hint
 import dividox.common.ui_resources.generated.resources.search_title
 import dividox.common.ui_resources.generated.resources.security_type_all
+import dividox.common.ui_resources.generated.resources.security_type_equity
 import dividox.common.ui_resources.generated.resources.security_type_etf
 import dividox.common.ui_resources.generated.resources.security_type_fund
 import kotlinx.coroutines.flow.Flow
@@ -190,6 +191,7 @@ private fun SecurityTypeFilterRow(
 
 @Composable
 private fun SecurityType?.label(): String? = when (this) {
+    SecurityType.EQUITY -> stringResource(Res.string.security_type_equity)
     SecurityType.ETF -> stringResource(Res.string.security_type_etf)
     SecurityType.MUTUAL_FUND -> stringResource(Res.string.security_type_fund)
     null -> null

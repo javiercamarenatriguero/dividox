@@ -151,9 +151,10 @@ class MarketRepositoryImpl(
                         name = quote.shortname ?: quote.longname,
                         exchange = quote.exchDisp,
                         type = when (quote.quoteType?.uppercase()) {
+                            "EQUITY" -> SecurityType.EQUITY
                             "ETF" -> SecurityType.ETF
                             "MUTUALFUND" -> SecurityType.MUTUAL_FUND
-                            else -> null
+                            else -> SecurityType.EQUITY
                         },
                     )
                 }
