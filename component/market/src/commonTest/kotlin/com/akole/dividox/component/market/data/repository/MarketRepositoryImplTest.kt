@@ -247,6 +247,35 @@ class MarketRepositoryImplTest {
         assertEquals(52.50, points.last().close, 0.001)
     }
 
+    @Test
+    fun `SHOULD normalize GBp price to GBP WHEN currency is GBp GIVEN Yahoo Finance LSE stock`() = runTest(dispatcher) {
+        // GIVEN — LGEN.L at 210.68 GBp (pence) = £2.1068; Yahoo Finance uses "GBp" not "GBX"
+        val repo = buildRepoWithResponses("chart" to CHART_JSON_LGEN)
+
+        // WHEN
+        val quote = repo.getStockQuote("LGEN.L").getOrThrow()
+
+        // THEN
+        assertEquals("GBP", quote.currency)
+        assertEquals(2.1068, quote.price, 0.001)
+        assertEquals(2.5, quote.fiftyTwoWeekHigh!!, 0.001)  // 250 GBp → £2.50
+        assertEquals(1.8, quote.fiftyTwoWeekLow!!, 0.001)   // 180 GBp → £1.80
+    }
+
+    @Test
+    fun `SHOULD normalize GBp price points to GBP WHEN currency is GBp GIVEN Yahoo Finance chart`() = runTest(dispatcher) {
+        // GIVEN
+        val repo = buildRepoWithResponses("chart" to CHART_JSON_LGEN)
+
+        // WHEN
+        val points = repo.getPriceHistory("LGEN.L", ChartPeriod.ONE_MONTH).first()
+
+        // THEN — 200.0 GBp → £2.00, 210.68 GBp → £2.1068
+        assertEquals(2, points.size)
+        assertEquals(2.0, points.first().close, 0.001)
+        assertEquals(2.1068, points.last().close, 0.001)
+    }
+
     // ── searchSecurities ──────────────────────────────────────────────────────
 
     @Test
@@ -373,6 +402,31 @@ class MarketRepositoryImplTest {
                   "timestamp": [1700000000, 1700086400],
                   "indicators": {
                     "quote": [{ "close": [5200.0, 5250.0] }]
+                  }
+                }],
+                "error": null
+              }
+            }
+        """.trimIndent()
+
+        // Yahoo Finance actually returns "GBp" (not "GBX") for most LSE stocks
+        val CHART_JSON_LGEN = """
+            {
+              "chart": {
+                "result": [{
+                  "meta": {
+                    "symbol": "LGEN.L",
+                    "regularMarketPrice": 210.68,
+                    "chartPreviousClose": 208.0,
+                    "currency": "GBp",
+                    "regularMarketTime": 1700000000,
+                    "exchangeName": "LSE",
+                    "fiftyTwoWeekHigh": 250.0,
+                    "fiftyTwoWeekLow": 180.0
+                  },
+                  "timestamp": [1700000000, 1700086400],
+                  "indicators": {
+                    "quote": [{ "close": [200.0, 210.68] }]
                   }
                 }],
                 "error": null

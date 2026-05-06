@@ -24,13 +24,14 @@ private const val DAYS_PER_YEAR_PRECISE = 365.25
 /** Unix seconds in one calendar year (non-leap). */
 private const val ONE_YEAR_SECONDS = DAYS_PER_YEAR * HOURS_PER_DAY * SECONDS_PER_HOUR
 
-// Yahoo Finance returns "GBX" (pence) for LSE stocks. Normalize to GBP at the API boundary.
-private const val GBX = "GBX"
+// Yahoo Finance returns "GBp" (pence) for LSE stocks; some providers use "GBX".
+// Both represent British pence (100p = £1). Normalize to GBP at the API boundary.
 private const val GBP = "GBP"
 private const val PENCE_TO_POUNDS = 0.01
 
-private val ChartMetaDto.priceFactor: Double get() = if (currency == GBX) PENCE_TO_POUNDS else 1.0
-private val ChartMetaDto.normalizedCurrency: String get() = if (currency == GBX) GBP else (currency ?: "USD")
+private fun String?.isGBPence(): Boolean = this == "GBX" || this == "GBp"
+private val ChartMetaDto.priceFactor: Double get() = if (currency.isGBPence()) PENCE_TO_POUNDS else 1.0
+private val ChartMetaDto.normalizedCurrency: String get() = if (currency.isGBPence()) GBP else (currency ?: "USD")
 
 /**
  * Maps chart metadata to a [StockQuote].
