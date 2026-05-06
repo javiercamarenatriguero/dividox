@@ -1,6 +1,7 @@
 package com.akole.dividox.di
 
 import com.akole.dividox.common.settings.AppRefreshTracker
+import com.akole.dividox.common.settings.data.biometric.BiometricAuthenticator
 import com.akole.dividox.common.settings.data.datastore.AppSettingsDataStoreImpl
 import com.akole.dividox.common.settings.data.datastore.createDataStore
 import com.akole.dividox.common.settings.domain.datastore.AppSettingsDataStore
@@ -14,6 +15,7 @@ val settingsModule = module {
     single { createDataStore(::dataStorePath) }
     single<AppSettingsDataStore> { AppSettingsDataStoreImpl(get()) }
     single { AppRefreshTracker() }
+    single { BiometricAuthenticator() }
     factory { ObserveAppSettingsUseCase(get()) }
     factory { SetCurrencyUseCase(get()) }
 }
