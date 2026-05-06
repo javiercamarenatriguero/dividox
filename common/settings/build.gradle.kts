@@ -14,6 +14,9 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.datastore.preferences)
         }
+        androidMain.dependencies {
+            implementation(libs.androidx.biometric)
+        }
         commonTest.dependencies {
             implementation(libs.kotlinx.coroutines.test)
         }
