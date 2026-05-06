@@ -1,5 +1,6 @@
 package com.akole.dividox.integration.security.domain.usecase
 
+import com.akole.dividox.common.currency.domain.model.Currency
 import com.akole.dividox.component.market.domain.model.StockQuote
 import com.akole.dividox.component.market.domain.usecase.GetDividendInfoUseCase
 import com.akole.dividox.component.market.domain.usecase.GetMultipleQuotesUseCase
@@ -62,7 +63,14 @@ class GetPortfolioWithQuotesUseCase(
                                 async {
                                     val quote = quoteByTicker[holding.tickerId]!!
                                     val dividendInfo = getDividendInfoUseCase(holding.tickerId).getOrNull()
-                                    val costBasis = holding.shares * holding.purchasePrice
+                                    val rawCostBasis = holding.shares * holding.purchasePrice
+                                    // Normalize GBX (pence) to GBP so gain% is comparable to the
+                                    // normalized quote price (always in GBP after ChartMapper fix).
+                                    val costBasis = if (holding.purchaseCurrency == Currency.GBX) {
+                                        rawCostBasis * 0.01
+                                    } else {
+                                        rawCostBasis
+                                    }
                                     val currentValue = holding.shares * quote.price
                                     val totalGainPercent = if (costBasis != 0.0) {
                                         (currentValue - costBasis) / costBasis * 100.0

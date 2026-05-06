@@ -426,6 +426,7 @@ private fun CurrencySelector(
         Currency.USD,
         Currency.EUR,
         Currency.GBP,
+        Currency.GBX,
     )
 
     Row(

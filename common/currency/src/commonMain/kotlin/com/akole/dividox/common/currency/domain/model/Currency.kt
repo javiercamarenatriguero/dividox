@@ -13,6 +13,8 @@ enum class Currency(val code: String, val symbol: String) {
     USD("USD", "$"),
     EUR("EUR", "€"),
     GBP("GBP", "£"),
+    /** British pence — 100 GBX = 1 GBP. Used for stocks quoted on LSE in pence. */
+    GBX("GBX", "p"),
     JPY("JPY", "¥"),
     CHF("CHF", "CHF "),
     CAD("CAD", "CA$"),
