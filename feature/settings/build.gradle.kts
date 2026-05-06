@@ -17,7 +17,6 @@ kotlin {
             implementation(projects.component.auth)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.datetime)
-            implementation(compose.material3)
             implementation(compose.materialIconsExtended)
         }
         commonTest.dependencies {

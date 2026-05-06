@@ -59,6 +59,8 @@ import com.akole.dividox.common.ui.resources.format.formatPercentSigned
 import com.akole.dividox.common.ui.resources.format.formatPrice
 import com.akole.dividox.common.ui.resources.format.formatPriceSigned
 import com.akole.dividox.common.ui.resources.theme.DividoxTheme
+import com.akole.dividox.common.ui.resources.format.flag
+import com.akole.dividox.common.ui.resources.format.nameRes
 import com.akole.dividox.common.ui.resources.theme.extendedColors
 import com.akole.dividox.common.ui.resources.theme.spacing
 import dividox.common.ui_resources.generated.resources.Res
@@ -210,7 +212,7 @@ private fun CurrencyDropdown(
             ),
         ) {
             Text(
-                text = "${selected.symbol.trim()} ${selected.code}",
+                text = "${selected.flag()} ${selected.symbol.trim()} ${selected.code}",
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.SemiBold,
             )
@@ -227,16 +229,32 @@ private fun CurrencyDropdown(
             CURRENCY_LIST.forEach { currency ->
                 DropdownMenuItem(
                     text = {
-                        Text(
-                            text = "${currency.symbol.trim()} ${currency.code}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = if (currency == selected) FontWeight.Bold else FontWeight.Normal,
-                            color = if (currency == selected) {
-                                MaterialTheme.colorScheme.primary
-                            } else {
-                                MaterialTheme.colorScheme.onSurface
-                            },
-                        )
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = currency.flag(),
+                                style = MaterialTheme.typography.bodyLarge,
+                            )
+                            Column {
+                                Text(
+                                    text = stringResource(currency.nameRes()),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = if (currency == selected) FontWeight.Bold else FontWeight.Normal,
+                                    color = if (currency == selected) {
+                                        MaterialTheme.colorScheme.primary
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurface
+                                    },
+                                )
+                                Text(
+                                    text = "${currency.symbol.trim()} ${currency.code}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
                     },
                     onClick = {
                         expanded = false

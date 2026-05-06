@@ -20,10 +20,12 @@ class SettingsViewModel(
     private val updateBiometricLock: UpdateBiometricLockUseCase,
     private val signOut: SignOutUseCase,
     private val authenticator: BiometricAuthenticator,
+    private val appVersion: String,
 ) : ViewModel(),
     MVI<SettingsViewState, SettingsViewEvent, SettingsViewSideEffect> by mvi(SettingsViewState()) {
 
     init {
+        updateViewState { copy(appVersion = appVersion) }
         observeSettings()
         checkBiometricAvailability()
     }

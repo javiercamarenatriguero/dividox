@@ -7,6 +7,7 @@ import com.akole.dividox.common.settings.data.datastore.createDataStore
 import com.akole.dividox.common.settings.domain.datastore.AppSettingsDataStore
 import com.akole.dividox.common.settings.domain.usecase.ObserveAppSettingsUseCase
 import com.akole.dividox.common.settings.domain.usecase.SetCurrencyUseCase
+import com.akole.dividox.common.settings.domain.usecase.UpdateBiometricLockUseCase
 import org.koin.dsl.module
 
 internal expect fun dataStorePath(): String
@@ -20,8 +21,3 @@ val settingsModule = module {
     factory { SetCurrencyUseCase(get()) }
     factory { UpdateBiometricLockUseCase(get(), get()) }
 }
-
-private class UpdateBiometricLockUseCase(
-    dataStore: AppSettingsDataStore,
-    authenticator: BiometricAuthenticator,
-) : com.akole.dividox.common.settings.domain.usecase.UpdateBiometricLockUseCase(dataStore, authenticator)

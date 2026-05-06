@@ -1,9 +1,9 @@
 package com.akole.dividox.feature.settings
 
 import com.akole.dividox.common.currency.domain.model.Currency
-import com.akole.dividox.common.mvi.viewmodel.ViewEvent
-import com.akole.dividox.common.mvi.viewmodel.ViewSideEffect
-import com.akole.dividox.common.mvi.viewmodel.ViewState
+import com.akole.dividox.common.mvi.SideEffect
+import com.akole.dividox.common.mvi.ViewEvent
+import com.akole.dividox.common.mvi.ViewState
 import com.akole.dividox.common.settings.domain.model.AppSettings
 
 data class SettingsViewState(
@@ -30,7 +30,7 @@ sealed interface SettingsViewEvent : ViewEvent {
     data object SignOutConfirmed : SettingsViewEvent
 }
 
-sealed interface SettingsViewSideEffect : ViewSideEffect {
+sealed interface SettingsViewSideEffect : SideEffect {
     sealed interface Navigation : SettingsViewSideEffect {
         data object NavigateToFavorites : Navigation
         data object NavigateToLogin : Navigation
