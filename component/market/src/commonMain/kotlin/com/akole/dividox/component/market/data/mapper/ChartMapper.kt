@@ -24,29 +24,40 @@ private const val DAYS_PER_YEAR_PRECISE = 365.25
 /** Unix seconds in one calendar year (non-leap). */
 private const val ONE_YEAR_SECONDS = DAYS_PER_YEAR * HOURS_PER_DAY * SECONDS_PER_HOUR
 
+// Yahoo Finance returns "GBX" (pence) for LSE stocks. Normalize to GBP at the API boundary.
+private const val GBX = "GBX"
+private const val GBP = "GBP"
+private const val PENCE_TO_POUNDS = 0.01
+
+private val ChartMetaDto.priceFactor: Double get() = if (currency == GBX) PENCE_TO_POUNDS else 1.0
+private val ChartMetaDto.normalizedCurrency: String get() = if (currency == GBX) GBP else (currency ?: "USD")
+
 /**
  * Maps chart metadata to a [StockQuote].
  *
  * Change and changePercent are derived from [ChartMetaDto.chartPreviousClose].
  * If previous close is unavailable, change values default to 0.
+ * GBX (pence) prices are normalized to GBP by dividing by 100.
  */
 internal fun ChartMetaDto.toStockQuote(): StockQuote {
-    val previousClose = chartPreviousClose ?: regularMarketPrice
-    val change = regularMarketPrice - previousClose
+    val factor = priceFactor
+    val price = regularMarketPrice * factor
+    val previousClose = (chartPreviousClose ?: regularMarketPrice) * factor
+    val change = price - previousClose
     val changePercent = if (previousClose != 0.0) (change / previousClose) * 100.0 else 0.0
     return StockQuote(
         ticker = symbol,
-        price = regularMarketPrice,
+        price = price,
         change = change,
         changePercent = changePercent,
-        currency = currency ?: "USD",
+        currency = normalizedCurrency,
         lastUpdated = Instant.fromEpochSeconds(regularMarketTime ?: 0),
         name = longName ?: shortName,
-        fiftyTwoWeekHigh = fiftyTwoWeekHigh,
-        fiftyTwoWeekLow = fiftyTwoWeekLow,
+        fiftyTwoWeekHigh = fiftyTwoWeekHigh?.times(factor),
+        fiftyTwoWeekLow = fiftyTwoWeekLow?.times(factor),
         volume = regularMarketVolume,
-        dayHigh = regularMarketDayHigh,
-        dayLow = regularMarketDayLow,
+        dayHigh = regularMarketDayHigh?.times(factor),
+        dayLow = regularMarketDayLow?.times(factor),
     )
 }
 
@@ -63,13 +74,14 @@ internal fun ChartMetaDto.toStockQuote(): StockQuote {
  * @param ticker Yahoo Finance symbol used as the [DividendInfo.ticker] key.
  */
 internal fun ChartResultDto.toDividendInfo(ticker: String): DividendInfo {
-    val price = meta.regularMarketPrice
+    val factor = meta.priceFactor
+    val price = meta.regularMarketPrice * factor
     val nowSeconds = Clock.System.now().epochSeconds
     val dividends = events?.dividends?.values?.sortedBy { it.date } ?: emptyList()
     val past = dividends.filter { it.date <= nowSeconds }
     val future = dividends.filter { it.date > nowSeconds }
 
-    val annualPayout = calculateAnnualPayout(dividends)
+    val annualPayout = calculateAnnualPayout(dividends) * factor
     val yieldValue = if (price > 0.0) (annualPayout / price) * 100.0 else 0.0
     val fiveYearGrowth = calculateFiveYearGrowth(past.ifEmpty { dividends })
 
@@ -161,11 +173,12 @@ internal fun ChartResultDto.toCompanyInfo(ticker: String): CompanyInfo = Company
  * Candles with a `null` closing price (market holidays, partial trading days) are skipped.
  */
 internal fun ChartResultDto.toPricePoints(): List<PricePoint> {
+    val factor = meta.priceFactor
     val timestamps = timestamp ?: return emptyList()
     val closes = indicators?.quote?.firstOrNull()?.close ?: return emptyList()
     return timestamps.zip(closes)
         .mapNotNull { (ts, close) ->
-            close?.let { PricePoint(timestamp = Instant.fromEpochSeconds(ts), close = it) }
+            close?.let { PricePoint(timestamp = Instant.fromEpochSeconds(ts), close = it * factor) }
         }
 }
 
@@ -179,14 +192,15 @@ internal fun ChartResultDto.toPricePoints(): List<PricePoint> {
  * @param ticker Yahoo Finance symbol used as the [MarketDividendEvent.ticker] key.
  */
 internal fun ChartResultDto.toMarketDividendEvents(ticker: String): List<MarketDividendEvent> {
-    val currency = meta.currency ?: "USD"
+    val factor = meta.priceFactor
+    val currency = meta.normalizedCurrency
     return events?.dividends
         ?.values
         ?.sortedBy { it.date }
         ?.map { dto ->
             MarketDividendEvent(
                 ticker = ticker,
-                amountPerShare = dto.amount,
+                amountPerShare = dto.amount * factor,
                 exDividendDate = Instant.fromEpochSeconds(dto.date)
                     .toLocalDateTime(TimeZone.UTC).date,
                 currency = currency,
