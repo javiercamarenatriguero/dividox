@@ -65,6 +65,12 @@ class FakeMarketRepository : MarketRepository {
     override fun getPriceHistory(ticker: String, period: ChartPeriod): Flow<List<PricePoint>> =
         flowOf(priceHistories[ticker] ?: emptyList())
 
+    override suspend fun getHistoricalDividendEvents(
+        ticker: String,
+        range: com.akole.dividox.component.market.domain.model.DividendHistoryRange,
+    ): Result<List<com.akole.dividox.component.market.domain.model.MarketDividendEvent>> =
+        Result.success(emptyList())
+
     override suspend fun searchSecurities(query: String): Result<List<StockQuote>> =
         Result.success(emptyList())
 

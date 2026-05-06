@@ -37,12 +37,10 @@ fun NavGraphBuilder.securityDetailScreenNode(navController: NavController) {
                 when (navigation) {
                     SecurityDetailSideEffect.Navigation.NavigateBack ->
                         navController.popBackStack()
-                    is SecurityDetailSideEffect.Navigation.NavigateToAddSecurity -> {
-                        navController.navigate(AddHoldingRoute)
-                    }
-                    is SecurityDetailSideEffect.Navigation.NavigateToEditHolding -> {
-                        // TK-025
-                    }
+                    is SecurityDetailSideEffect.Navigation.NavigateToAddSecurity ->
+                        navController.navigateToAddHolding(ticker = navigation.ticker)
+                    is SecurityDetailSideEffect.Navigation.NavigateToEditHolding ->
+                        navController.navigateToEditHolding(navigation.holdingId.value)
                 }
             },
         )

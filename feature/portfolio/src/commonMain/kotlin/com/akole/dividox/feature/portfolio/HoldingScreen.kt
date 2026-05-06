@@ -8,8 +8,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -23,6 +27,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -49,12 +54,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.akole.dividox.common.currency.domain.model.Currency
 import com.akole.dividox.common.ui.resources.components.DividoxTopAppBar
+import com.akole.dividox.common.ui.resources.components.ExchangeMarket
+import com.akole.dividox.common.ui.resources.components.MarketFilterRow
+import com.akole.dividox.common.ui.resources.components.SearchBar
 import com.akole.dividox.common.ui.resources.components.connectivity.ConnectivityBannerHost
 import com.akole.dividox.common.ui.resources.components.connectivity.LocalNetworkConnectivityManager
 import com.akole.dividox.common.ui.resources.format.formatPrice
 import com.akole.dividox.common.ui.resources.format.formatTwoDecimals
 import com.akole.dividox.common.ui.resources.theme.DividoxTheme
 import com.akole.dividox.common.ui.resources.theme.spacing
+import com.akole.dividox.component.market.domain.model.SecurityType
 import com.akole.dividox.component.market.domain.model.StockQuote
 import com.akole.dividox.component.market.domain.model.displayName
 import com.akole.dividox.component.portfolio.domain.model.HoldingId
@@ -71,7 +80,11 @@ import dividox.common.ui_resources.generated.resources.label_price_per_share
 import dividox.common.ui_resources.generated.resources.label_purchase_date
 import dividox.common.ui_resources.generated.resources.label_shares
 import dividox.common.ui_resources.generated.resources.label_unknown_position
-import dividox.common.ui_resources.generated.resources.search_security_hint
+import dividox.common.ui_resources.generated.resources.holding_search_security_hint
+import dividox.common.ui_resources.generated.resources.security_type_all
+import dividox.common.ui_resources.generated.resources.security_type_equity
+import dividox.common.ui_resources.generated.resources.security_type_etf
+import dividox.common.ui_resources.generated.resources.security_type_fund
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -172,9 +185,17 @@ private fun HoldingScreenContent(
             query = state.searchQuery,
             results = state.searchResults,
             selectedSecurity = state.selectedSecurity,
+            selectedMarket = state.selectedMarket,
+            selectedType = state.selectedType,
             isLoading = state.isSearching,
             onQueryChanged = { query ->
                 onEvent(HoldingContract.HoldingViewEvent.SearchQueryChanged(query))
+            },
+            onMarketSelected = { market ->
+                onEvent(HoldingContract.HoldingViewEvent.MarketFilterChanged(market))
+            },
+            onTypeSelected = { type ->
+                onEvent(HoldingContract.HoldingViewEvent.TypeFilterChanged(type))
             },
             onSecuritySelected = { quote ->
                 onEvent(HoldingContract.HoldingViewEvent.SecuritySelected(quote))
@@ -257,7 +278,7 @@ private fun HoldingScreenContent(
                         onClick = { onEvent(HoldingContract.HoldingViewEvent.DeleteClicked) },
                         modifier = Modifier
                             .weight(1f)
-                            .padding(vertical = MaterialTheme.spacing.small),
+                            .heightIn(min = MaterialTheme.spacing.buttonMinHeight),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.errorContainer,
                             contentColor = MaterialTheme.colorScheme.error,
@@ -273,7 +294,7 @@ private fun HoldingScreenContent(
                     onClick = { onEvent(HoldingContract.HoldingViewEvent.ConfirmClicked) },
                     modifier = Modifier
                         .weight(1f)
-                        .padding(vertical = MaterialTheme.spacing.small),
+                        .heightIn(min = MaterialTheme.spacing.buttonMinHeight),
                     enabled = state.selectedSecurity != null &&
                               state.shares.isNotBlank() && state.pricePerShare.isNotBlank(),
                 ) {
@@ -295,19 +316,34 @@ private fun SearchSecurityField(
     query: String,
     results: List<StockQuote>,
     selectedSecurity: StockQuote?,
+    selectedMarket: ExchangeMarket,
+    selectedType: SecurityType?,
     isLoading: Boolean,
     onQueryChanged: (String) -> Unit,
+    onMarketSelected: (ExchangeMarket) -> Unit,
+    onTypeSelected: (SecurityType?) -> Unit,
     onSecuritySelected: (StockQuote) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small)) {
-        OutlinedTextField(
-            value = query,
-            onValueChange = onQueryChanged,
-            label = { Text(stringResource(Res.string.search_security_hint)) },
+        SearchBar(
+            query = query,
+            onQueryChange = onQueryChanged,
+            placeholder = stringResource(Res.string.holding_search_security_hint),
             modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
             enabled = selectedSecurity == null,
         )
+        if (selectedSecurity == null) {
+            MarketFilterRow(
+                selectedMarket = selectedMarket,
+                onMarketSelected = onMarketSelected,
+                contentPadding = PaddingValues(0.dp),
+            )
+            SecurityTypeFilterRow(
+                selectedType = selectedType,
+                onTypeSelected = onTypeSelected,
+                contentPadding = PaddingValues(0.dp),
+            )
+        }
 
         if (isLoading) {
             CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
@@ -349,11 +385,24 @@ private fun SecurityResultItem(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = quote.ticker,
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold,
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xSmall),
+            ) {
+                Text(
+                    text = quote.ticker,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                )
+                val typeLabel = quote.type.label()
+                if (typeLabel != null) {
+                    Text(
+                        text = typeLabel,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
             if (quote.name != null) {
                 Text(
                     text = quote.name!!,
@@ -425,6 +474,7 @@ private fun CurrencySelector(
         Currency.USD,
         Currency.EUR,
         Currency.GBP,
+        Currency.GBX,
     )
 
     Row(
@@ -509,9 +559,7 @@ private fun DeleteConfirmationDialog(
         onDismissRequest = onCancel,
     ) {
         Surface(
-            modifier = Modifier
-                .fillMaxWidth(0.9f)
-                .padding(MaterialTheme.spacing.large),
+            modifier = Modifier.fillMaxWidth(),
             shape = MaterialTheme.shapes.large,
             color = MaterialTheme.colorScheme.surface,
         ) {
@@ -520,12 +568,12 @@ private fun DeleteConfirmationDialog(
                 verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
             ) {
                 Text(
-                    text = "Remove Position?",
+                    text = stringResource(Res.string.dialog_remove_title),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                 )
                 Text(
-                    text = "Remove $ticker from your portfolio? This cannot be undone.",
+                    text = stringResource(Res.string.dialog_remove_message, ticker),
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 Row(
@@ -536,19 +584,23 @@ private fun DeleteConfirmationDialog(
                 ) {
                     OutlinedButton(
                         onClick = onCancel,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .heightIn(min = MaterialTheme.spacing.buttonMinHeight),
                     ) {
-                        Text("Cancel")
+                        Text(stringResource(Res.string.action_cancel))
                     }
                     Button(
                         onClick = onConfirm,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .heightIn(min = MaterialTheme.spacing.buttonMinHeight),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.errorContainer,
                             contentColor = MaterialTheme.colorScheme.error,
                         ),
                     ) {
-                        Text("Delete")
+                        Text(stringResource(Res.string.action_delete))
                     }
                 }
             }
@@ -742,4 +794,38 @@ private fun HoldingScreenAddDarkPreview() {
             onEvent = {},
         )
     }
+}
+
+@Composable
+private fun SecurityTypeFilterRow(
+    selectedType: SecurityType?,
+    onTypeSelected: (SecurityType?) -> Unit,
+    contentPadding: PaddingValues = PaddingValues(0.dp),
+) {
+    val options: List<SecurityType?> = listOf(null) + SecurityType.entries
+    LazyRow(
+        contentPadding = contentPadding,
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
+    ) {
+        items(options, key = { it?.name ?: "ALL" }) { type ->
+            FilterChip(
+                selected = selectedType == type,
+                onClick = { onTypeSelected(type) },
+                label = {
+                    Text(
+                        text = type.label() ?: stringResource(Res.string.security_type_all),
+                        style = MaterialTheme.typography.labelSmall,
+                    )
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun SecurityType?.label(): String? = when (this) {
+    SecurityType.EQUITY -> stringResource(Res.string.security_type_equity)
+    SecurityType.ETF -> stringResource(Res.string.security_type_etf)
+    SecurityType.MUTUAL_FUND -> stringResource(Res.string.security_type_fund)
+    null -> null
 }

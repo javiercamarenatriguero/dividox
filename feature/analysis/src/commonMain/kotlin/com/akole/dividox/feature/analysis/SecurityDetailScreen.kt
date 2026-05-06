@@ -37,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.akole.dividox.common.currency.domain.model.Currency
 import com.akole.dividox.common.mvi.CollectSideEffect
 import com.akole.dividox.common.ui.resources.charts.BarChart
 import com.akole.dividox.common.ui.resources.charts.BarChartEntry
@@ -89,6 +90,7 @@ import org.jetbrains.compose.resources.stringResource
 private val PriceChartHeight = 200.dp
 private val DividendChartHeight = 250.dp
 
+@Suppress("LongMethod")
 @Composable
 fun SecurityDetailScreen(
     state: SecurityDetailViewState,
@@ -220,7 +222,7 @@ private fun PriceCard(state: SecurityDetailViewState) {
                 verticalAlignment = Alignment.Bottom,
             ) {
                 Text(
-                    text = quote.price.formatPrice(state.currency),
+                    text = quote.price.formatPrice(quote.currency),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                 )
@@ -328,7 +330,7 @@ private fun ChartSection(
                     height = PriceChartHeight,
                     yAxisValueOffset = floorPrice,
                     popupFormatter = { label, value ->
-                        val formattedValue = (value + floorPrice).toDouble().formatPrice(state.currency.code)
+                        val formattedValue = (value + floorPrice).toDouble().formatPrice(state.quote?.currency ?: "USD")
                         "$formattedValue · $label"
                     },
                 )
@@ -347,6 +349,7 @@ private fun ChartSection(
 @Composable
 private fun DividendMetricsSection(state: SecurityDetailViewState) {
     val dividendInfo = state.dividendInfo ?: return
+    val quoteCurrencyCode = state.quote?.currency ?: "USD"
 
     Column(
         modifier = Modifier
@@ -371,7 +374,7 @@ private fun DividendMetricsSection(state: SecurityDetailViewState) {
             )
             MetricCard(
                 label = stringResource(Res.string.analysis_metric_annual_payout),
-                value = dividendInfo.annualPayout.formatTwoDecimals(),
+                value = dividendInfo.annualPayout.formatPrice(quoteCurrencyCode),
                 modifier = Modifier.weight(1f).fillMaxHeight(),
             )
         }
@@ -431,6 +434,7 @@ private fun DividendGrowthSection(
     state: SecurityDetailViewState,
     onEvent: (SecurityDetailViewEvent) -> Unit,
 ) {
+    val quoteCurrency = Currency.entries.firstOrNull { it.code == (state.quote?.currency ?: "USD") } ?: Currency.USD
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -449,19 +453,28 @@ private fun DividendGrowthSection(
                     fontWeight = FontWeight.SemiBold,
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xSmall)) {
-                    listOf(false to state.currency.symbol, true to stringResource(Res.string.analysis_view_as_percent)).forEach { (isPercent, label) ->
+                    listOf(
+                        false to quoteCurrency.symbol,
+                        true to stringResource(Res.string.analysis_view_as_percent)).forEach { (isPercent, label) ->
                         val isSelected = state.isDividendChartPercentage == isPercent
                         Surface(
                             shape = RoundedCornerShape(6.dp),
-                            color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
-                            modifier = Modifier.clickable { if (!isSelected) onEvent(SecurityDetailViewEvent.ToggleDividendChartMode) },
+                            color = if (isSelected) MaterialTheme.colorScheme.primaryContainer
+                            else MaterialTheme.colorScheme.surfaceContainerHigh,
+                            modifier = Modifier.clickable {
+                                if (!isSelected) onEvent(SecurityDetailViewEvent.ToggleDividendChartMode)
+                                                          },
                         ) {
                             Text(
                                 text = label,
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.padding(horizontal = MaterialTheme.spacing.small, vertical = MaterialTheme.spacing.xSmall),
+                                color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer
+                                else MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.padding(
+                                    horizontal = MaterialTheme.spacing.small,
+                                    vertical = MaterialTheme.spacing.xSmall,
+                                ),
                             )
                         }
                     }
@@ -490,7 +503,7 @@ private fun DividendGrowthSection(
                     if (state.isDividendChartPercentage) {
                         "${entry.value.toDouble().formatTwoDecimals()}%"
                     } else {
-                        formatBarChartPopupLabel(entry.value, state.currency.code, entry.label)
+                        formatBarChartPopupLabel(entry.value, quoteCurrency.code, entry.label)
                     }
                 },
             )
@@ -522,12 +535,12 @@ private fun FundamentalsSection(state: SecurityDetailViewState) {
         ) {
             MetricCard(
                 label = stringResource(Res.string.metric_52w_high),
-                value = quote.fiftyTwoWeekHigh?.formatPrice(state.currency) ?: "N/A",
+                value = quote.fiftyTwoWeekHigh?.formatPrice(quote.currency) ?: "N/A",
                 modifier = Modifier.weight(1f).fillMaxHeight(),
             )
             MetricCard(
                 label = stringResource(Res.string.metric_52w_low),
-                value = quote.fiftyTwoWeekLow?.formatPrice(state.currency) ?: "N/A",
+                value = quote.fiftyTwoWeekLow?.formatPrice(quote.currency) ?: "N/A",
                 modifier = Modifier.weight(1f).fillMaxHeight(),
             )
         }
@@ -539,7 +552,7 @@ private fun FundamentalsSection(state: SecurityDetailViewState) {
             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
         ) {
             val dayRange = if (quote.dayLow != null && quote.dayHigh != null) {
-                "${quote.dayLow!!.formatPrice(state.currency)} – ${quote.dayHigh!!.formatPrice(state.currency)}"
+                "${quote.dayLow!!.formatPrice(quote.currency)} – ${quote.dayHigh!!.formatPrice(quote.currency)}"
             } else "N/A"
             MetricCard(
                 label = stringResource(Res.string.metric_day_range),
@@ -562,12 +575,12 @@ private fun FundamentalsSection(state: SecurityDetailViewState) {
             ) {
                 MetricCard(
                     label = stringResource(Res.string.metric_ex_dividend_date),
-                    value = dividendInfo?.exDividendDate?.toString() ?: "N/A",
+                    value = dividendInfo.exDividendDate?.toString() ?: "N/A",
                     modifier = Modifier.weight(1f).fillMaxHeight(),
                 )
                 MetricCard(
                     label = stringResource(Res.string.metric_next_dividend_date),
-                    value = dividendInfo?.nextDividendDate?.toString() ?: "N/A",
+                    value = dividendInfo.nextDividendDate?.toString() ?: "N/A",
                     modifier = Modifier.weight(1f).fillMaxHeight(),
                 )
             }
@@ -581,7 +594,10 @@ private fun CtaButton(
     onEvent: (SecurityDetailViewEvent) -> Unit,
 ) {
     Button(
-        onClick = { onEvent(SecurityDetailViewEvent.OnAddSecurityClicked) },
+        onClick = {
+            if (state.isInPortfolio) onEvent(SecurityDetailViewEvent.OnEditHoldingClicked)
+            else onEvent(SecurityDetailViewEvent.OnAddSecurityClicked)
+        },
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = MaterialTheme.spacing.medium)

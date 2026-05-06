@@ -7,32 +7,57 @@ import com.akole.dividox.common.settings.AppRefreshTracker
 import com.akole.dividox.common.settings.domain.model.AppSettings
 import com.akole.dividox.common.settings.domain.usecase.ObserveAppSettingsUseCase
 import com.akole.dividox.component.market.domain.model.ChartPeriod
-import com.akole.dividox.component.market.domain.model.StockQuote
 import com.akole.dividox.component.market.domain.model.PricePoint
+import com.akole.dividox.component.market.domain.model.StockQuote
+import com.akole.dividox.component.market.domain.usecase.GetHistoricalDividendEventsUseCase
+import com.akole.dividox.component.market.domain.usecase.GetPriceHistoryUseCase
 import com.akole.dividox.component.market.domain.usecase.GetStockQuoteUseCase
+import com.akole.dividox.component.portfolio.domain.model.HoldingId
 import com.akole.dividox.component.watchlist.domain.usecase.AddToWatchlistUseCase
 import com.akole.dividox.component.watchlist.domain.usecase.IsInWatchlistUseCase
 import com.akole.dividox.component.watchlist.domain.usecase.RemoveFromWatchlistUseCase
-import com.akole.dividox.feature.analysis.SecurityDetailContract.SecurityDetailViewEvent
 import com.akole.dividox.feature.analysis.SecurityDetailContract.SecurityDetailSideEffect
+import com.akole.dividox.feature.analysis.SecurityDetailContract.SecurityDetailViewEvent
 import com.akole.dividox.integration.security.domain.model.SecurityDetail
 import com.akole.dividox.integration.security.domain.usecase.GetSecurityDetailUseCase
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
-import kotlin.time.Clock
-import kotlinx.coroutines.flow.emptyFlow
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.runTest
+import io.mockk.Runs
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
+import kotlin.test.assertTrue
+import kotlin.time.Clock
+import kotlin.time.Instant
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.TestCoroutineScheduler
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class SecurityDetailViewModelTest {
 
+    private val testScheduler = TestCoroutineScheduler()
+    private val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+
     private val ticker = "AAPL"
+
     private val mockGetSecurityDetail = mockk<GetSecurityDetailUseCase>()
     private val mockGetStockQuote = mockk<GetStockQuoteUseCase>()
+    private val mockGetHistoricalDividendEvents = mockk<GetHistoricalDividendEventsUseCase>()
+    private val mockGetPriceHistory = mockk<GetPriceHistoryUseCase>()
     private val mockIsInWatchlist = mockk<IsInWatchlistUseCase>()
     private val mockAddToWatchlist = mockk<AddToWatchlistUseCase>()
     private val mockRemoveFromWatchlist = mockk<RemoveFromWatchlistUseCase>()
@@ -41,164 +66,202 @@ class SecurityDetailViewModelTest {
     private val mockCurrencyConverter = mockk<CurrencyConverter>()
     private val mockRefreshTracker = mockk<AppRefreshTracker>()
 
-    private fun createViewModel(): SecurityDetailViewModel {
-        // Setup default mock behaviors
-        every { mockObserveAppSettings() } returns flowOf(
-            AppSettings(currency = Currency.USD)
-        )
+    @BeforeTest
+    fun setup() {
+        Dispatchers.setMain(testDispatcher)
+        every { mockObserveAppSettings() } returns flowOf(AppSettings(currency = Currency.USD))
         every { mockIsInWatchlist(any()) } returns flowOf(false)
-        coEvery { mockGetStockQuote(any()).getOrNull() } returns null
-        every { mockConnectivityManager.isConnected } returns flowOf(true)
-
-        return SecurityDetailViewModel(
-            ticker = ticker,
-            getSecurityDetail = mockGetSecurityDetail,
-            getStockQuote = mockGetStockQuote,
-            isInWatchlist = mockIsInWatchlist,
-            addToWatchlist = mockAddToWatchlist,
-            removeFromWatchlist = mockRemoveFromWatchlist,
-            connectivityManager = mockConnectivityManager,
-            observeAppSettings = mockObserveAppSettings,
-            currencyConverter = mockCurrencyConverter,
-            refreshTracker = mockRefreshTracker,
-        )
+        every { mockConnectivityManager.observeConnectivity() } returns emptyFlow()
+        every { mockGetSecurityDetail(any(), any()) } returns emptyFlow()
+        every { mockGetPriceHistory(any(), any()) } returns flowOf(emptyList())
+        coEvery { mockGetHistoricalDividendEvents(any(), any()) } returns Result.success(emptyList())
+        coEvery { mockAddToWatchlist(any()) } just Runs
+        coEvery { mockRemoveFromWatchlist(any()) } just Runs
     }
 
-    @Test
-    fun `SHOULD load security details on OnLoad GIVEN initial state`() = runTest {
-        // GIVEN
-        val quote = StockQuote(
-            ticker = ticker,
-            price = 150.0,
-            change = 2.5,
-            changePercent = 1.69,
-            currency = "USD",
-            lastUpdated = Clock.System.now(),
-        )
-        val priceHistory = listOf(
-            PricePoint(Clock.System.now(), 150.0),
-            PricePoint(Clock.System.now(), 149.5),
-        )
-        val securityDetail = SecurityDetail(
-            ticker = ticker,
-            quote = quote,
-            dividendInfo = null,
-            companyInfo = null,
-            priceHistory = priceHistory,
-            isInPortfolio = false,
-            isInWatchlist = false,
-            holdingId = null,
-        )
+    @AfterTest
+    fun teardown() {
+        Dispatchers.resetMain()
+    }
 
-        every { mockGetSecurityDetail(ticker, ChartPeriod.ONE_YEAR) } returns flowOf(
-            securityDetail
-        )
+    private fun viewModel() = SecurityDetailViewModel(
+        ticker = ticker,
+        getSecurityDetail = mockGetSecurityDetail,
+        getStockQuote = mockGetStockQuote,
+        getHistoricalDividendEvents = mockGetHistoricalDividendEvents,
+        getPriceHistory = mockGetPriceHistory,
+        isInWatchlist = mockIsInWatchlist,
+        addToWatchlist = mockAddToWatchlist,
+        removeFromWatchlist = mockRemoveFromWatchlist,
+        connectivityManager = mockConnectivityManager,
+        observeAppSettings = mockObserveAppSettings,
+        currencyConverter = mockCurrencyConverter,
+        refreshTracker = mockRefreshTracker,
+    )
+
+    // ─── Load ─────────────────────────────────────────────────────────────────
+
+    @Test
+    fun `SHOULD populate state WHEN security detail emits GIVEN OnLoad`() = runTest(testScheduler) {
+        // GIVEN
+        val detail = aSecurityDetail()
+        every { mockGetSecurityDetail(ticker, ChartPeriod.ONE_YEAR) } returns flowOf(detail)
+        val vm = viewModel()
 
         // WHEN
-        val viewModel = createViewModel()
-        viewModel.onViewEvent(SecurityDetailViewEvent.OnLoad)
+        vm.onViewEvent(SecurityDetailViewEvent.OnLoad)
+        advanceUntilIdle()
 
         // THEN
-        val state = viewModel.viewState.value
-        assertEquals(ticker, state.ticker)
-        assertEquals(quote.price, state.quote?.price)
-        assertEquals(priceHistory.size, state.priceHistory.size)
+        assertEquals(ticker, vm.viewState.value.ticker)
+        assertEquals(detail.quote.price, vm.viewState.value.quote?.price)
     }
 
-    @Test
-    fun `SHOULD toggle favorite status WHEN OnFavoriteToggled GIVEN not in watchlist`() = runTest {
-        // GIVEN
-        val quote = StockQuote(
-            ticker = ticker,
-            price = 150.0,
-            change = 2.5,
-            changePercent = 1.69,
-            currency = "USD",
-            lastUpdated = Clock.System.now(),
-        )
-        every { mockGetSecurityDetail(ticker, any()) } returns flowOf(
-            SecurityDetail(
-                ticker = ticker,
-                quote = quote,
-                dividendInfo = null,
-                companyInfo = null,
-                priceHistory = emptyList(),
-                isInPortfolio = false,
-                isInWatchlist = false,
-                holdingId = null,
-            )
-        )
-        coEvery { mockAddToWatchlist(ticker) } returns Result.success(Unit)
+    // ─── Watchlist ────────────────────────────────────────────────────────────
 
-        val viewModel = createViewModel()
-        viewModel.onViewEvent(SecurityDetailViewEvent.OnLoad)
+    @Test
+    fun `SHOULD call addToWatchlist WHEN OnFavoriteToggled GIVEN not in watchlist`() = runTest(testScheduler) {
+        // GIVEN
+        every { mockIsInWatchlist(any()) } returns flowOf(false)
+        val vm = viewModel()
+        advanceUntilIdle()
 
         // WHEN
-        viewModel.onViewEvent(SecurityDetailViewEvent.OnFavoriteToggled)
+        vm.onViewEvent(SecurityDetailViewEvent.OnFavoriteToggled)
+        advanceUntilIdle()
 
         // THEN
         coVerify { mockAddToWatchlist(ticker) }
     }
 
+    // ─── Chart period ─────────────────────────────────────────────────────────
+
     @Test
-    fun `SHOULD change chart period WHEN ChartPeriodSelected GIVEN valid period`() = runTest {
+    fun `SHOULD update selectedChartPeriod WHEN ChartPeriodSelected GIVEN new period`() = runTest(testScheduler) {
         // GIVEN
-        every { mockGetSecurityDetail(ticker, ChartPeriod.ONE_WEEK) } returns flowOf(
-            SecurityDetail(
-                ticker = ticker,
-                quote = StockQuote(
-                    ticker = ticker,
-                    price = 150.0,
-                    change = 0.5,
-                    changePercent = 0.33,
-                    currency = "USD",
-                    lastUpdated = Clock.System.now(),
-                ),
-                dividendInfo = null,
-                companyInfo = null,
-                priceHistory = emptyList(),
-                isInPortfolio = false,
-                isInWatchlist = false,
-                holdingId = null,
-            )
+        every { mockGetSecurityDetail(ticker, ChartPeriod.ONE_WEEK) } returns emptyFlow()
+        val vm = viewModel()
+
+        // WHEN
+        vm.onViewEvent(SecurityDetailViewEvent.ChartPeriodSelected(ChartPeriod.ONE_WEEK))
+        advanceUntilIdle()
+
+        // THEN
+        assertEquals(ChartPeriod.ONE_WEEK, vm.viewState.value.selectedChartPeriod)
+    }
+
+    // ─── Dividend chart toggle ────────────────────────────────────────────────
+
+    @Test
+    fun `SHOULD toggle isDividendChartPercentage WHEN ToggleDividendChartMode`() = runTest(testScheduler) {
+        // GIVEN
+        val vm = viewModel()
+        val initial = vm.viewState.value.isDividendChartPercentage
+
+        // WHEN
+        vm.onViewEvent(SecurityDetailViewEvent.ToggleDividendChartMode)
+
+        // THEN
+        assertEquals(!initial, vm.viewState.value.isDividendChartPercentage)
+    }
+
+    // ─── Navigation ───────────────────────────────────────────────────────────
+
+    @Test
+    fun `SHOULD emit NavigateBack WHEN OnBackClicked`() = runTest(testScheduler) {
+        // GIVEN
+        val vm = viewModel()
+        val effects = mutableListOf<SecurityDetailSideEffect>()
+        val job = launch { vm.sideEffect.collect(effects::add) }
+
+        // WHEN
+        vm.onViewEvent(SecurityDetailViewEvent.OnBackClicked)
+        advanceUntilIdle()
+        job.cancel()
+
+        // THEN
+        assertIs<SecurityDetailSideEffect.Navigation.NavigateBack>(effects.first())
+    }
+
+    @Test
+    fun `SHOULD emit NavigateToEditHolding WHEN OnEditHoldingClicked GIVEN ticker in portfolio`() = runTest(testScheduler) {
+        // GIVEN
+        val holdingId = HoldingId("holding-1")
+        every { mockGetSecurityDetail(any(), any()) } returns flowOf(
+            aSecurityDetail(isInPortfolio = true, holdingId = holdingId)
         )
-
-        val viewModel = createViewModel()
+        val vm = viewModel()
+        advanceUntilIdle()
+        val effects = mutableListOf<SecurityDetailSideEffect>()
+        val job = launch { vm.sideEffect.collect(effects::add) }
 
         // WHEN
-        viewModel.onViewEvent(SecurityDetailViewEvent.ChartPeriodSelected(ChartPeriod.ONE_WEEK))
+        vm.onViewEvent(SecurityDetailViewEvent.OnEditHoldingClicked)
+        advanceUntilIdle()
+        job.cancel()
 
         // THEN
-        val state = viewModel.viewState.value
-        assertEquals(ChartPeriod.ONE_WEEK, state.selectedChartPeriod)
+        val effect = assertIs<SecurityDetailSideEffect.Navigation.NavigateToEditHolding>(effects.first())
+        assertEquals(holdingId, effect.holdingId)
     }
 
     @Test
-    fun `SHOULD toggle dividend chart mode WHEN ToggleDividendChartMode GIVEN current state`() = runTest {
+    fun `SHOULD emit NavigateToAddSecurity WHEN OnAddSecurityClicked GIVEN ticker not in portfolio`() = runTest(testScheduler) {
         // GIVEN
-        every { mockGetSecurityDetail(ticker, any()) } returns emptyFlow()
-        val viewModel = createViewModel()
-        val initialMode = viewModel.viewState.value.isDividendChartPercentage
+        val vm = viewModel()
+        val effects = mutableListOf<SecurityDetailSideEffect>()
+        val job = launch { vm.sideEffect.collect(effects::add) }
 
         // WHEN
-        viewModel.onViewEvent(SecurityDetailViewEvent.ToggleDividendChartMode)
+        vm.onViewEvent(SecurityDetailViewEvent.OnAddSecurityClicked)
+        advanceUntilIdle()
+        job.cancel()
 
         // THEN
-        val state = viewModel.viewState.value
-        assertEquals(!initialMode, state.isDividendChartPercentage)
+        val effect = assertIs<SecurityDetailSideEffect.Navigation.NavigateToAddSecurity>(effects.first())
+        assertEquals(ticker, effect.ticker)
     }
 
     @Test
-    fun `SHOULD emit navigation side effect WHEN OnBackClicked GIVEN in detail view`() = runTest {
+    fun `SHOULD NOT emit NavigateToEditHolding WHEN OnEditHoldingClicked GIVEN holdingId is null`() = runTest(testScheduler) {
         // GIVEN
-        every { mockGetSecurityDetail(ticker, any()) } returns emptyFlow()
-        val viewModel = createViewModel()
+        every { mockGetSecurityDetail(any(), any()) } returns flowOf(
+            aSecurityDetail(isInPortfolio = true, holdingId = null)
+        )
+        val vm = viewModel()
+        advanceUntilIdle()
+        val effects = mutableListOf<SecurityDetailSideEffect>()
+        val job = launch { vm.sideEffect.collect(effects::add) }
 
         // WHEN
-        viewModel.onViewEvent(SecurityDetailViewEvent.OnBackClicked)
+        vm.onViewEvent(SecurityDetailViewEvent.OnEditHoldingClicked)
+        advanceUntilIdle()
+        job.cancel()
 
         // THEN
-        val sideEffect = viewModel.sideEffect.value
-        assertEquals(SecurityDetailSideEffect.Navigation.NavigateBack, sideEffect)
+        assertTrue(effects.isEmpty())
     }
+
+    // ─── Test fixtures ────────────────────────────────────────────────────────
+
+    private fun aSecurityDetail(
+        isInPortfolio: Boolean = false,
+        holdingId: HoldingId? = null,
+    ) = SecurityDetail(
+        ticker = ticker,
+        quote = StockQuote(
+            ticker = ticker,
+            price = 150.0,
+            change = 0.0,
+            changePercent = 0.0,
+            currency = "USD",
+            lastUpdated = Instant.fromEpochMilliseconds(0),
+        ),
+        dividendInfo = null,
+        companyInfo = null,
+        priceHistory = emptyList(),
+        isInPortfolio = isInPortfolio,
+        isInWatchlist = false,
+        holdingId = holdingId,
+    )
 }

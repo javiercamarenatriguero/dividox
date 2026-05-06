@@ -54,10 +54,12 @@ val viewModelModule: Module = module {
 
     // HoldingViewModel with optional holdingId parameter for Add/Edit modes
     viewModel { params ->
-        val holdingIdValue: String? = params.getOrNull()
+        val holdingIdValue: String? = params.component1()
+        val prefillTicker: String? = if (params.size() > 1) params.component2() else null
         val holdingId = holdingIdValue?.let { HoldingId(it) }
         HoldingViewModel(
             holdingId = holdingId,
+            prefillTicker = prefillTicker,
             searchSecurities = get(),
             getStockQuote = get(),
             addHolding = get(),

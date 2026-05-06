@@ -43,6 +43,10 @@
     <string name="cd_remove_from_favourites">Remove from favourites</string>
     <string name="cd_add_to_favourites">Add to favourites</string>
     <string name="label_in_portfolio">In portfolio</string>
+    <string name="security_type_all">All</string>
+    <string name="security_type_equity">Stock</string>
+    <string name="security_type_etf">ETF</string>
+    <string name="security_type_fund">Fund</string>
     <string name="cd_clear_search">Clear search</string>
     <string name="favorites_title">Favourites</string>
     <string name="disclaimer_prices_delayed">Prices delayed 15 minutes</string>
@@ -63,7 +67,8 @@
     <string name="label_price_per_share">Price per Share</string>
     <string name="label_purchase_date">Purchase Date</string>
     <string name="label_estimated_value">Estimated Value</string>
-    <string name="search_security_hint">Search security (ticker or name)</string>
+    <string name="search_security_hint">Filter security (ticker or name)</string>
+    <string name="holding_search_security_hint">Search security (ticker or name)</string>
     <string name="dialog_remove_title">Remove Position?</string>
     <string name="dialog_remove_message">Remove %1$s from your portfolio? This cannot be undone.</string>
     <string name="cd_delete">Delete</string>

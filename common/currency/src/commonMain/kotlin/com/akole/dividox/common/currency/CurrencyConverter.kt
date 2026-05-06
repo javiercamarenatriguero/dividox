@@ -31,6 +31,9 @@ class CurrencyConverter(
      */
     suspend fun convert(amount: Double, from: Currency, to: Currency): Result<Double> {
         if (from == to) return Result.success(amount)
+        // GBX (pence) = 1/100 GBP — no exchange rate lookup needed for this step.
+        if (from == Currency.GBX) return convert(amount * 0.01, Currency.GBP, to)
+        if (to == Currency.GBX) return convert(amount, from, Currency.GBP).map { it * 100.0 }
         return getExchangeRates(from).mapCatching { rates ->
             rates.rates[to] ?: error("No exchange rate found for ${to.code} (base: ${from.code})")
         }.map { rate -> amount * rate }

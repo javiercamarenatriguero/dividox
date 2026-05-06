@@ -48,6 +48,7 @@ fun SecurityCard(
     onFavoriteToggle: () -> Unit,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    securityType: String? = null,
 ) {
     Card(
         modifier = modifier
@@ -66,11 +67,23 @@ fun SecurityCard(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = ticker,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold,
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xSmall),
+                ) {
+                    Text(
+                        text = ticker,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    if (securityType != null) {
+                        Text(
+                            text = securityType,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
                 if (companyName != null) {
                     Text(
                         text = companyName,

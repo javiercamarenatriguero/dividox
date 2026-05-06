@@ -3,6 +3,8 @@ package com.akole.dividox.feature.portfolio
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.akole.dividox.common.settings.domain.usecase.ObserveAppSettingsUseCase
+import com.akole.dividox.common.ui.resources.components.ExchangeMarket
+import com.akole.dividox.component.market.domain.model.SecurityType
 import com.akole.dividox.component.market.domain.model.StockQuote
 import com.akole.dividox.component.market.domain.usecase.GetStockQuoteUseCase
 import com.akole.dividox.component.market.domain.usecase.SearchSecuritiesUseCase
@@ -23,6 +25,7 @@ import kotlinx.coroutines.launch
 
 class HoldingViewModel(
     private val holdingId: HoldingId?,
+    private val prefillTicker: String? = null,
     private val searchSecurities: SearchSecuritiesUseCase,
     private val getStockQuote: GetStockQuoteUseCase,
     private val addHolding: AddHoldingUseCase,
@@ -32,6 +35,8 @@ class HoldingViewModel(
     private val getCurrentTimeMillis: () -> Long,
     private val observeAppSettings: ObserveAppSettingsUseCase,
 ) : ViewModel() {
+
+    private var allSearchResults: List<StockQuote> = emptyList()
 
     private val _state = MutableStateFlow(
         HoldingContract.HoldingViewState(
@@ -51,6 +56,8 @@ class HoldingViewModel(
         }
         if (holdingId != null) {
             loadExistingHolding(holdingId)
+        } else if (prefillTicker != null) {
+            prefillSecurity(prefillTicker)
         }
     }
 
@@ -59,6 +66,20 @@ class HoldingViewModel(
             is HoldingContract.HoldingViewEvent.SearchQueryChanged -> {
                 _state.value = _state.value.copy(searchQuery = event.query)
                 performSearch(event.query)
+            }
+
+            is HoldingContract.HoldingViewEvent.MarketFilterChanged -> {
+                _state.value = _state.value.copy(
+                    selectedMarket = event.market,
+                    searchResults = allSearchResults.filterByMarket(event.market).filterByType(_state.value.selectedType),
+                )
+            }
+
+            is HoldingContract.HoldingViewEvent.TypeFilterChanged -> {
+                _state.value = _state.value.copy(
+                    selectedType = event.type,
+                    searchResults = allSearchResults.filterByMarket(_state.value.selectedMarket).filterByType(event.type),
+                )
             }
 
             is HoldingContract.HoldingViewEvent.SecuritySelected -> {
@@ -138,6 +159,23 @@ class HoldingViewModel(
         }
     }
 
+    private fun prefillSecurity(ticker: String) {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(searchQuery = ticker, isSearching = true)
+            val quote = getStockQuote(ticker).getOrNull() ?: run {
+                _state.value = _state.value.copy(isSearching = false)
+                return@launch
+            }
+            _state.value = _state.value.copy(
+                selectedSecurity = quote,
+                searchQuery = ticker,
+                searchResults = emptyList(),
+                isSearching = false,
+            )
+            checkPortfolioForExistingHolding(ticker)
+        }
+    }
+
     /**
      * When the user selects a security in ADD mode, checks whether that ticker already exists
      * in the portfolio. If it does, the form is switched to EDIT mode and pre-filled with the
@@ -165,10 +203,12 @@ class HoldingViewModel(
         viewModelScope.launch {
             if (query.isNotBlank()) {
                 try {
+                    val market = _state.value.selectedMarket
                     _state.value = _state.value.copy(isSearching = true)
-                    val results = searchSecurities(query).getOrElse { emptyList() }
+                    val results = searchSecurities(query, market.region).getOrElse { emptyList() }
+                    allSearchResults = results
                     _state.value = _state.value.copy(
-                        searchResults = results,
+                        searchResults = results.filterByMarket(market).filterByType(_state.value.selectedType),
                         isSearching = false,
                     )
                 } catch (e: Exception) {
@@ -176,10 +216,17 @@ class HoldingViewModel(
                     _sideEffect.send(HoldingContract.HoldingSideEffect.ShowError(e.message ?: "Search failed"))
                 }
             } else {
+                allSearchResults = emptyList()
                 _state.value = _state.value.copy(searchResults = emptyList())
             }
         }
     }
+
+    private fun List<StockQuote>.filterByMarket(market: ExchangeMarket): List<StockQuote> =
+        if (market == ExchangeMarket.ALL) this else filter { market.matches(it.exchange) }
+
+    private fun List<StockQuote>.filterByType(type: SecurityType?): List<StockQuote> =
+        if (type == null) this else filter { it.type == type }
 
     private fun recalculateTotal() {
         val shares = _state.value.shares.toDoubleOrNull() ?: 0.0

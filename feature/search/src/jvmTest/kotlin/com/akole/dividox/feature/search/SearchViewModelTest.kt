@@ -52,7 +52,7 @@ class SearchViewModelTest {
         Dispatchers.setMain(testDispatcher)
         every { getWatchlist() } returns emptyFlow()
         every { connectivityManager.observeConnectivity() } returns emptyFlow()
-        coEvery { searchSecurities(any()) } returns Result.success(emptyList())
+        coEvery { searchSecurities(any(), null) } returns Result.success(emptyList())
         coEvery { addToWatchlist(any()) } just Runs
         coEvery { removeFromWatchlist(any()) } just Runs
     }
@@ -95,7 +95,7 @@ class SearchViewModelTest {
         advanceTimeBy(100)
 
         // THEN
-        coVerify(exactly = 0) { searchSecurities(any()) }
+        coVerify(exactly = 0) { searchSecurities(any(), null) }
     }
 
     @Test
@@ -109,7 +109,7 @@ class SearchViewModelTest {
         advanceUntilIdle()
 
         // THEN
-        coVerify { searchSecurities("AAPL") }
+        coVerify { searchSecurities("AAPL", null) }
     }
 
     @Test
@@ -127,7 +127,7 @@ class SearchViewModelTest {
         advanceUntilIdle()
 
         // THEN
-        coVerify(exactly = 1) { searchSecurities("AAPL") }
+        coVerify(exactly = 1) { searchSecurities("AAPL", null) }
     }
 
     // ─── Results ──────────────────────────────────────────────────────────────
@@ -136,7 +136,7 @@ class SearchViewModelTest {
     fun `SHOULD populate results WHEN searchSecurities returns quotes GIVEN query`() = runTest(testScheduler) {
         // GIVEN
         val quote = aQuote("AAPL")
-        coEvery { searchSecurities("AAPL") } returns Result.success(listOf(quote))
+        coEvery { searchSecurities("AAPL", null) } returns Result.success(listOf(quote))
         val vm = viewModel()
 
         // WHEN
@@ -152,7 +152,7 @@ class SearchViewModelTest {
     @Test
     fun `SHOULD clear results WHEN query is cleared GIVEN previous results`() = runTest(testScheduler) {
         // GIVEN
-        coEvery { searchSecurities("AAPL") } returns Result.success(listOf(aQuote("AAPL")))
+        coEvery { searchSecurities("AAPL", null) } returns Result.success(listOf(aQuote("AAPL")))
         val vm = viewModel()
         vm.onViewEvent(SearchViewEvent.QueryChanged("AAPL"))
         advanceTimeBy(250)

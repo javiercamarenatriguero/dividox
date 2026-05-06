@@ -26,7 +26,7 @@ internal fun List<PricePoint>.toPriceChartData(period: ChartPeriod): PriceChartD
         val label = when {
             period == ChartPeriod.ONE_DAY && dt.minute != 0 ->
                 "​".repeat(index + 1)
-            period == ChartPeriod.ONE_MONTH && dt.dayOfMonth % 5 != 0 ->
+            period == ChartPeriod.ONE_MONTH && dt.day % 5 != 0 ->
                 "​".repeat(index + 1)
             sparseLabel && reverseIndex % 2 != 0 ->
                 "​".repeat(index + 1)
@@ -45,7 +45,7 @@ private fun PricePoint.toChartLabel(period: ChartPeriod): String {
     val dt = timestamp.toLocalDateTime(TimeZone.UTC)
     return when (period) {
         ChartPeriod.ONE_DAY -> "${dt.hour}:${dt.minute.toString().padStart(2, '0')}"
-        ChartPeriod.ONE_WEEK, ChartPeriod.ONE_MONTH -> "${dt.dayOfMonth} ${dt.date.monthShort()}"
+        ChartPeriod.ONE_WEEK, ChartPeriod.ONE_MONTH -> "${dt.day} ${dt.date.monthShort()}"
         ChartPeriod.YTD, ChartPeriod.ONE_YEAR -> dt.date.monthShort()
         ChartPeriod.FIVE_YEARS -> dt.date.monthShortWithYear()
         ChartPeriod.ALL -> dt.year.toString()
@@ -54,9 +54,31 @@ private fun PricePoint.toChartLabel(period: ChartPeriod): String {
 
 private fun List<PricePoint>.thinForPeriod(period: ChartPeriod): List<PricePoint> {
     return when (period) {
+        // ONE_YEAR uses weekly data spanning 2 calendar years (e.g. Jun 2024 – May 2025).
+        // Grouping by month produces 13 groups where the boundary month name appears twice
+        // (e.g. "May" for both 2024 and 2025). Taking the last 12 guarantees 12 consecutive
+        // months with no duplicate short-name labels, so the library's chartData map size
+        // matches entries.size and the scrubber overlay stays aligned.
+        ChartPeriod.ONE_YEAR -> groupBy {
+            val dt = it.timestamp.toLocalDateTime(TimeZone.UTC)
+            "${dt.year}-${(dt.month.ordinal + 1).toString().padStart(2, '0')}"
+        }.entries.sortedBy { it.key }.takeLast(12).mapNotNull { it.value.lastOrNull() }
+
+        // YTD spans only the current calendar year — months are always unique within a year.
+        ChartPeriod.YTD -> groupBy {
+            val dt = it.timestamp.toLocalDateTime(TimeZone.UTC)
+            "${dt.year}-${(dt.month.ordinal + 1).toString().padStart(2, '0')}"
+        }.entries.sortedBy { it.key }.mapNotNull { it.value.lastOrNull() }
+
+        // ONE_WEEK uses hourly data with daily labels — deduplicate to one point per day.
+        ChartPeriod.ONE_WEEK -> groupBy {
+            val dt = it.timestamp.toLocalDateTime(TimeZone.UTC)
+            "${dt.year}-${(dt.month.ordinal + 1).toString().padStart(2, '0')}-${dt.day.toString().padStart(2, '0')}"
+        }.entries.sortedBy { it.key }.mapNotNull { it.value.lastOrNull() }
+
         ChartPeriod.FIVE_YEARS -> groupBy {
             val dt = it.timestamp.toLocalDateTime(TimeZone.UTC)
-            "${dt.year}-Q${(dt.monthNumber - 1) / 3}"
+            "${dt.year}-Q${dt.month.ordinal / 3}"
         }.entries.sortedBy { it.key }.mapNotNull { it.value.lastOrNull() }
 
         ChartPeriod.ALL -> {

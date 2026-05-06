@@ -1,5 +1,10 @@
 package com.akole.dividox.integration.security.usecase
 
+import com.akole.dividox.common.currency.CurrencyConverter
+import com.akole.dividox.common.currency.domain.model.Currency
+import com.akole.dividox.common.currency.domain.model.ExchangeRates
+import com.akole.dividox.common.currency.domain.repository.ExchangeRateRepository
+import com.akole.dividox.common.currency.domain.usecase.GetExchangeRatesUseCase
 import com.akole.dividox.component.market.domain.usecase.GetDividendInfoUseCase
 import com.akole.dividox.component.market.domain.usecase.GetMultipleQuotesUseCase
 import com.akole.dividox.component.portfolio.domain.usecase.GetPortfolioUseCase
@@ -8,6 +13,7 @@ import com.akole.dividox.integration.security.FakePortfolioRepository
 import com.akole.dividox.integration.security.domain.usecase.GetPortfolioWithQuotesUseCase
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -22,10 +28,27 @@ class GetPortfolioWithQuotesUseCaseTest {
     private val getMultipleQuotesUseCase = GetMultipleQuotesUseCase(marketRepo)
     private val getDividendInfoUseCase = GetDividendInfoUseCase(marketRepo)
 
+    // Identity rates: all currencies convert 1:1. USD↔USD short-circuits anyway.
+    private val currencyConverter = CurrencyConverter(
+        GetExchangeRatesUseCase(
+            object : ExchangeRateRepository {
+                override suspend fun getExchangeRates(base: Currency): Result<ExchangeRates> =
+                    Result.success(
+                        ExchangeRates(
+                            base = base,
+                            date = LocalDate(2024, 1, 1),
+                            rates = Currency.entries.associateWith { 1.0 },
+                        )
+                    )
+            }
+        )
+    )
+
     private val sut = GetPortfolioWithQuotesUseCase(
         getPortfolioUseCase = getPortfolioUseCase,
         getMultipleQuotesUseCase = getMultipleQuotesUseCase,
         getDividendInfoUseCase = getDividendInfoUseCase,
+        currencyConverter = currencyConverter,
     )
 
     @Test
@@ -90,16 +113,23 @@ class GetPortfolioWithQuotesUseCaseTest {
 
     @Test
     fun `SHOULD exclude holding WHEN quote fetch fails GIVEN unavailable ticker`() = runTest {
-        // GIVEN — quote not registered → getMultipleQuotes returns empty
-        val holding = FakePortfolioRepository.holding(tickerId = "UNKNOWN")
-        portfolioRepo.setHoldings(listOf(holding))
-        // No quote set for UNKNOWN — FakeMarketRepository.getMultipleQuotes returns empty list
+        // GIVEN — two holdings, only AAPL has a quote; UNKNOWN is excluded from the result
+        portfolioRepo.setHoldings(
+            listOf(
+                FakePortfolioRepository.holding(id = "h1", tickerId = "AAPL", shares = 10.0, purchasePrice = 100.0),
+                FakePortfolioRepository.holding(id = "h2", tickerId = "UNKNOWN", shares = 5.0, purchasePrice = 50.0),
+            ),
+        )
+        marketRepo.setQuote("AAPL", FakeMarketRepository.quote(ticker = "AAPL", price = 150.0))
+        marketRepo.setDividendInfo("AAPL", FakeMarketRepository.dividendInfo("AAPL"))
+        // No quote set for UNKNOWN → excluded by filter in GetPortfolioWithQuotesUseCase
 
         // WHEN
         val result = sut().first()
 
-        // THEN — no SecurityHolding emitted because quote is missing
-        assertTrue(result.isEmpty())
+        // THEN — only AAPL holding emitted; UNKNOWN is excluded because its quote is missing
+        assertEquals(1, result.size)
+        assertEquals("AAPL", result.first().holding.tickerId)
     }
 
     @Test

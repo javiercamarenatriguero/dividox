@@ -30,6 +30,7 @@ fun SearchBar(
     placeholder: String,
     modifier: Modifier = Modifier,
     autoFocus: Boolean = false,
+    enabled: Boolean = true,
 ) {
     val focusRequester = remember { FocusRequester() }
     if (autoFocus) {
@@ -38,6 +39,7 @@ fun SearchBar(
     TextField(
         value = query,
         onValueChange = onQueryChange,
+        enabled = enabled,
         modifier = modifier.fillMaxWidth().focusRequester(focusRequester),
         placeholder = {
             Text(
@@ -72,6 +74,7 @@ fun SearchBar(
             disabledIndicatorColor = Color.Transparent,
             focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
             unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         ),
         textStyle = MaterialTheme.typography.bodyMedium,
     )

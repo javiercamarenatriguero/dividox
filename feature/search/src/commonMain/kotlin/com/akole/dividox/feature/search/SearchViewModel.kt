@@ -13,9 +13,13 @@ import com.akole.dividox.feature.search.SearchContract.SearchSideEffect
 import com.akole.dividox.feature.search.SearchContract.SearchViewEvent
 import com.akole.dividox.feature.search.SearchContract.SearchViewEvent.BackClicked
 import com.akole.dividox.feature.search.SearchContract.SearchViewEvent.FavouriteToggled
+import com.akole.dividox.feature.search.SearchContract.SearchViewEvent.MarketFilterChanged
 import com.akole.dividox.feature.search.SearchContract.SearchViewEvent.QueryChanged
 import com.akole.dividox.feature.search.SearchContract.SearchViewEvent.SecurityClicked
 import com.akole.dividox.feature.search.SearchContract.SearchViewState
+import com.akole.dividox.component.market.domain.model.SecurityType
+import com.akole.dividox.component.market.domain.model.StockQuote
+import com.akole.dividox.feature.search.SearchContract.SearchViewEvent.TypeFilterChanged
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
@@ -31,6 +35,7 @@ class SearchViewModel(
     MVI<SearchViewState, SearchViewEvent, SearchSideEffect> by mvi(SearchViewState()) {
 
     private val queryFlow = MutableStateFlow("")
+    private var allResults: List<StockQuote> = emptyList()
 
     init {
         observeSearch()
@@ -44,6 +49,22 @@ class SearchViewModel(
                 updateViewState { copy(query = viewEvent.query) }
                 queryFlow.value = viewEvent.query
             }
+            is MarketFilterChanged -> {
+                updateViewState {
+                    copy(
+                        selectedMarket = viewEvent.market,
+                        results = allResults.filterByMarket(viewEvent.market).filterByType(selectedType),
+                    )
+                }
+            }
+            is TypeFilterChanged -> {
+                updateViewState {
+                    copy(
+                        selectedType = viewEvent.type,
+                        results = allResults.filterByMarket(selectedMarket).filterByType(viewEvent.type),
+                    )
+                }
+            }
             is FavouriteToggled -> toggleFavourite(viewEvent.ticker)
             is SecurityClicked -> viewModelScope.emitSideEffect(
                 SearchSideEffect.Navigation.NavigateToSecurity(viewEvent.ticker)
@@ -56,20 +77,31 @@ class SearchViewModel(
         viewModelScope.launch {
             queryFlow.debounce(250L).collectLatest { query ->
                 if (query.isBlank()) {
+                    allResults = emptyList()
                     updateViewState { copy(results = emptyList(), isLoading = false, error = null) }
                     return@collectLatest
                 }
                 updateViewState { copy(isLoading = true, error = null) }
-                searchSecurities(query)
+                val market = viewState.value.selectedMarket
+                searchSecurities(query, market.region)
                     .onSuccess { results ->
-                        updateViewState { copy(results = results, isLoading = false) }
+                        allResults = results
+                        val type = viewState.value.selectedType
+                        updateViewState { copy(results = results.filterByMarket(market).filterByType(type), isLoading = false) }
                     }
                     .onFailure { e ->
+                        allResults = emptyList()
                         updateViewState { copy(results = emptyList(), isLoading = false, error = e.message) }
                     }
             }
         }
     }
+
+    private fun List<StockQuote>.filterByMarket(market: ExchangeMarket): List<StockQuote> =
+        if (market == ExchangeMarket.ALL) this else filter { market.matches(it.exchange) }
+
+    private fun List<StockQuote>.filterByType(type: SecurityType?): List<StockQuote> =
+        if (type == null) this else filter { it.type == type }
 
     private fun observeWatchlist() {
         viewModelScope.launch {

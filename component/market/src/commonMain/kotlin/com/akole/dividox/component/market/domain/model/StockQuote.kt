@@ -13,6 +13,8 @@ data class StockQuote(
     val name: String? = null,
     /** Exchange display name (e.g. "NASDAQ", "NYSE"), populated only from search results. */
     val exchange: String? = null,
+    /** Security type for filtering and display. Null for plain equities. */
+    val type: SecurityType? = null,
     val fiftyTwoWeekHigh: Double? = null,
     val fiftyTwoWeekLow: Double? = null,
     val volume: Long? = null,
