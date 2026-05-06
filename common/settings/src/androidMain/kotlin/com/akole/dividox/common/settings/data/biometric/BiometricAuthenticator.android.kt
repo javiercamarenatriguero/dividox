@@ -6,6 +6,10 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
 actual class BiometricAuthenticator {
+    actual fun canAuthenticate(): Boolean {
+        return ActivityHolder.get() != null
+    }
+
     actual suspend fun authenticate(): BiometricResult {
         val activity = ActivityHolder.get()
             ?: return BiometricResult.NotAvailable

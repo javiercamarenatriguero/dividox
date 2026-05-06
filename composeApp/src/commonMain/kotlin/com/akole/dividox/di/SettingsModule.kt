@@ -18,4 +18,10 @@ val settingsModule = module {
     single { BiometricAuthenticator() }
     factory { ObserveAppSettingsUseCase(get()) }
     factory { SetCurrencyUseCase(get()) }
+    factory { UpdateBiometricLockUseCase(get(), get()) }
 }
+
+private class UpdateBiometricLockUseCase(
+    dataStore: AppSettingsDataStore,
+    authenticator: BiometricAuthenticator,
+) : com.akole.dividox.common.settings.domain.usecase.UpdateBiometricLockUseCase(dataStore, authenticator)

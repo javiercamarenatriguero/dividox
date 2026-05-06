@@ -3,6 +3,7 @@ package com.akole.dividox.common.settings.data.datastore
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.akole.dividox.common.settings.domain.datastore.AppSettingsDataStore
 import com.akole.dividox.common.settings.domain.model.AppSettings
@@ -15,6 +16,7 @@ class AppSettingsDataStoreImpl(
 ) : AppSettingsDataStore {
 
     private val currencyKey = stringPreferencesKey(KEY_CURRENCY)
+    private val biometricLockKey = booleanPreferencesKey(KEY_BIOMETRIC_LOCK)
 
     override fun observe(): Flow<AppSettings> =
         dataStore.data.map { prefs ->
@@ -22,7 +24,8 @@ class AppSettingsDataStoreImpl(
             val currency = currencyCode?.let { code ->
                 Currency.entries.firstOrNull { it.code == code }
             } ?: AppSettings().currency
-            AppSettings(currency = currency)
+            val biometricLockEnabled = prefs[biometricLockKey] ?: false
+            AppSettings(currency = currency, biometricLockEnabled = biometricLockEnabled)
         }
 
     override suspend fun setCurrency(currency: Currency) {
@@ -31,7 +34,14 @@ class AppSettingsDataStoreImpl(
         }
     }
 
+    override suspend fun setBiometricLock(enabled: Boolean) {
+        dataStore.edit { prefs ->
+            prefs[biometricLockKey] = enabled
+        }
+    }
+
     companion object {
         private const val KEY_CURRENCY = "currency"
+        private const val KEY_BIOMETRIC_LOCK = "biometric_lock_enabled"
     }
 }
