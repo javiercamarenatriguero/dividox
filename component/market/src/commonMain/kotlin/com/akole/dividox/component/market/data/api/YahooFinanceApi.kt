@@ -50,10 +50,12 @@ internal class YahooFinanceApi(
      *
      * @param query Free-text search string (ticker or company name).
      */
-    suspend fun search(query: String): SearchResponseDto =
+    suspend fun search(query: String, region: String? = null): SearchResponseDto =
         client.get("https://query1.finance.yahoo.com/v1/finance/search") {
             parameter("q", query)
             parameter("quotesCount", 10)
             parameter("newsCount", 0)
+            parameter("enableFuzzyQuery", true)
+            if (region != null) parameter("region", region)
         }.body()
 }

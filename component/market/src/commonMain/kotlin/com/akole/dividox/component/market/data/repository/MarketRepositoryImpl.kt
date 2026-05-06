@@ -133,9 +133,9 @@ class MarketRepositoryImpl(
             emit(result?.toPricePoints() ?: emptyList())
         }.flowOn(ioDispatcher)
 
-    override suspend fun searchSecurities(query: String): Result<List<StockQuote>> = withContext(ioDispatcher) {
+    override suspend fun searchSecurities(query: String, region: String?): Result<List<StockQuote>> = withContext(ioDispatcher) {
         runCatching {
-            val dto = api.search(query)
+            val dto = api.search(query, region)
             val acceptedTypes = setOf("EQUITY", "ETF", "MUTUALFUND")
             dto.quotes
                 ?.filter { it.quoteType?.uppercase() in acceptedTypes }

@@ -13,12 +13,14 @@ interface SearchContract {
         val watchlistedTickers: Set<String> = emptySet(),
         val isLoading: Boolean = false,
         val error: String? = null,
+        val selectedMarket: ExchangeMarket = ExchangeMarket.ALL,
     ) : ViewState
 
     sealed interface SearchViewEvent : ViewEvent {
         data class QueryChanged(val query: String) : SearchViewEvent
         data class FavouriteToggled(val ticker: String) : SearchViewEvent
         data class SecurityClicked(val ticker: String) : SearchViewEvent
+        data class MarketFilterChanged(val market: ExchangeMarket) : SearchViewEvent
         data object BackClicked : SearchViewEvent
     }
 

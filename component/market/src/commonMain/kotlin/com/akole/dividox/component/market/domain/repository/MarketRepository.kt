@@ -32,5 +32,5 @@ interface MarketRepository {
     ): Result<List<MarketDividendEvent>>
 
     fun getPriceHistory(ticker: String, period: ChartPeriod): Flow<List<PricePoint>>
-    suspend fun searchSecurities(query: String): Result<List<StockQuote>>
+    suspend fun searchSecurities(query: String, region: String? = null): Result<List<StockQuote>>
 }

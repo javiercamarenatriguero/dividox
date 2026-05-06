@@ -1,13 +1,16 @@
 package com.akole.dividox.feature.search
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -29,6 +32,7 @@ import com.akole.dividox.feature.search.SearchContract.SearchSideEffect.Navigati
 import com.akole.dividox.feature.search.SearchContract.SearchViewEvent
 import com.akole.dividox.feature.search.SearchContract.SearchViewEvent.BackClicked
 import com.akole.dividox.feature.search.SearchContract.SearchViewEvent.FavouriteToggled
+import com.akole.dividox.feature.search.SearchContract.SearchViewEvent.MarketFilterChanged
 import com.akole.dividox.feature.search.SearchContract.SearchViewEvent.QueryChanged
 import com.akole.dividox.feature.search.SearchContract.SearchViewEvent.SecurityClicked
 import com.akole.dividox.feature.search.SearchContract.SearchViewState
@@ -84,6 +88,21 @@ fun SearchScreen(
                         ),
                     autoFocus = true,
                 )
+            }
+
+            item {
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = MaterialTheme.spacing.medium),
+                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
+                ) {
+                    items(ExchangeMarket.entries, key = { it.name }) { market ->
+                        FilterChip(
+                            selected = state.selectedMarket == market,
+                            onClick = { onEvent(MarketFilterChanged(market)) },
+                            label = { Text("${market.emoji} ${market.label}") },
+                        )
+                    }
+                }
             }
 
             when {

@@ -50,6 +50,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.akole.dividox.common.currency.domain.model.Currency
 import com.akole.dividox.common.ui.resources.components.DividoxTopAppBar
+import com.akole.dividox.common.ui.resources.components.SearchBar
 import com.akole.dividox.common.ui.resources.components.connectivity.ConnectivityBannerHost
 import com.akole.dividox.common.ui.resources.components.connectivity.LocalNetworkConnectivityManager
 import com.akole.dividox.common.ui.resources.format.formatPrice
@@ -301,12 +302,11 @@ private fun SearchSecurityField(
     onSecuritySelected: (StockQuote) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small)) {
-        OutlinedTextField(
-            value = query,
-            onValueChange = onQueryChanged,
-            label = { Text(stringResource(Res.string.holding_search_security_hint)) },
+        SearchBar(
+            query = query,
+            onQueryChange = onQueryChanged,
+            placeholder = stringResource(Res.string.holding_search_security_hint),
             modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
             enabled = selectedSecurity == null,
         )
 
