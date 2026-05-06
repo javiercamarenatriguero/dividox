@@ -1,5 +1,6 @@
 package com.akole.dividox.integration.security.domain.usecase
 
+import com.akole.dividox.common.currency.CurrencyConverter
 import com.akole.dividox.common.currency.domain.model.Currency
 import com.akole.dividox.component.market.domain.model.StockQuote
 import com.akole.dividox.component.market.domain.usecase.GetDividendInfoUseCase
@@ -36,6 +37,7 @@ class GetPortfolioWithQuotesUseCase(
     private val getPortfolioUseCase: GetPortfolioUseCase,
     private val getMultipleQuotesUseCase: GetMultipleQuotesUseCase,
     private val getDividendInfoUseCase: GetDividendInfoUseCase,
+    private val currencyConverter: CurrencyConverter,
 ) {
     operator fun invoke(): Flow<List<SecurityHolding>> =
         getPortfolioUseCase.execute()
@@ -63,17 +65,17 @@ class GetPortfolioWithQuotesUseCase(
                                 async {
                                     val quote = quoteByTicker[holding.tickerId]!!
                                     val dividendInfo = getDividendInfoUseCase(holding.tickerId).getOrNull()
-                                    val rawCostBasis = holding.shares * holding.purchasePrice
-                                    // Normalize GBX (pence) to GBP so gain% is comparable to the
-                                    // normalized quote price (always in GBP after ChartMapper fix).
-                                    val costBasis = if (holding.purchaseCurrency == Currency.GBX) {
-                                        rawCostBasis * 0.01
-                                    } else {
-                                        rawCostBasis
-                                    }
-                                    val currentValue = holding.shares * quote.price
-                                    val totalGainPercent = if (costBasis != 0.0) {
-                                        (currentValue - costBasis) / costBasis * 100.0
+                                    // Normalize purchase price to quote.currency so gain% is
+                                    // comparable regardless of the currency the user bought in.
+                                    val quoteCurrency = Currency.entries
+                                        .firstOrNull { it.code == quote.currency } ?: Currency.USD
+                                    val purchasePriceNorm = currencyConverter.convert(
+                                        holding.purchasePrice,
+                                        holding.purchaseCurrency,
+                                        quoteCurrency,
+                                    ).getOrElse { holding.purchasePrice }
+                                    val totalGainPercent = if (purchasePriceNorm != 0.0) {
+                                        (quote.price - purchasePriceNorm) / purchasePriceNorm * 100.0
                                     } else {
                                         0.0
                                     }

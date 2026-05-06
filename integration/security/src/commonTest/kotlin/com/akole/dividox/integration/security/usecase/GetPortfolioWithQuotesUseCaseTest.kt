@@ -1,5 +1,10 @@
 package com.akole.dividox.integration.security.usecase
 
+import com.akole.dividox.common.currency.CurrencyConverter
+import com.akole.dividox.common.currency.domain.model.Currency
+import com.akole.dividox.common.currency.domain.model.ExchangeRates
+import com.akole.dividox.common.currency.domain.repository.ExchangeRateRepository
+import com.akole.dividox.common.currency.domain.usecase.GetExchangeRatesUseCase
 import com.akole.dividox.component.market.domain.usecase.GetDividendInfoUseCase
 import com.akole.dividox.component.market.domain.usecase.GetMultipleQuotesUseCase
 import com.akole.dividox.component.portfolio.domain.usecase.GetPortfolioUseCase
@@ -8,6 +13,7 @@ import com.akole.dividox.integration.security.FakePortfolioRepository
 import com.akole.dividox.integration.security.domain.usecase.GetPortfolioWithQuotesUseCase
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -22,10 +28,27 @@ class GetPortfolioWithQuotesUseCaseTest {
     private val getMultipleQuotesUseCase = GetMultipleQuotesUseCase(marketRepo)
     private val getDividendInfoUseCase = GetDividendInfoUseCase(marketRepo)
 
+    // Identity rates: all currencies convert 1:1. USD↔USD short-circuits anyway.
+    private val currencyConverter = CurrencyConverter(
+        GetExchangeRatesUseCase(
+            object : ExchangeRateRepository {
+                override suspend fun getExchangeRates(base: Currency): Result<ExchangeRates> =
+                    Result.success(
+                        ExchangeRates(
+                            base = base,
+                            date = LocalDate(2024, 1, 1),
+                            rates = Currency.entries.associateWith { 1.0 },
+                        )
+                    )
+            }
+        )
+    )
+
     private val sut = GetPortfolioWithQuotesUseCase(
         getPortfolioUseCase = getPortfolioUseCase,
         getMultipleQuotesUseCase = getMultipleQuotesUseCase,
         getDividendInfoUseCase = getDividendInfoUseCase,
+        currencyConverter = currencyConverter,
     )
 
     @Test

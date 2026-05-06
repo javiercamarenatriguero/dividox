@@ -23,12 +23,6 @@ class GetPortfolioSummaryUseCaseTest {
     private val portfolioRepo = FakePortfolioRepository()
     private val marketRepo = FakeMarketRepository()
 
-    private val getPortfolioWithQuotesUseCase = GetPortfolioWithQuotesUseCase(
-        getPortfolioUseCase = GetPortfolioUseCase(portfolioRepo),
-        getMultipleQuotesUseCase = GetMultipleQuotesUseCase(marketRepo),
-        getDividendInfoUseCase = GetDividendInfoUseCase(marketRepo),
-    )
-
     // Identity rates — returns 1:1 for all pairs. USD→USD short-circuits before calling this.
     private val currencyConverter = CurrencyConverter(
         GetExchangeRatesUseCase(
@@ -43,6 +37,13 @@ class GetPortfolioSummaryUseCaseTest {
                     )
             }
         )
+    )
+
+    private val getPortfolioWithQuotesUseCase = GetPortfolioWithQuotesUseCase(
+        getPortfolioUseCase = GetPortfolioUseCase(portfolioRepo),
+        getMultipleQuotesUseCase = GetMultipleQuotesUseCase(marketRepo),
+        getDividendInfoUseCase = GetDividendInfoUseCase(marketRepo),
+        currencyConverter = currencyConverter,
     )
 
     private val sut = GetPortfolioSummaryUseCase(getPortfolioWithQuotesUseCase, currencyConverter)
