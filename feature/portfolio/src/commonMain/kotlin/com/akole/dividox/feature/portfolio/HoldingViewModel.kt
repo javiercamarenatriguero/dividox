@@ -3,6 +3,7 @@ package com.akole.dividox.feature.portfolio
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.akole.dividox.common.settings.domain.usecase.ObserveAppSettingsUseCase
+import com.akole.dividox.common.ui.resources.components.ExchangeMarket
 import com.akole.dividox.component.market.domain.model.StockQuote
 import com.akole.dividox.component.market.domain.usecase.GetStockQuoteUseCase
 import com.akole.dividox.component.market.domain.usecase.SearchSecuritiesUseCase
@@ -34,6 +35,8 @@ class HoldingViewModel(
     private val observeAppSettings: ObserveAppSettingsUseCase,
 ) : ViewModel() {
 
+    private var allSearchResults: List<StockQuote> = emptyList()
+
     private val _state = MutableStateFlow(
         HoldingContract.HoldingViewState(
             mode = if (holdingId != null) HoldingContract.Mode.EDIT else HoldingContract.Mode.ADD,
@@ -62,6 +65,13 @@ class HoldingViewModel(
             is HoldingContract.HoldingViewEvent.SearchQueryChanged -> {
                 _state.value = _state.value.copy(searchQuery = event.query)
                 performSearch(event.query)
+            }
+
+            is HoldingContract.HoldingViewEvent.MarketFilterChanged -> {
+                _state.value = _state.value.copy(
+                    selectedMarket = event.market,
+                    searchResults = allSearchResults.filterByMarket(event.market),
+                )
             }
 
             is HoldingContract.HoldingViewEvent.SecuritySelected -> {
@@ -185,10 +195,12 @@ class HoldingViewModel(
         viewModelScope.launch {
             if (query.isNotBlank()) {
                 try {
+                    val market = _state.value.selectedMarket
                     _state.value = _state.value.copy(isSearching = true)
-                    val results = searchSecurities(query).getOrElse { emptyList() }
+                    val results = searchSecurities(query, market.region).getOrElse { emptyList() }
+                    allSearchResults = results
                     _state.value = _state.value.copy(
-                        searchResults = results,
+                        searchResults = results.filterByMarket(market),
                         isSearching = false,
                     )
                 } catch (e: Exception) {
@@ -196,10 +208,14 @@ class HoldingViewModel(
                     _sideEffect.send(HoldingContract.HoldingSideEffect.ShowError(e.message ?: "Search failed"))
                 }
             } else {
+                allSearchResults = emptyList()
                 _state.value = _state.value.copy(searchResults = emptyList())
             }
         }
     }
+
+    private fun List<StockQuote>.filterByMarket(market: ExchangeMarket): List<StockQuote> =
+        if (market == ExchangeMarket.ALL) this else filter { market.matches(it.exchange) }
 
     private fun recalculateTotal() {
         val shares = _state.value.shares.toDoubleOrNull() ?: 0.0

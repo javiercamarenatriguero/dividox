@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -50,6 +51,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.akole.dividox.common.currency.domain.model.Currency
 import com.akole.dividox.common.ui.resources.components.DividoxTopAppBar
+import com.akole.dividox.common.ui.resources.components.ExchangeMarket
+import com.akole.dividox.common.ui.resources.components.MarketFilterRow
 import com.akole.dividox.common.ui.resources.components.SearchBar
 import com.akole.dividox.common.ui.resources.components.connectivity.ConnectivityBannerHost
 import com.akole.dividox.common.ui.resources.components.connectivity.LocalNetworkConnectivityManager
@@ -174,9 +177,13 @@ private fun HoldingScreenContent(
             query = state.searchQuery,
             results = state.searchResults,
             selectedSecurity = state.selectedSecurity,
+            selectedMarket = state.selectedMarket,
             isLoading = state.isSearching,
             onQueryChanged = { query ->
                 onEvent(HoldingContract.HoldingViewEvent.SearchQueryChanged(query))
+            },
+            onMarketSelected = { market ->
+                onEvent(HoldingContract.HoldingViewEvent.MarketFilterChanged(market))
             },
             onSecuritySelected = { quote ->
                 onEvent(HoldingContract.HoldingViewEvent.SecuritySelected(quote))
@@ -297,8 +304,10 @@ private fun SearchSecurityField(
     query: String,
     results: List<StockQuote>,
     selectedSecurity: StockQuote?,
+    selectedMarket: ExchangeMarket,
     isLoading: Boolean,
     onQueryChanged: (String) -> Unit,
+    onMarketSelected: (ExchangeMarket) -> Unit,
     onSecuritySelected: (StockQuote) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small)) {
@@ -309,6 +318,13 @@ private fun SearchSecurityField(
             modifier = Modifier.fillMaxWidth(),
             enabled = selectedSecurity == null,
         )
+        if (selectedSecurity == null) {
+            MarketFilterRow(
+                selectedMarket = selectedMarket,
+                onMarketSelected = onMarketSelected,
+                contentPadding = PaddingValues(0.dp),
+            )
+        }
 
         if (isLoading) {
             CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
