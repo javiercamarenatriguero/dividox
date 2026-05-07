@@ -30,6 +30,7 @@ internal fun projectUpcomingPayments(
                     paymentDate = nextDate,
                 ),
                 companyInfo = last.companyInfo,
+                dividendInfo = last.dividendInfo,
             )
             nextDate = nextDate.plus(intervalDays, DateTimeUnit.DAY)
             count++

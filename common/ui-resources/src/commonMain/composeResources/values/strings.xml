@@ -80,6 +80,8 @@
     <string name="dividends_title">Dividend Activity</string>
     <string name="dividends_tap_to_retry">Tap to retry</string>
     <string name="dividends_section_upcoming">Upcoming Payments</string>
+    <string name="dividends_ex_date">Ex-date</string>
+    <string name="dividends_pay_date">Payment</string>
     <string name="dividends_show_more">Show %1$d more</string>
     <string name="dividends_show_less">Show less</string>
     <string name="dividends_section_past_activity">Past Activity</string>
