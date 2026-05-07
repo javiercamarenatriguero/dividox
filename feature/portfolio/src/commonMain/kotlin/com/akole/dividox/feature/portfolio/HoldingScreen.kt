@@ -50,6 +50,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.akole.dividox.common.currency.domain.model.Currency
@@ -438,11 +439,13 @@ private fun SelectedSecurityCard(security: StockQuote) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = security.displayName,
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
                 Text(
                     text = security.price.formatPrice("USD"),
@@ -455,11 +458,12 @@ private fun SelectedSecurityCard(security: StockQuote) {
                     else -> "${security.change.formatTwoDecimals()}%"
                 },
                 style = MaterialTheme.typography.labelSmall,
-                color = if (security.change >= 0) 
-                    MaterialTheme.colorScheme.tertiary 
-                else 
+                color = if (security.change >= 0)
+                    MaterialTheme.colorScheme.tertiary
+                else
                     MaterialTheme.colorScheme.error,
                 fontWeight = FontWeight.Bold,
+                maxLines = 1,
             )
         }
     }

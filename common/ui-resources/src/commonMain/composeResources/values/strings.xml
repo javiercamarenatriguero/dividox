@@ -58,9 +58,12 @@
     <string name="portfolio_add_holding">Add holding</string>
     <string name="portfolio_empty_state">No holdings yet.\nTap + to add your first one.</string>
     <string name="portfolio_sort_gain">Gain</string>
+    <string name="portfolio_sort_value">Value</string>
     <string name="portfolio_sort_yield">Dividend</string>
     <string name="portfolio_sort_date">Date</string>
     <string name="portfolio_edit">Edit</string>
+    <string name="portfolio_purchase_price">Purchase</string>
+    <string name="portfolio_per_share">/share</string>
     <string name="portfolio_shares_format">%1$s shares</string>
     <string name="portfolio_yield_label">Dividend Yield: %1$s</string>
     <string name="action_add_position">Add Position</string>

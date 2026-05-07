@@ -37,7 +37,8 @@ interface PortfolioContract {
 
 enum class SortField {
     GAIN,
-    YIELD,
+    VALUE,
+    DIVIDEND,
     DATE,
 }
 

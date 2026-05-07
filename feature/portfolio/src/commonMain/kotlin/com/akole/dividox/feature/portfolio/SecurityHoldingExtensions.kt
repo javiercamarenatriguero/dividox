@@ -16,7 +16,8 @@ internal fun List<SecurityHolding>.filterByQuery(query: String): List<SecurityHo
 internal fun List<SecurityHolding>.sortBy(sortOrder: SortOrder): List<SecurityHolding> {
     val comparator: Comparator<SecurityHolding> = when (sortOrder.field) {
         SortField.GAIN -> compareBy { it.totalGainPercent }
-        SortField.YIELD -> compareBy { it.dividendInfo?.yield ?: 0.0 }
+        SortField.VALUE -> compareBy { it.holding.shares * it.quote.price }
+        SortField.DIVIDEND -> compareBy { it.dividendInfo?.yield ?: 0.0 }
         SortField.DATE -> compareBy { it.holding.purchaseDate }
     }
     return if (sortOrder.ascending) sortedWith(comparator) else sortedWith(comparator.reversed())
