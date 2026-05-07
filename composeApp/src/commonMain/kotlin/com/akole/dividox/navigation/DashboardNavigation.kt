@@ -33,7 +33,7 @@ fun NavGraphBuilder.dashboardScreenNode(navController: NavController, rootNavCon
                     is DashboardSideEffect.Navigation.NavigateToSecurity ->
                         rootNavController.navigateToSecurityDetail(ticker = navigation.ticker)
                     DashboardSideEffect.Navigation.NavigateToFavorites ->
-                        navController.navigate(FavoritesRoute)
+                        rootNavController.navigateToFavorites()
                 }
             },
         )

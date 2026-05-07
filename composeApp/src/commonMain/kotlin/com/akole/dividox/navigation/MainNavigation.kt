@@ -141,7 +141,6 @@ fun NavGraphBuilder.mainGraphNode(rootNavController: NavController) {
                     onRegisterFabClick = { callback -> portfolioFabClick = callback },
                 )
                 dividendsScreenNode(navController = innerNavController, rootNavController = rootNavController)
-                favoritesScreenNode(navController = innerNavController, rootNavController = rootNavController)
                 settingsScreenNode(navController = innerNavController, rootNavController = rootNavController)
             }
         }
@@ -182,7 +181,7 @@ fun NavGraphBuilder.settingsScreenNode(navController: NavController, rootNavCont
             viewModel.sideEffect.collect { effect ->
                 when (effect) {
                     is SettingsViewSideEffect.Navigation.NavigateToFavorites ->
-                        rootNavController.navigate(FavoritesRoute)
+                        rootNavController.navigateToFavorites()
                     is SettingsViewSideEffect.Navigation.NavigateToLogin ->
                         rootNavController.navigate(LoginRoute) {
                             popUpTo(0) { inclusive = true }
