@@ -34,6 +34,12 @@ fun NavGraphBuilder.dashboardScreenNode(navController: NavController, rootNavCon
                         rootNavController.navigateToSecurityDetail(ticker = navigation.ticker)
                     DashboardSideEffect.Navigation.NavigateToFavorites ->
                         rootNavController.navigateToFavorites()
+                    DashboardSideEffect.Navigation.NavigateToPortfolio ->
+                        navController.navigate(PortfolioRoute) {
+                            popUpTo(navController.graph.startDestinationId) { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                 }
             },
         )

@@ -27,6 +27,8 @@ interface DashboardContract {
         val lifetimeDividends: Double = 0.0,
         val totalGainPercent: Double = 0.0,
         val totalGainAbsolute: Double = 0.0,
+        val topGainers: List<PortfolioTodayItem> = emptyList(),
+        val topLosers: List<PortfolioTodayItem> = emptyList(),
     ) : ViewState
 
     sealed interface DashboardViewEvent : ViewEvent {
@@ -35,6 +37,7 @@ interface DashboardContract {
         data class FavouriteToggled(val ticker: String) : DashboardViewEvent
         data class SecurityClicked(val ticker: String) : DashboardViewEvent
         data object ViewAllFavouritesClicked : DashboardViewEvent
+        data object ViewAllPortfolioClicked : DashboardViewEvent
         data object Refresh : DashboardViewEvent
     }
 
@@ -42,9 +45,18 @@ interface DashboardContract {
         sealed interface Navigation : DashboardSideEffect {
             data class NavigateToSecurity(val ticker: String) : Navigation
             data object NavigateToFavorites : Navigation
+            data object NavigateToPortfolio : Navigation
         }
     }
 }
+
+data class PortfolioTodayItem(
+    val ticker: String,
+    val name: String?,
+    val changePercent: Double,
+    val price: Double,
+    val currency: Currency,
+)
 
 enum class ChartPeriod(val label: String) {
     ONE_DAY("1D"),

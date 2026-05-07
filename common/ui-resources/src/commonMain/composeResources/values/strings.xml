@@ -35,7 +35,10 @@
     <string name="metric_invested">Invested</string>
     <string name="metric_total_gain">Total Gain</string>
     <string name="metric_yield">Dividend Yield</string>
-    <string name="metric_period_gain">Return</string>
+    <string name="metric_period_gain">Portfolio</string>
+    <string name="dashboard_portfolio_today">Your Portfolio Today</string>
+    <string name="dashboard_gainers">Gainers</string>
+    <string name="dashboard_losers">Losers</string>
     <string name="metric_dividends">Dividends</string>
     <string name="metric_dividends_lifetime">total</string>
     <string name="section_favourites">Favourites</string>
