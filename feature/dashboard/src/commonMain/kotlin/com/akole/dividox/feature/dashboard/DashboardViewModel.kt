@@ -24,6 +24,7 @@ import com.akole.dividox.integration.dividend.domain.usecase.GetPeriodDividendsU
 import com.akole.dividox.integration.dividend.domain.usecase.ObservePortfolioChangesUseCase
 import com.akole.dividox.integration.dividend.domain.usecase.SyncDividendHistoryFromHoldingsUseCase
 import com.akole.dividox.integration.security.domain.usecase.GetEnrichedWatchlistUseCase
+import com.akole.dividox.component.market.domain.model.ChartPeriod as MarketChartPeriod
 import com.akole.dividox.integration.security.domain.usecase.GetPortfolioPeriodGainUseCase
 import com.akole.dividox.integration.security.domain.usecase.GetPortfolioSummaryUseCase
 import com.akole.dividox.integration.security.domain.usecase.GetPortfolioWithQuotesUseCase
@@ -60,10 +61,11 @@ class DashboardViewModel(
     MVI<DashboardViewState, DashboardViewEvent, DashboardSideEffect> by mvi(DashboardViewState()) {
 
     private var dataJob: Job? = null
-    private val periodFlow = MutableStateFlow(ChartPeriod.ALL)
+    private val periodFlow = MutableStateFlow(ChartPeriod.ONE_YEAR)
     // Internal flows updated by separate coroutines so slow API calls don't block main UI data
     private val summaryFlow = MutableStateFlow<PortfolioSummary?>(null)         // null until portfolio API calls complete
     private val periodGainFlow = MutableStateFlow<Pair<Double, Double>?>(null)  // null until first gain result
+    private val totalGainFlow = MutableStateFlow<Pair<Double, Double>?>(null)   // all-time gain, never period-affected
     private val periodDividendsFlow = MutableStateFlow(0.0)   // USD, unconverted
     private val lifetimeDividendsFlow = MutableStateFlow(0.0) // USD, unconverted
 
@@ -146,24 +148,36 @@ class DashboardViewModel(
                 }
             }
 
+            // 3b. Total (all-time) gain — fixed, independent of period selection.
+            launch {
+                portfolioShared.collectLatest { holdings ->
+                    val (abs, pct) = getPortfolioPeriodGain(holdings, MarketChartPeriod.ALL)
+                    totalGainFlow.value = abs to pct
+                }
+            }
+
             // 4. Main combine — skeleton stays until summaryFlow has its first real value.
             val dividendPairFlow =
                 combine(periodDividendsFlow, lifetimeDividendsFlow) { period, lifetime -> period to lifetime }
+            val allGainsFlow = combine(periodGainFlow, totalGainFlow) { period, total -> period to total }
             combine(
                 summaryFlow,
                 getEnrichedWatchlist(),
                 observeAppSettings(),
                 dividendPairFlow,
-                periodGainFlow,
-            ) { summary, watchlist, settings, dividendPair, gainPair ->
+                allGainsFlow,
+            ) { summary, watchlist, settings, dividendPair, gainsPair ->
                 val (dividends, lifetime) = dividendPair
-                val gainAbs = gainPair?.first ?: 0.0
-                val gainPct = gainPair?.second ?: 0.0
+                val (periodGain, totalGain) = gainsPair
+                val gainAbs = periodGain?.first ?: 0.0
+                val gainPct = periodGain?.second ?: 0.0
+                val totalGainAbs = totalGain?.first ?: 0.0
+                val totalGainPct = totalGain?.second ?: 0.0
                 val targetCurrency = settings.currency
                 val convertedSummary = summary?.let { currencyConverter.convertSummary(it, targetCurrency) }
                 val convertedWatchlistPrices = currencyConverter.convertWatchlistPrices(watchlist, targetCurrency)
                 viewState.value.copy(
-                    isLoading = summary == null || gainPair == null || summary.totalValue == 0.0,
+                    isLoading = summary == null || periodGain == null || totalGain == null || summary.totalValue == 0.0,
                     isRefreshing = false,
                     summary = convertedSummary,
                     watchlist = watchlist,
@@ -175,6 +189,8 @@ class DashboardViewModel(
                     periodGainAbsolute = currencyConverter.convertAmount(gainAbs, targetCurrency),
                     periodDividends = currencyConverter.convertAmount(dividends, targetCurrency),
                     lifetimeDividends = currencyConverter.convertAmount(lifetime, targetCurrency),
+                    totalGainPercent = totalGainPct,
+                    totalGainAbsolute = currencyConverter.convertAmount(totalGainAbs, targetCurrency),
                 )
             }.collect { newState ->
                 val now = Clock.System.now()

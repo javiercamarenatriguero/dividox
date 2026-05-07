@@ -16,7 +16,7 @@ interface DashboardContract {
         val lastUpdated: Instant? = null,
         val summary: PortfolioSummary? = null,
         val watchlist: List<EnrichedWatchlistEntry> = emptyList(),
-        val selectedPeriod: ChartPeriod = ChartPeriod.ALL,
+        val selectedPeriod: ChartPeriod = ChartPeriod.ONE_YEAR,
         val currency: Currency = Currency.EUR,
         val error: String? = null,
         val convertedSummary: PortfolioSummary? = null,
@@ -25,6 +25,8 @@ interface DashboardContract {
         val periodGainAbsolute: Double = 0.0,
         val periodDividends: Double = 0.0,
         val lifetimeDividends: Double = 0.0,
+        val totalGainPercent: Double = 0.0,
+        val totalGainAbsolute: Double = 0.0,
     ) : ViewState
 
     sealed interface DashboardViewEvent : ViewEvent {
@@ -50,5 +52,4 @@ enum class ChartPeriod(val label: String) {
     ONE_MONTH("1M"),
     ONE_YEAR("1Y"),
     YEAR_TO_DATE("YTD"),
-    ALL("ALL"),
 }
