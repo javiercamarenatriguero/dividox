@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.akole.dividox.common.mvi.viewmodel.MVI
 import com.akole.dividox.common.mvi.viewmodel.mvi
 import com.akole.dividox.common.network.connectivity.NetworkConnectivityManager
+import com.akole.dividox.common.settings.domain.usecase.ObserveAppSettingsUseCase
 import com.akole.dividox.component.market.domain.usecase.SearchSecuritiesUseCase
 import com.akole.dividox.component.watchlist.domain.usecase.AddToWatchlistUseCase
 import com.akole.dividox.component.watchlist.domain.usecase.GetWatchlistUseCase
@@ -23,6 +24,7 @@ import com.akole.dividox.feature.search.SearchContract.SearchViewEvent.TypeFilte
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class SearchViewModel(
@@ -31,6 +33,7 @@ class SearchViewModel(
     private val addToWatchlist: AddToWatchlistUseCase,
     private val removeFromWatchlist: RemoveFromWatchlistUseCase,
     private val connectivityManager: NetworkConnectivityManager,
+    private val observeAppSettings: ObserveAppSettingsUseCase,
 ) : ViewModel(),
     MVI<SearchViewState, SearchViewEvent, SearchSideEffect> by mvi(SearchViewState()) {
 
@@ -38,9 +41,19 @@ class SearchViewModel(
     private var allResults: List<StockQuote> = emptyList()
 
     init {
+        initDefaultMarket()
         observeSearch()
         observeWatchlist()
         observeConnectivity()
+    }
+
+    private fun initDefaultMarket() {
+        viewModelScope.launch {
+            val settings = observeAppSettings().first()
+            val market = ExchangeMarket.entries.firstOrNull { it.name == settings.defaultMarket }
+                ?: ExchangeMarket.ALL
+            updateViewState { copy(selectedMarket = market) }
+        }
     }
 
     override fun onViewEvent(viewEvent: SearchViewEvent) {

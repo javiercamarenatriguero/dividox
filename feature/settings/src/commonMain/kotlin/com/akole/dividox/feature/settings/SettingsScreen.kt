@@ -20,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Fingerprint
@@ -53,6 +54,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import com.akole.dividox.common.currency.domain.model.Currency
 import com.akole.dividox.common.ui.resources.components.DividoxTopAppBar
+import com.akole.dividox.common.ui.resources.components.ExchangeMarket
 import com.akole.dividox.common.ui.resources.format.flag
 import com.akole.dividox.common.ui.resources.format.nameRes
 import com.akole.dividox.common.ui.resources.theme.spacing
@@ -64,6 +66,8 @@ import dividox.common.ui_resources.generated.resources.settings_close
 import dividox.common.ui_resources.generated.resources.settings_contact_support
 import dividox.common.ui_resources.generated.resources.settings_currency
 import dividox.common.ui_resources.generated.resources.settings_currency_picker_title
+import dividox.common.ui_resources.generated.resources.settings_default_market
+import dividox.common.ui_resources.generated.resources.settings_market_picker_title
 import dividox.common.ui_resources.generated.resources.settings_delete_account
 import dividox.common.ui_resources.generated.resources.settings_delete_confirm_message
 import dividox.common.ui_resources.generated.resources.settings_delete_confirm_title
@@ -91,6 +95,7 @@ fun SettingsScreen(
     var showSignOutDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showCurrencyPicker by remember { mutableStateOf(false) }
+    var showMarketPicker by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = modifier,
@@ -143,6 +148,38 @@ fun SettingsScreen(
                             ) {
                                 Text(
                                     "${state.settings.currency.symbol} ${state.settings.currency.code}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                                Icon(
+                                    Icons.Filled.KeyboardArrowRight,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(MaterialTheme.spacing.iconSmall),
+                                )
+                            }
+                        },
+                    )
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = MaterialTheme.spacing.medium),
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                    )
+                    val currentMarket = ExchangeMarket.entries.firstOrNull {
+                        it.name == state.settings.defaultMarket
+                    } ?: ExchangeMarket.ALL
+                    SettingsRow(
+                        label = stringResource(Res.string.settings_default_market),
+                        icon = Icons.Filled.Language,
+                        iconContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                        iconTint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        onClick = { showMarketPicker = true },
+                        trailingContent = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xSmall),
+                            ) {
+                                Text(
+                                    "${currentMarket.emoji} ${currentMarket.label}",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
@@ -294,6 +331,20 @@ fun SettingsScreen(
                 showCurrencyPicker = false
             },
             onDismiss = { showCurrencyPicker = false },
+        )
+    }
+
+    if (showMarketPicker) {
+        val currentMarket = ExchangeMarket.entries.firstOrNull {
+            it.name == state.settings?.defaultMarket
+        } ?: ExchangeMarket.ALL
+        MarketPickerDialog(
+            current = currentMarket,
+            onSelected = { market ->
+                onEvent(SettingsViewEvent.MarketChanged(market.name))
+                showMarketPicker = false
+            },
+            onDismiss = { showMarketPicker = false },
         )
     }
 
@@ -478,4 +529,61 @@ private fun CurrencyPickerDialog(
     )
 }
 
-
+@Composable
+private fun MarketPickerDialog(
+    current: ExchangeMarket,
+    onSelected: (ExchangeMarket) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        title = { Text(stringResource(Res.string.settings_market_picker_title)) },
+        text = {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+            ) {
+                ExchangeMarket.entries.forEachIndexed { index, market ->
+                    if (index > 0) {
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onSelected(market) }
+                            .padding(
+                                horizontal = MaterialTheme.spacing.small,
+                                vertical = MaterialTheme.spacing.medium,
+                            ),
+                        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            market.emoji,
+                            style = MaterialTheme.typography.titleLarge,
+                        )
+                        Text(
+                            market.label,
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.weight(1f),
+                        )
+                        if (market == current) {
+                            Icon(
+                                imageVector = Icons.Filled.Check,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(MaterialTheme.spacing.iconSmall),
+                            )
+                        } else {
+                            Spacer(Modifier.width(MaterialTheme.spacing.iconSmall))
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(Res.string.settings_close))
+            }
+        },
+        onDismissRequest = onDismiss,
+    )
+}

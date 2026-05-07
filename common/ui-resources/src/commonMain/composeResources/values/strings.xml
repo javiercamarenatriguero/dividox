@@ -150,6 +150,8 @@
     <string name="settings_delete_confirm_title">Delete Account</string>
     <string name="settings_delete_confirm_message">This action is permanent and cannot be undone.</string>
     <string name="settings_currency_picker_title">Select Currency</string>
+    <string name="settings_default_market">Default Market</string>
+    <string name="settings_market_picker_title">Select Market</string>
     <string name="settings_close">Close</string>
     <string name="currency_name_usd">US Dollar</string>
     <string name="currency_name_eur">Euro</string>

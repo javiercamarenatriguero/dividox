@@ -788,7 +788,7 @@ private fun FavouritesSection(
                 modifier = Modifier.padding(vertical = MaterialTheme.spacing.small),
             )
         } else {
-            watchlist.take(2).forEach { entry ->
+            watchlist.take(3).forEach { entry ->
                 val ticker = entry.entry.tickerId
                 SecurityCard(
                     ticker = ticker,

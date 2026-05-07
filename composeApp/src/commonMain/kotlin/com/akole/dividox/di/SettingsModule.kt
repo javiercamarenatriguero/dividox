@@ -7,6 +7,7 @@ import com.akole.dividox.common.settings.data.datastore.createDataStore
 import com.akole.dividox.common.settings.domain.datastore.AppSettingsDataStore
 import com.akole.dividox.common.settings.domain.usecase.ObserveAppSettingsUseCase
 import com.akole.dividox.common.settings.domain.usecase.SetCurrencyUseCase
+import com.akole.dividox.common.settings.domain.usecase.SetDefaultMarketUseCase
 import com.akole.dividox.common.settings.domain.usecase.UpdateBiometricLockUseCase
 import org.koin.dsl.module
 
@@ -19,5 +20,6 @@ val settingsModule = module {
     single { BiometricAuthenticator() }
     factory { ObserveAppSettingsUseCase(get()) }
     factory { SetCurrencyUseCase(get()) }
+    factory { SetDefaultMarketUseCase(get()) }
     factory { UpdateBiometricLockUseCase(get(), get()) }
 }

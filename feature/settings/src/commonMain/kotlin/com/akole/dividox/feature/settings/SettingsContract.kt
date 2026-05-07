@@ -17,6 +17,7 @@ data class SettingsViewState(
 sealed interface SettingsViewEvent : ViewEvent {
     data class BiometricToggled(val enabled: Boolean) : SettingsViewEvent
     data class CurrencyChanged(val currency: Currency) : SettingsViewEvent
+    data class MarketChanged(val market: String) : SettingsViewEvent
     data object FavoritesClicked : SettingsViewEvent
     data object ExportClicked : SettingsViewEvent
     data object NotificationsClicked : SettingsViewEvent

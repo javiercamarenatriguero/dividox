@@ -13,6 +13,7 @@ kotlin {
         commonMain.dependencies {
             implementation(project(":common:mvi"))
             implementation(project(":common:currency"))
+            implementation(project(":common:settings"))
             implementation(project(":common:ui-resources"))
             implementation(project(":common:network"))
             implementation(project(":component:market"))
