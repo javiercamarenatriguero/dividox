@@ -591,7 +591,6 @@ private fun ProjectionChartSection(
                 val barWidth: Dp = when (selectedRange) {
                     DividendHistoryRange.YTD,
                     DividendHistoryRange.ONE_YEAR -> 24.dp
-                    DividendHistoryRange.TWO_YEARS -> 30.dp
                     DividendHistoryRange.FIVE_YEARS,
                     DividendHistoryRange.MAX -> 28.dp
                 }

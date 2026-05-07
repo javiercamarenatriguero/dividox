@@ -21,7 +21,6 @@ internal fun List<MonthBar>.filterByRange(range: DividendHistoryRange): List<Mon
     val cutoff: LocalDate = when (range) {
         DividendHistoryRange.YTD -> LocalDate(today.year, Month.JANUARY, 1)
         DividendHistoryRange.ONE_YEAR -> today.minus(12, DateTimeUnit.MONTH)
-        DividendHistoryRange.TWO_YEARS -> today.minus(24, DateTimeUnit.MONTH)
         DividendHistoryRange.FIVE_YEARS -> today.minus(60, DateTimeUnit.MONTH)
         DividendHistoryRange.MAX -> LocalDate(1970, Month.JANUARY, 1)
     }

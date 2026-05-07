@@ -9,8 +9,10 @@ package com.akole.dividox.component.market.domain.model
 enum class DividendHistoryRange(val apiValue: String, val label: String) {
     /** From January 1st of the current year to today. */
     YTD("ytd", "YTD"),
+    /** Last year. */
     ONE_YEAR("1y", "1Y"),
-    TWO_YEARS("2y", "2Y"),
+    /** Last 5 years. */
     FIVE_YEARS("5y", "5Y"),
+    /** All historical data. */
     MAX("max", "Max"),
 }
