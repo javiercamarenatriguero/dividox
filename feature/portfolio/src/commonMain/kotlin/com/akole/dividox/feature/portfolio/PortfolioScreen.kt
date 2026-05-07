@@ -72,7 +72,7 @@ import dividox.common.ui_resources.generated.resources.portfolio_per_share
 import dividox.common.ui_resources.generated.resources.portfolio_purchase_price
 import dividox.common.ui_resources.generated.resources.portfolio_shares_format
 import dividox.common.ui_resources.generated.resources.portfolio_empty_state
-import dividox.common.ui_resources.generated.resources.portfolio_search_placeholder
+import dividox.common.ui_resources.generated.resources.search_security_hint
 import dividox.common.ui_resources.generated.resources.portfolio_sort_date
 import dividox.common.ui_resources.generated.resources.portfolio_sort_gain
 import dividox.common.ui_resources.generated.resources.portfolio_sort_value
@@ -207,7 +207,7 @@ private fun SearchBar(
         },
         modifier = modifier
             .fillMaxWidth(),
-        placeholder = { Text(stringResource(Res.string.portfolio_search_placeholder)) },
+        placeholder = { Text(stringResource(Res.string.search_security_hint)) },
         leadingIcon = {
             Icon(
                 imageVector = Icons.Default.Search,

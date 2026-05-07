@@ -39,7 +39,10 @@ class FavoritesViewModel(
 
     override fun onViewEvent(viewEvent: FavoritesViewEvent) {
         when (viewEvent) {
-            is SearchQueryChanged -> searchQuery.value = viewEvent.query
+            is SearchQueryChanged -> {
+                searchQuery.value = viewEvent.query
+                updateViewState { copy(searchQuery = viewEvent.query) }
+            }
             is FavoriteToggled -> removeFavorite(viewEvent.ticker)
             is SecurityClicked -> viewModelScope.emitSideEffect(
                 FavoritesSideEffect.Navigation.NavigateToSecurity(viewEvent.ticker)
@@ -54,7 +57,14 @@ class FavoritesViewModel(
                 getEnrichedWatchlist(),
                 searchQuery,
                 observeAppSettings(),
-            ) { entries, query, settings ->
+            ) { entries, _, settings ->
+                Pair(entries, settings)
+            }.catch { e ->
+                updateViewState { copy(isLoading = false, error = e.message ?: "Unknown error") }
+            }.collect { (entries, settings) ->
+                // Always read the latest query at collect time to avoid stale combine emissions
+                // overwriting state with an outdated empty query.
+                val query = searchQuery.value
                 val targetCurrency = settings.currency
                 val filtered = if (query.isBlank()) entries else {
                     val lower = query.lowercase()
@@ -64,18 +74,16 @@ class FavoritesViewModel(
                     }
                 }
                 val convertedPrices = currencyConverter.convertWatchlistPrices(filtered, targetCurrency)
-                viewState.value.copy(
-                    isLoading = false,
-                    favorites = filtered,
-                    searchQuery = query,
-                    currency = targetCurrency,
-                    convertedPrices = convertedPrices,
-                    error = null,
-                )
-            }.catch { e ->
-                updateViewState { copy(isLoading = false, error = e.message ?: "Unknown error") }
-            }.collect { newState ->
-                updateViewState { newState }
+                updateViewState {
+                    copy(
+                        isLoading = false,
+                        favorites = filtered,
+                        searchQuery = query,
+                        currency = targetCurrency,
+                        convertedPrices = convertedPrices,
+                        error = null,
+                    )
+                }
             }
         }
     }
