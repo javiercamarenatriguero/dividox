@@ -87,7 +87,7 @@ class HoldingViewModel(
             is HoldingContract.HoldingViewEvent.SecuritySelected -> {
                 _state.value = _state.value.copy(
                     selectedSecurity = event.security,
-                    searchQuery = event.security.ticker,
+                    searchQuery = "",
                     searchResults = emptyList(),
                 )
                 checkPortfolioForExistingHolding(event.security.ticker)
