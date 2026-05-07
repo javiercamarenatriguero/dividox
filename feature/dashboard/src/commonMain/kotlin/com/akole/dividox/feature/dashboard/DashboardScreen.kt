@@ -310,7 +310,7 @@ private fun PeriodSelectorRow(
                     .clickable { onPeriodSelected(period) },
             ) {
                 Text(
-                    text = period.label,
+                    text = stringResource(period.labelRes()),
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                     color = if (isSelected) {
@@ -319,7 +319,12 @@ private fun PeriodSelectorRow(
                         MaterialTheme.colorScheme.onSurface
                     },
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(vertical = MaterialTheme.spacing.xSmall),
+                    maxLines = 1,
+                    softWrap = false,
+                    overflow = TextOverflow.Clip,
+                    modifier = Modifier
+                        .padding(vertical = MaterialTheme.spacing.xSmall)
+                        .fillMaxWidth(),
                 )
             }
         }
@@ -553,7 +558,7 @@ private fun PeriodDetailRow(
         ) {
             Column(modifier = Modifier.padding(MaterialTheme.spacing.medium)) {
                 Text(
-                    text = "${stringResource(Res.string.metric_period_gain)} (${selectedPeriod.label})",
+                    text = "${stringResource(Res.string.metric_period_gain)} (${stringResource(selectedPeriod.labelRes())})",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -583,7 +588,7 @@ private fun PeriodDetailRow(
         ) {
             Column(modifier = Modifier.padding(MaterialTheme.spacing.medium)) {
                 Text(
-                    text = "${stringResource(Res.string.metric_dividends)} (${selectedPeriod.label})",
+                    text = "${stringResource(Res.string.metric_dividends)} (${stringResource(selectedPeriod.labelRes())})",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

@@ -634,7 +634,7 @@ private fun DividendRangeSelectorRow(
                     .clickable { onRangeSelected(range) },
             ) {
                 Text(
-                    text = range.label,
+                    text = stringResource(range.labelRes()),
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                     color = if (isSelected) {
@@ -643,7 +643,12 @@ private fun DividendRangeSelectorRow(
                         MaterialTheme.colorScheme.onSurface
                     },
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(vertical = MaterialTheme.spacing.xSmall),
+                    maxLines = 1,
+                    softWrap = false,
+                    overflow = TextOverflow.Clip,
+                    modifier = Modifier
+                        .padding(vertical = MaterialTheme.spacing.xSmall)
+                        .fillMaxWidth(),
                 )
             }
         }

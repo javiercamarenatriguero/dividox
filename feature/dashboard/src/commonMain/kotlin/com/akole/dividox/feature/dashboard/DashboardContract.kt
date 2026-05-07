@@ -16,7 +16,7 @@ interface DashboardContract {
         val lastUpdated: Instant? = null,
         val summary: PortfolioSummary? = null,
         val watchlist: List<EnrichedWatchlistEntry> = emptyList(),
-        val selectedPeriod: ChartPeriod = ChartPeriod.ONE_YEAR,
+        val selectedPeriod: ChartPeriod = ChartPeriod.ONE_DAY,
         val currency: Currency = Currency.EUR,
         val error: String? = null,
         val convertedSummary: PortfolioSummary? = null,
@@ -58,10 +58,10 @@ data class PortfolioTodayItem(
     val currency: Currency,
 )
 
-enum class ChartPeriod(val label: String) {
-    ONE_DAY("1D"),
-    ONE_WEEK("1W"),
-    ONE_MONTH("1M"),
-    ONE_YEAR("1Y"),
-    YEAR_TO_DATE("YTD"),
+enum class ChartPeriod {
+    ONE_DAY,
+    ONE_WEEK,
+    ONE_MONTH,
+    ONE_YEAR,
+    YEAR_TO_DATE,
 }

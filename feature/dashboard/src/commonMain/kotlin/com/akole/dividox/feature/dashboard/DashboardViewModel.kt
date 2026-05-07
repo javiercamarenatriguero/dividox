@@ -63,7 +63,7 @@ class DashboardViewModel(
     MVI<DashboardViewState, DashboardViewEvent, DashboardSideEffect> by mvi(DashboardViewState()) {
 
     private var dataJob: Job? = null
-    private val periodFlow = MutableStateFlow(ChartPeriod.ONE_YEAR)
+    private val periodFlow = MutableStateFlow(ChartPeriod.ONE_DAY)
     // Internal flows updated by separate coroutines so slow API calls don't block main UI data
     private val summaryFlow = MutableStateFlow<PortfolioSummary?>(null)         // null until portfolio API calls complete
     private val periodGainFlow = MutableStateFlow<Pair<Double, Double>?>(null)  // null until first gain result

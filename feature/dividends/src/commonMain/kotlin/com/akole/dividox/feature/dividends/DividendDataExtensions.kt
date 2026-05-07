@@ -4,11 +4,24 @@ import com.akole.dividox.common.ui.resources.di.todayIn
 import com.akole.dividox.component.market.domain.model.DividendHistoryRange
 import com.akole.dividox.integration.dividend.domain.model.EnrichedPayment
 import com.akole.dividox.integration.dividend.domain.model.MonthBar
+import dividox.common.ui_resources.generated.resources.Res
+import dividox.common.ui_resources.generated.resources.period_1y
+import dividox.common.ui_resources.generated.resources.period_5y
+import dividox.common.ui_resources.generated.resources.period_all
+import dividox.common.ui_resources.generated.resources.period_ytd
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.Month
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
+import org.jetbrains.compose.resources.StringResource
+
+internal fun DividendHistoryRange.labelRes(): StringResource = when (this) {
+    DividendHistoryRange.YTD -> Res.string.period_ytd
+    DividendHistoryRange.ONE_YEAR -> Res.string.period_1y
+    DividendHistoryRange.FIVE_YEARS -> Res.string.period_5y
+    DividendHistoryRange.MAX -> Res.string.period_all
+}
 
 internal fun List<EnrichedPayment>.groupByMonth(): Map<LocalDate, List<EnrichedPayment>> =
     groupBy { LocalDate(it.payment.paymentDate.year, it.payment.paymentDate.month, 1) }

@@ -36,6 +36,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.akole.dividox.common.currency.domain.model.Currency
 import com.akole.dividox.common.mvi.CollectSideEffect
@@ -313,7 +314,12 @@ private fun ChartSection(
                                 MaterialTheme.colorScheme.onSurface
                             },
                             textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(vertical = MaterialTheme.spacing.xSmall),
+                            maxLines = 1,
+                            softWrap = false,
+                            overflow = TextOverflow.Clip,
+                            modifier = Modifier
+                                .padding(vertical = MaterialTheme.spacing.xSmall)
+                                .fillMaxWidth(),
                         )
                     }
                 }
