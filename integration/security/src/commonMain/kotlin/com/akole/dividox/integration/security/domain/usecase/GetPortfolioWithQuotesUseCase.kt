@@ -54,36 +54,45 @@ class GetPortfolioWithQuotesUseCase(
 
                     val quoteByTicker = quotes.associateBy { it.ticker }
                     val holdingsWithQuotes = holdings.filter { it.tickerId in quoteByTicker }
-                    emit(
-                        coroutineScope {
-                            holdingsWithQuotes.map { holding ->
-                                async {
-                                    val quote = quoteByTicker[holding.tickerId]!!
-                                    val dividendInfo = getDividendInfoUseCase(holding.tickerId).getOrNull()
-                                    // Normalize purchase price to quote.currency so gain% is
-                                    // comparable regardless of the currency the user bought in.
-                                    val quoteCurrency = Currency.entries
-                                        .firstOrNull { it.code == quote.currency } ?: Currency.USD
-                                    val purchasePriceNorm = currencyConverter.convert(
-                                        holding.purchasePrice,
-                                        holding.purchaseCurrency,
-                                        quoteCurrency,
-                                    ).getOrElse { holding.purchasePrice }
-                                    val totalGainPercent = if (purchasePriceNorm != 0.0) {
-                                        (quote.price - purchasePriceNorm) / purchasePriceNorm * 100.0
-                                    } else {
-                                        0.0
-                                    }
-                                    SecurityHolding(
-                                        holding = holding,
-                                        quote = quote,
-                                        dividendInfo = dividendInfo,
-                                        totalGainPercent = totalGainPercent,
-                                    )
-                                }
-                            }.map { it.await() }
-                        },
-                    )
+
+                    // Phase 1: build SecurityHoldings immediately without dividend info so the
+                    // UI can render as soon as quotes are available (no extra API round-trips).
+                    val initialHoldings = holdingsWithQuotes.map { holding ->
+                        val quote = quoteByTicker[holding.tickerId]!!
+                        val quoteCurrency = Currency.entries
+                            .firstOrNull { it.code == quote.currency } ?: Currency.USD
+                        val purchasePriceNorm = currencyConverter.convert(
+                            holding.purchasePrice,
+                            holding.purchaseCurrency,
+                            quoteCurrency,
+                        ).getOrElse { holding.purchasePrice }
+                        val totalGainPercent = if (purchasePriceNorm != 0.0) {
+                            (quote.price - purchasePriceNorm) / purchasePriceNorm * 100.0
+                        } else {
+                            0.0
+                        }
+                        SecurityHolding(
+                            holding = holding,
+                            quote = quote,
+                            dividendInfo = null,
+                            totalGainPercent = totalGainPercent,
+                        )
+                    }
+                    emit(initialHoldings)
+
+                    // Phase 2: enrich with dividend info in parallel and re-emit.
+                    // Dividend yield/annual payout fields update once all N calls finish.
+                    val enrichedHoldings = coroutineScope {
+                        initialHoldings.map { securityHolding ->
+                            async {
+                                val dividendInfo = getDividendInfoUseCase(
+                                    securityHolding.holding.tickerId,
+                                ).getOrNull()
+                                securityHolding.copy(dividendInfo = dividendInfo)
+                            }
+                        }.map { it.await() }
+                    }
+                    emit(enrichedHoldings)
                 }.retryWhen { _, attempt ->
                     delay(minOf(2_000L * (attempt + 1), 30_000L))
                     true
