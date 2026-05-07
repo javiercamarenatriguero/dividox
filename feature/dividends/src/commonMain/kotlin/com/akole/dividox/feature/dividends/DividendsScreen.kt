@@ -589,17 +589,25 @@ private fun ProjectionChartSection(
                 }
             } else {
                 val barWidth: Dp = when (selectedRange) {
-                    DividendHistoryRange.YTD,
-                    DividendHistoryRange.ONE_YEAR -> 24.dp
+                    DividendHistoryRange.YTD -> 24.dp
+                    // ONE_YEAR has ~16 bars; use a narrow bar so they fit without
+                    // scrolling and LazyRow's SpaceEvenly distributes gaps evenly.
+                    DividendHistoryRange.ONE_YEAR -> 20.dp
                     DividendHistoryRange.FIVE_YEARS,
                     DividendHistoryRange.MAX -> 28.dp
+                }
+                // For ONE_YEAR, keep minBarSlotWidth small so the chart width
+                // stays within the viewport — SpaceEvenly then handles the gaps.
+                val minBarSlotWidth: Dp = when (selectedRange) {
+                    DividendHistoryRange.ONE_YEAR -> barWidth + 4.dp
+                    else -> barWidth + 20.dp
                 }
                 BarChart(
                     entries = entries,
                     modifier = Modifier.fillMaxWidth(),
                     barColor = MaterialTheme.colorScheme.primary,
                     barWidth = barWidth,
-                    minBarSlotWidth = barWidth + 20.dp,
+                    minBarSlotWidth = minBarSlotWidth,
                     skipAlternateXLabels = entries.size > 6,
                     popupLabelFormatter = { entry ->
                         formatBarChartPopupLabel(entry.value, currency.code, entry.label)
