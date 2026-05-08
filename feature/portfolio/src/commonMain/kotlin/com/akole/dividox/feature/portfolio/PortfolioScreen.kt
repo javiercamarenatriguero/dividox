@@ -368,7 +368,7 @@ private fun HoldingCard(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = holding.quote.displayName,
+                        text = holding.quote.name ?: ticker,
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold,
                         maxLines = 1,
@@ -421,8 +421,9 @@ private fun HoldingCard(
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
 
-            // Row 3: Purchase label + price · date
+            // Row 3: Purchase label + price · date | edit
             Row(
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xSmall),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -440,22 +441,6 @@ private fun HoldingCard(
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f),
                 )
-            }
-
-            Spacer(modifier = Modifier.height(MaterialTheme.spacing.xSmall))
-
-            // Row 4: yield | edit
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
-            ) {
-                Text(
-                    text = stringResource(Res.string.portfolio_yield_label, yield.formatPercent()),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    modifier = Modifier.weight(1f),
-                )
                 Icon(
                     imageVector = Icons.Default.Edit,
                     contentDescription = stringResource(Res.string.portfolio_edit),
@@ -463,6 +448,20 @@ private fun HoldingCard(
                     modifier = Modifier
                         .size(20.dp)
                         .clickable { onEditClicked(holding.holding.id.value) },
+                )
+            }
+
+            Spacer(modifier = Modifier.height(MaterialTheme.spacing.xSmall))
+
+            // Row 4: yield
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(
+                    text = stringResource(Res.string.portfolio_yield_label, yield.formatPercent()),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
                 )
             }
         }

@@ -132,7 +132,6 @@
     <string name="period_5y">5 Años</string>
     <string name="period_all">Máx</string>
     <string name="search_title">Buscar</string>
-    <string name="search_placeholder_hint">Buscar por ticker o nombre de empresa</string>
     <string name="search_no_results">Sin resultados para \"%1$s\"</string>
     <string name="settings_section_preferences">Preferencias</string>
     <string name="settings_section_portfolio">Cartera</string>
