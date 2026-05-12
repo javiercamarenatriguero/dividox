@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.retain.retain
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -73,7 +74,7 @@ fun NavGraphBuilder.mainGraphNode(rootNavController: NavController) {
     composable<MainGraphRoute> {
         val innerNavController = rememberNavController()
         val navBackStackEntry by innerNavController.currentBackStackEntryAsState()
-        var portfolioFabClick by remember { mutableStateOf({}) }
+        var portfolioFabClick by retain { mutableStateOf({}) }
 
         val currentRoute = navBackStackEntry?.destination?.route
         val selectedTab = when {

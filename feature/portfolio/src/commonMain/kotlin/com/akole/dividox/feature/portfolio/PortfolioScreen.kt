@@ -45,6 +45,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.runtime.retain.retain
 import com.akole.dividox.common.mvi.CollectSideEffect
 import com.akole.dividox.common.currency.domain.model.Currency
 import com.akole.dividox.common.ui.resources.components.DividoxTopAppBar
@@ -195,7 +196,7 @@ private fun SearchBar(
 ) {
     // Local state so TextField updates instantly without waiting for the ViewModel round-trip.
     // LaunchedEffect syncs back if the query is cleared externally (e.g. on screen reset).
-    var localQuery by remember { mutableStateOf(query) }
+    var localQuery by retain { mutableStateOf(query) }
     LaunchedEffect(query) {
         if (localQuery != query) localQuery = query
     }

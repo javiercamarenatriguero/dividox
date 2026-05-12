@@ -15,6 +15,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.retain.retain
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,7 +33,7 @@ private const val TEXT_ANIMATION_DURATION_MS = 450
 
 @Composable
 fun SplashScreen() {
-    var showText by remember { mutableStateOf(false) }
+    var showText by retain { mutableStateOf(false) }
 
     val textAlpha by animateFloatAsState(
         targetValue = if (showText) 1f else 0f,

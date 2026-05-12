@@ -8,6 +8,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.retain.retain
 import androidx.compose.runtime.setValue
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
@@ -25,8 +26,8 @@ private const val SPLASH_DURATION_MS = 2000L
 @Composable
 fun SetupRootNavGraph(navController: NavHostController) {
     val observeSession: ObserveSessionUseCase = koinInject()
-    val sessionState by remember { observeSession() }.collectAsState(initial = SessionState.Loading)
-    var splashReady by remember { mutableStateOf(false) }
+    val sessionState by retain { observeSession() }.collectAsState(initial = SessionState.Loading)
+    var splashReady by retain { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         delay(SPLASH_DURATION_MS)

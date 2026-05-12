@@ -45,6 +45,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.retain.retain
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -92,10 +93,10 @@ fun SettingsScreen(
     onEvent: (SettingsViewEvent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var showSignOutDialog by remember { mutableStateOf(false) }
-    var showDeleteDialog by remember { mutableStateOf(false) }
-    var showCurrencyPicker by remember { mutableStateOf(false) }
-    var showMarketPicker by remember { mutableStateOf(false) }
+    var showSignOutDialog by retain { mutableStateOf(false) }
+    var showDeleteDialog by retain { mutableStateOf(false) }
+    var showCurrencyPicker by retain { mutableStateOf(false) }
+    var showMarketPicker by retain { mutableStateOf(false) }
 
     Scaffold(
         modifier = modifier,

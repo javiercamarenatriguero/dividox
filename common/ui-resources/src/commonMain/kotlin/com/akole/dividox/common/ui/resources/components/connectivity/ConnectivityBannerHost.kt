@@ -5,6 +5,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.retain.retain
 import androidx.compose.runtime.setValue
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -22,9 +23,9 @@ import kotlinx.coroutines.flow.Flow
  */
 @Composable
 fun ConnectivityBannerHost(connectivityFlow: Flow<Boolean>) {
-    var isOnline by remember { mutableStateOf(true) }
-    var showReconnecting by remember { mutableStateOf(false) }
-    var previousOnline by remember { mutableStateOf(true) }
+    var isOnline by retain { mutableStateOf(true) }
+    var showReconnecting by retain { mutableStateOf(false) }
+    var previousOnline by retain { mutableStateOf(true) }
 
     LaunchedEffect(connectivityFlow) {
         connectivityFlow.collect { online ->

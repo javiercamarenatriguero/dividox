@@ -21,6 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.retain.retain
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -80,10 +81,10 @@ fun LineChart(
     val yAxisStep = if (yAxisScaleCount > 0) maxEntryValue / yAxisScaleCount else maxEntryValue
     val stepHeight = height / yAxisScaleCount
 
-    var dragX: Float? by remember { mutableStateOf(null) }
-    var yAxisWidthPx by remember { mutableIntStateOf(0) }
-    var graphWidthPx by remember { mutableIntStateOf(0) }
-    var popupWidthPx by remember { mutableIntStateOf(0) }
+    var dragX: Float? by retain { mutableStateOf(null) }
+    var yAxisWidthPx by retain { mutableIntStateOf(0) }
+    var graphWidthPx by retain { mutableIntStateOf(0) }
+    var popupWidthPx by retain { mutableIntStateOf(0) }
     val density = LocalDensity.current
 
     val hoveredIndex: Int? by remember(entries.size) {
@@ -98,20 +99,20 @@ fun LineChart(
     }
     // Stable boolean: only changes at gesture start/end, not on every pointer event.
     // Prevents LineGraph from recomposing while the finger is moving.
-    val isDragging by remember(entries.size) { derivedStateOf { hoveredIndex != null } }
+    val isDragging by retain(entries.size) { derivedStateOf { hoveredIndex != null } }
 
-    val chartData = remember(entries) { entries.associate { it.label to it.value } }
-    val lineConfig = remember(primaryColor) { LineGraphDefaults.lineConfig(lineColor = primaryColor) }
-    val areaFillConfig = remember(primaryColor) { LineGraphDefaults.areaFillConfig(lineColor = primaryColor) }
-    val pointConfig = remember { LineGraphDefaults.pointConfig(enabled = false) }
-    val yAxisConfig = remember(useCustomYAxis, yAxisScaleCount, onSurfaceVariant) {
+    val chartData = retain(entries) { entries.associate { it.label to it.value } }
+    val lineConfig = retain(primaryColor) { LineGraphDefaults.lineConfig(lineColor = primaryColor) }
+    val areaFillConfig = retain(primaryColor) { LineGraphDefaults.areaFillConfig(lineColor = primaryColor) }
+    val pointConfig = retain { LineGraphDefaults.pointConfig(enabled = false) }
+    val yAxisConfig = retain(useCustomYAxis, yAxisScaleCount, onSurfaceVariant) {
         LineGraphDefaults.yAxisConfig(
             isAxisScaleEnabled = !useCustomYAxis,
             axisScaleCount = yAxisScaleCount,
             textStyle = labelStyle.copy(color = onSurfaceVariant),
         )
     }
-    val xAxisConfig = remember(onSurfaceVariant) {
+    val xAxisConfig = retain(onSurfaceVariant) {
         LineGraphDefaults.xAxisConfig(
             textStyle = labelStyle.copy(color = onSurfaceVariant),
         )

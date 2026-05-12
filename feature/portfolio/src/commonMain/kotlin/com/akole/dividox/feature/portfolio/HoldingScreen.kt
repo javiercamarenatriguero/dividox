@@ -41,10 +41,9 @@ import androidx.compose.material3.rememberDatePickerState
 import kotlin.time.Clock
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.retain.retain
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -53,6 +52,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.akole.dividox.common.currency.domain.model.Currency
 import com.akole.dividox.common.ui.resources.components.DividoxTopAppBar
 import com.akole.dividox.common.ui.resources.components.ExchangeMarket
@@ -99,7 +99,7 @@ fun HoldingScreen(
     onPositionSaved: () -> Unit,
     onPositionDeleted: () -> Unit,
 ) {
-    val state by viewModel.viewState.collectAsState()
+    val state by viewModel.viewState.collectAsStateWithLifecycle()
 
     // State-based navigation: triggers reliably on recomposition
     LaunchedEffect(state.operationCompleted) {
@@ -621,7 +621,7 @@ private fun PurchaseDateField(
     onDateSelected: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var showPicker by remember { mutableStateOf(false) }
+    var showPicker by retain { mutableStateOf(false) }
     val todayMillis = Clock.System.now().toEpochMilliseconds()
     val datePickerState = rememberDatePickerState(
         initialSelectedDateMillis = dateMillis,
