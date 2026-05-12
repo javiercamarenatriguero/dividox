@@ -22,10 +22,13 @@ class GetEnrichedUpcomingPaymentsUseCase(
 ) {
     operator fun invoke(): Flow<List<EnrichedPayment>> =
         dividendRepository.getUpcomingPayments().map { payments ->
-            val companyInfoCache = payments
-                .map { it.tickerId }
-                .distinct()
-                .associateWith { ticker -> marketRepository.getCompanyInfo(ticker).getOrNull() }
+            val tickers = payments.map { it.tickerId }.distinct()
+            val companyInfoCache = tickers.associateWith { ticker ->
+                marketRepository.getCompanyInfo(ticker).getOrNull()
+            }
+            val dividendInfoCache = tickers.associateWith { ticker ->
+                marketRepository.getDividendInfo(ticker).getOrNull()
+            }
 
             payments
                 .sortedBy { it.paymentDate }
@@ -33,6 +36,7 @@ class GetEnrichedUpcomingPaymentsUseCase(
                     EnrichedPayment(
                         payment = payment,
                         companyInfo = companyInfoCache[payment.tickerId],
+                        dividendInfo = dividendInfoCache[payment.tickerId],
                     )
                 }
         }

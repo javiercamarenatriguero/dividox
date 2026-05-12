@@ -16,7 +16,7 @@ interface DashboardContract {
         val lastUpdated: Instant? = null,
         val summary: PortfolioSummary? = null,
         val watchlist: List<EnrichedWatchlistEntry> = emptyList(),
-        val selectedPeriod: ChartPeriod = ChartPeriod.ALL,
+        val selectedPeriod: ChartPeriod = ChartPeriod.ONE_DAY,
         val currency: Currency = Currency.EUR,
         val error: String? = null,
         val convertedSummary: PortfolioSummary? = null,
@@ -25,6 +25,10 @@ interface DashboardContract {
         val periodGainAbsolute: Double = 0.0,
         val periodDividends: Double = 0.0,
         val lifetimeDividends: Double = 0.0,
+        val totalGainPercent: Double = 0.0,
+        val totalGainAbsolute: Double = 0.0,
+        val topGainers: List<PortfolioTodayItem> = emptyList(),
+        val topLosers: List<PortfolioTodayItem> = emptyList(),
     ) : ViewState
 
     sealed interface DashboardViewEvent : ViewEvent {
@@ -33,6 +37,7 @@ interface DashboardContract {
         data class FavouriteToggled(val ticker: String) : DashboardViewEvent
         data class SecurityClicked(val ticker: String) : DashboardViewEvent
         data object ViewAllFavouritesClicked : DashboardViewEvent
+        data object ViewAllPortfolioClicked : DashboardViewEvent
         data object Refresh : DashboardViewEvent
     }
 
@@ -40,15 +45,23 @@ interface DashboardContract {
         sealed interface Navigation : DashboardSideEffect {
             data class NavigateToSecurity(val ticker: String) : Navigation
             data object NavigateToFavorites : Navigation
+            data object NavigateToPortfolio : Navigation
         }
     }
 }
 
-enum class ChartPeriod(val label: String) {
-    ONE_DAY("1D"),
-    ONE_WEEK("1W"),
-    ONE_MONTH("1M"),
-    ONE_YEAR("1Y"),
-    YEAR_TO_DATE("YTD"),
-    ALL("ALL"),
+data class PortfolioTodayItem(
+    val ticker: String,
+    val name: String?,
+    val changePercent: Double,
+    val price: Double,
+    val currency: Currency,
+)
+
+enum class ChartPeriod {
+    ONE_DAY,
+    ONE_WEEK,
+    ONE_MONTH,
+    ONE_YEAR,
+    YEAR_TO_DATE,
 }

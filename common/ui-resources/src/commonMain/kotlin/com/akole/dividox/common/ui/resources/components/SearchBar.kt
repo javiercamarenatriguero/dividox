@@ -14,6 +14,7 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.retain.retain
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -32,7 +33,7 @@ fun SearchBar(
     autoFocus: Boolean = false,
     enabled: Boolean = true,
 ) {
-    val focusRequester = remember { FocusRequester() }
+    val focusRequester = retain { FocusRequester() }
     if (autoFocus) {
         LaunchedEffect(Unit) { focusRequester.requestFocus() }
     }

@@ -7,4 +7,6 @@ import kotlinx.coroutines.flow.Flow
 interface AppSettingsDataStore {
     fun observe(): Flow<AppSettings>
     suspend fun setCurrency(currency: Currency)
+    suspend fun setBiometricLock(enabled: Boolean)
+    suspend fun setDefaultMarket(market: String)
 }

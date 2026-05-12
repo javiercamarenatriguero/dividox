@@ -69,23 +69,28 @@ class PortfolioViewModel(
                 searchQuery,
                 sortOrder,
                 observeAppSettings(),
-            ) { holdings, query, order, settings ->
+            ) { holdings, _, order, settings ->
+                Triple(holdings, order, settings)
+            }.collect { (holdings, order, settings) ->
                 rawHoldings.value = holdings
+                // Always read the latest query at collect time to avoid stale combine emissions
+                // overwriting state with an outdated empty query.
+                val query = searchQuery.value
                 val targetCurrency = settings.currency
                 val filtered = holdings.filterByQuery(query)
                 val sorted = filtered.sortBy(order)
                 val convertedPrices = currencyConverter.convertHoldingPrices(holdings, targetCurrency)
-                viewState.value.copy(
-                    isLoading = false,
-                    holdings = sorted,
-                    searchQuery = query,
-                    sortOrder = order,
-                    currency = targetCurrency,
-                    error = null,
-                    convertedPrices = convertedPrices,
-                )
-            }.collect { newState ->
-                updateViewState { newState }
+                updateViewState {
+                    copy(
+                        isLoading = false,
+                        holdings = sorted,
+                        searchQuery = query,
+                        sortOrder = order,
+                        currency = targetCurrency,
+                        error = null,
+                        convertedPrices = convertedPrices,
+                    )
+                }
             }
         }
     }

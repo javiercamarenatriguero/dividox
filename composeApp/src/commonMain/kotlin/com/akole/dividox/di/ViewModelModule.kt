@@ -1,5 +1,6 @@
 package com.akole.dividox.di
 
+import com.akole.dividox.getAppVersion
 import com.akole.dividox.feature.auth.forgotpassword.ForgotPasswordViewModel
 import com.akole.dividox.feature.auth.login.LoginViewModel
 import com.akole.dividox.feature.auth.register.SignUpViewModel
@@ -9,6 +10,7 @@ import com.akole.dividox.feature.favorites.FavoritesViewModel
 import com.akole.dividox.feature.search.SearchViewModel
 import com.akole.dividox.feature.dashboard.DashboardViewModel
 import com.akole.dividox.feature.home.HomeViewModel
+import com.akole.dividox.feature.settings.SettingsViewModel
 import com.akole.dividox.feature.portfolio.HoldingViewModel
 import com.akole.dividox.feature.portfolio.PortfolioViewModel
 import com.akole.dividox.component.portfolio.domain.model.HoldingId
@@ -32,6 +34,7 @@ val viewModelModule: Module = module {
     viewModelOf(::DividendsViewModel)
     viewModelOf(::FavoritesViewModel)
     viewModelOf(::SearchViewModel)
+    viewModel { SettingsViewModel(get(), get(), get(), get(), get(), get(), getAppVersion()) }
     viewModel { PortfolioViewModel(get(), get(), get(), get()) }
 
     // SecurityDetailViewModel with required ticker parameter

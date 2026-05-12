@@ -19,11 +19,13 @@ import com.akole.dividox.feature.dashboard.DashboardContract.DashboardViewEvent.
 import com.akole.dividox.feature.dashboard.DashboardContract.DashboardViewEvent.Refresh
 import com.akole.dividox.feature.dashboard.DashboardContract.DashboardViewEvent.SecurityClicked
 import com.akole.dividox.feature.dashboard.DashboardContract.DashboardViewEvent.ViewAllFavouritesClicked
+import com.akole.dividox.feature.dashboard.DashboardContract.DashboardViewEvent.ViewAllPortfolioClicked
 import com.akole.dividox.feature.dashboard.DashboardContract.DashboardViewState
 import com.akole.dividox.integration.dividend.domain.usecase.GetPeriodDividendsUseCase
 import com.akole.dividox.integration.dividend.domain.usecase.ObservePortfolioChangesUseCase
 import com.akole.dividox.integration.dividend.domain.usecase.SyncDividendHistoryFromHoldingsUseCase
 import com.akole.dividox.integration.security.domain.usecase.GetEnrichedWatchlistUseCase
+import com.akole.dividox.integration.security.domain.model.SecurityHolding
 import com.akole.dividox.integration.security.domain.usecase.GetPortfolioPeriodGainUseCase
 import com.akole.dividox.integration.security.domain.usecase.GetPortfolioSummaryUseCase
 import com.akole.dividox.integration.security.domain.usecase.GetPortfolioWithQuotesUseCase
@@ -60,10 +62,13 @@ class DashboardViewModel(
     MVI<DashboardViewState, DashboardViewEvent, DashboardSideEffect> by mvi(DashboardViewState()) {
 
     private var dataJob: Job? = null
-    private val periodFlow = MutableStateFlow(ChartPeriod.ALL)
+    private val periodFlow = MutableStateFlow(ChartPeriod.ONE_DAY)
     // Internal flows updated by separate coroutines so slow API calls don't block main UI data
     private val summaryFlow = MutableStateFlow<PortfolioSummary?>(null)         // null until portfolio API calls complete
     private val periodGainFlow = MutableStateFlow<Pair<Double, Double>?>(null)  // null until first gain result
+    private val portfolioTodayFlow = MutableStateFlow<Pair<List<SecurityHolding>, List<SecurityHolding>>>(
+        emptyList<SecurityHolding>() to emptyList(),
+    )
     private val periodDividendsFlow = MutableStateFlow(0.0)   // USD, unconverted
     private val lifetimeDividendsFlow = MutableStateFlow(0.0) // USD, unconverted
 
@@ -95,6 +100,9 @@ class DashboardViewModel(
             )
             ViewAllFavouritesClicked -> viewModelScope.emitSideEffect(
                 DashboardSideEffect.Navigation.NavigateToFavorites,
+            )
+            ViewAllPortfolioClicked -> viewModelScope.emitSideEffect(
+                DashboardSideEffect.Navigation.NavigateToPortfolio,
             )
             Refresh -> {
                 updateViewState { copy(isRefreshing = true) }
@@ -146,24 +154,61 @@ class DashboardViewModel(
                 }
             }
 
+            // 3b. Portfolio Today — top 3 gainers and losers by today's % change.
+            launch {
+                portfolioShared.collect { holdings ->
+                    val gainers = holdings.filter { it.quote.changePercent > 0 }
+                        .sortedByDescending { it.quote.changePercent }
+                        .take(3)
+                    val losers = holdings.filter { it.quote.changePercent < 0 }
+                        .sortedBy { it.quote.changePercent }
+                        .take(3)
+                    portfolioTodayFlow.value = gainers to losers
+                }
+            }
+
             // 4. Main combine — skeleton stays until summaryFlow has its first real value.
             val dividendPairFlow =
                 combine(periodDividendsFlow, lifetimeDividendsFlow) { period, lifetime -> period to lifetime }
+            val allGainsAndTodayFlow = combine(
+                periodGainFlow,
+                portfolioTodayFlow,
+            ) { period, today -> period to today }
             combine(
                 summaryFlow,
                 getEnrichedWatchlist(),
                 observeAppSettings(),
                 dividendPairFlow,
-                periodGainFlow,
-            ) { summary, watchlist, settings, dividendPair, gainPair ->
+                allGainsAndTodayFlow,
+            ) { summary, watchlist, settings, dividendPair, gainsAndToday ->
                 val (dividends, lifetime) = dividendPair
-                val gainAbs = gainPair?.first ?: 0.0
-                val gainPct = gainPair?.second ?: 0.0
+                val (periodGain, rawTodayPair) = gainsAndToday
+                val (rawGainers, rawLosers) = rawTodayPair
+                val gainAbs = periodGain?.first ?: 0.0
+                val gainPct = periodGain?.second ?: 0.0
                 val targetCurrency = settings.currency
                 val convertedSummary = summary?.let { currencyConverter.convertSummary(it, targetCurrency) }
                 val convertedWatchlistPrices = currencyConverter.convertWatchlistPrices(watchlist, targetCurrency)
+                val topGainers = rawGainers.map { h ->
+                    PortfolioTodayItem(
+                        ticker = h.holding.tickerId,
+                        name = h.quote.name,
+                        changePercent = h.quote.changePercent,
+                        price = currencyConverter.convertAmount(h.quote.price, targetCurrency),
+                        currency = targetCurrency,
+                    )
+                }
+                val topLosers = rawLosers.map { h ->
+                    PortfolioTodayItem(
+                        ticker = h.holding.tickerId,
+                        name = h.quote.name,
+                        changePercent = h.quote.changePercent,
+                        price = currencyConverter.convertAmount(h.quote.price, targetCurrency),
+                        currency = targetCurrency,
+                    )
+                }
                 viewState.value.copy(
-                    isLoading = summary == null || gainPair == null || summary.totalValue == 0.0,
+                    isLoading = summary == null || periodGain == null || summary.totalValue == 0.0,
                     isRefreshing = false,
                     summary = convertedSummary,
                     watchlist = watchlist,
@@ -175,6 +220,10 @@ class DashboardViewModel(
                     periodGainAbsolute = currencyConverter.convertAmount(gainAbs, targetCurrency),
                     periodDividends = currencyConverter.convertAmount(dividends, targetCurrency),
                     lifetimeDividends = currencyConverter.convertAmount(lifetime, targetCurrency),
+                    totalGainPercent = convertedSummary?.totalGainPercent ?: 0.0,
+                    totalGainAbsolute = convertedSummary?.totalGain ?: 0.0,
+                    topGainers = topGainers,
+                    topLosers = topLosers,
                 )
             }.collect { newState ->
                 val now = Clock.System.now()
@@ -215,4 +264,5 @@ class DashboardViewModel(
             }
         }
     }
+
 }

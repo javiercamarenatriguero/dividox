@@ -345,7 +345,7 @@ Package: `com.akole.dividox.common.auth.di`
 Replace `SetupRootNavGraph` body with:
 ```kotlin
 val observeSession: ObserveSessionUseCase = koinInject()
-val sessionState by observeSession().collectAsState(initial = SessionState.Loading)
+val sessionState by observeSession().collectAsStateWithLifecycle(initial = SessionState.Loading)
 
 when (sessionState) {
     SessionState.Loading        -> SplashScreen()

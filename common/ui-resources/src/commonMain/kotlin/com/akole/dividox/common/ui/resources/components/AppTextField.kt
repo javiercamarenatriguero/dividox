@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.retain.retain
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -40,7 +41,7 @@ fun AppTextField(
     imeAction: ImeAction = ImeAction.Next,
     onImeAction: () -> Unit = {},
 ) {
-    var isPasswordVisible by remember { mutableStateOf(false) }
+    var isPasswordVisible by retain { mutableStateOf(false) }
 
     val visualTransformation = if (isPassword && !isPasswordVisible) {
         PasswordVisualTransformation()

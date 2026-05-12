@@ -17,11 +17,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -40,8 +39,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.runtime.retain.retain
 import com.akole.dividox.common.mvi.CollectSideEffect
 import com.akole.dividox.common.currency.domain.model.Currency
 import com.akole.dividox.common.ui.resources.components.DividoxTopAppBar
@@ -49,6 +53,7 @@ import com.akole.dividox.common.ui.resources.components.connectivity.Connectivit
 import com.akole.dividox.common.ui.resources.components.connectivity.LocalNetworkConnectivityManager
 import com.akole.dividox.common.ui.resources.format.formatPercent
 import com.akole.dividox.common.ui.resources.format.formatPrice
+import com.akole.dividox.common.ui.resources.format.monthShort
 import com.akole.dividox.common.ui.resources.theme.DividoxTheme
 import com.akole.dividox.common.ui.resources.theme.extendedColors
 import com.akole.dividox.common.ui.resources.theme.spacing
@@ -59,14 +64,19 @@ import com.akole.dividox.component.portfolio.domain.model.Holding
 import com.akole.dividox.component.portfolio.domain.model.HoldingId
 import com.akole.dividox.integration.security.domain.model.SecurityHolding
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Instant
 import dividox.common.ui_resources.generated.resources.Res
 import dividox.common.ui_resources.generated.resources.portfolio_edit
-import dividox.common.ui_resources.generated.resources.portfolio_empty_state
-import dividox.common.ui_resources.generated.resources.portfolio_search_placeholder
+import dividox.common.ui_resources.generated.resources.portfolio_per_share
+import dividox.common.ui_resources.generated.resources.portfolio_purchase_price
 import dividox.common.ui_resources.generated.resources.portfolio_shares_format
+import dividox.common.ui_resources.generated.resources.portfolio_empty_state
+import dividox.common.ui_resources.generated.resources.search_security_hint
 import dividox.common.ui_resources.generated.resources.portfolio_sort_date
 import dividox.common.ui_resources.generated.resources.portfolio_sort_gain
+import dividox.common.ui_resources.generated.resources.portfolio_sort_value
 import dividox.common.ui_resources.generated.resources.portfolio_sort_yield
 import dividox.common.ui_resources.generated.resources.portfolio_yield_label
 import dividox.common.ui_resources.generated.resources.section_portfolio
@@ -129,46 +139,49 @@ private fun PortfolioContent(
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .weight(1f)
-                        .padding(horizontal = MaterialTheme.spacing.medium),
+                        .weight(1f),
                 ) {
-                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
+                    Column(
+                        modifier = Modifier
+                            .padding(horizontal = MaterialTheme.spacing.medium)
+                            .weight(1f),
+                    ) {
+                        Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
 
-                    SearchBar(
-                        query = state.searchQuery,
-                        onQueryChanged = { query ->
-                            onEvent(PortfolioContract.PortfolioViewEvent.SearchQueryChanged(query))
-                        },
-                    )
-
-                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
-
-                    SortChips(
-                        selectedOrder = state.sortOrder,
-                        onOrderChanged = { order ->
-                            onEvent(PortfolioContract.PortfolioViewEvent.SortOrderChanged(order))
-                        },
-                    )
-
-                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
-
-                    if (state.holdings.isEmpty()) {
-                        EmptyState()
-                    } else {
-                        HoldingsList(
-                            holdings = state.holdings,
-                            currency = state.currency,
-                            convertedPrices = state.convertedPrices,
-                            onSecurityClicked = { ticker ->
-                                onEvent(PortfolioContract.PortfolioViewEvent.SecurityClicked(ticker))
-                            },
-                            onEditClicked = { holdingId ->
-                                onEvent(PortfolioContract.PortfolioViewEvent.EditHoldingClicked(holdingId))
+                        SearchBar(
+                            query = state.searchQuery,
+                            onQueryChanged = { query ->
+                                onEvent(PortfolioContract.PortfolioViewEvent.SearchQueryChanged(query))
                             },
                         )
-                    }
 
-                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
+                        Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
+
+                        SortChips(
+                            selectedOrder = state.sortOrder,
+                            onOrderChanged = { order ->
+                                onEvent(PortfolioContract.PortfolioViewEvent.SortOrderChanged(order))
+                            },
+                        )
+
+                        Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
+
+                        if (state.holdings.isEmpty()) {
+                            EmptyState()
+                        } else {
+                            HoldingsList(
+                                holdings = state.holdings,
+                                currency = state.currency,
+                                convertedPrices = state.convertedPrices,
+                                onSecurityClicked = { ticker ->
+                                    onEvent(PortfolioContract.PortfolioViewEvent.SecurityClicked(ticker))
+                                },
+                                onEditClicked = { holdingId ->
+                                    onEvent(PortfolioContract.PortfolioViewEvent.EditHoldingClicked(holdingId))
+                                },
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -183,7 +196,7 @@ private fun SearchBar(
 ) {
     // Local state so TextField updates instantly without waiting for the ViewModel round-trip.
     // LaunchedEffect syncs back if the query is cleared externally (e.g. on screen reset).
-    var localQuery by remember { mutableStateOf(query) }
+    var localQuery by retain { mutableStateOf(query) }
     LaunchedEffect(query) {
         if (localQuery != query) localQuery = query
     }
@@ -195,7 +208,7 @@ private fun SearchBar(
         },
         modifier = modifier
             .fillMaxWidth(),
-        placeholder = { Text(stringResource(Res.string.portfolio_search_placeholder)) },
+        placeholder = { Text(stringResource(Res.string.search_security_hint)) },
         leadingIcon = {
             Icon(
                 imageVector = Icons.Default.Search,
@@ -247,7 +260,8 @@ private fun getSortFieldLabel(field: SortField): String {
     return stringResource(
         when (field) {
             SortField.GAIN -> Res.string.portfolio_sort_gain
-            SortField.YIELD -> Res.string.portfolio_sort_yield
+            SortField.VALUE -> Res.string.portfolio_sort_value
+            SortField.DIVIDEND -> Res.string.portfolio_sort_yield
             SortField.DATE -> Res.string.portfolio_sort_date
         },
     )
@@ -324,6 +338,14 @@ private fun HoldingCard(
     val shares = holding.holding.shares
     val gain = holding.totalGainPercent
     val yield = holding.dividendInfo?.yield ?: 0.0
+    val purchaseDate = Instant.fromEpochMilliseconds(holding.holding.purchaseDate)
+        .toLocalDateTime(TimeZone.UTC).date
+    val purchaseDateLabel = "${purchaseDate.day} ${purchaseDate.monthShort()} ${purchaseDate.year}"
+    val gainColor = when {
+        gain > 0.0 -> MaterialTheme.extendedColors.profit
+        gain < 0.0 -> MaterialTheme.colorScheme.error
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
 
     Card(
         modifier = modifier
@@ -339,46 +361,56 @@ private fun HoldingCard(
                 .fillMaxWidth()
                 .padding(MaterialTheme.spacing.medium),
         ) {
+            // Header row: name+ticker (left) | value+per-share+gain (right)
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
+                verticalAlignment = Alignment.Top,
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = holding.quote.displayName,
+                        text = holding.quote.name ?: ticker,
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        text = ticker,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
                     )
                     Text(
                         text = stringResource(Res.string.portfolio_shares_format, shares.formatShares()),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
                     )
                 }
-
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        text = displayPrice.formatPrice(currency),
+                        text = (shares * displayPrice).formatPrice(currency),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
                     )
+                    Text(
+                        text = displayPrice.formatPrice(currency) + stringResource(Res.string.portfolio_per_share),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                    )
+                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.xSmall))
                     Text(
                         text = gain.formatPercent(),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.SemiBold,
-                        color = when {
-                            gain > 0.0 -> MaterialTheme.extendedColors.profit
-                            gain < 0.0 -> MaterialTheme.colorScheme.error
-                            else -> MaterialTheme.colorScheme.onSurfaceVariant
-                        },
+                        color = gainColor,
+                        maxLines = 1,
                         modifier = Modifier
                             .background(
-                                color = when {
-                                    gain > 0.0 -> MaterialTheme.extendedColors.profit.copy(alpha = 0.12f)
-                                    gain < 0.0 -> MaterialTheme.colorScheme.error.copy(alpha = 0.12f)
-                                    else -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.10f)
-                                },
+                                color = gainColor.copy(alpha = 0.12f),
                                 shape = RoundedCornerShape(4.dp),
                             )
                             .padding(horizontal = 6.dp, vertical = 2.dp),
@@ -387,21 +419,50 @@ private fun HoldingCard(
             }
 
             Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
 
+            // Row 3: Purchase label + price · date | edit
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xSmall),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = stringResource(Res.string.portfolio_purchase_price),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                )
+                Text(
+                    text = holding.holding.purchasePrice.formatPrice(holding.holding.purchaseCurrency) + stringResource(Res.string.portfolio_per_share) + " · $purchaseDateLabel",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
+                )
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = stringResource(Res.string.portfolio_edit),
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .size(20.dp)
+                        .clickable { onEditClicked(holding.holding.id.value) },
+                )
+            }
+
+            Spacer(modifier = Modifier.height(MaterialTheme.spacing.xSmall))
+
+            // Row 4: yield
+            Row(
+                modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(
                     text = stringResource(Res.string.portfolio_yield_label, yield.formatPercent()),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Text(
-                    text = stringResource(Res.string.portfolio_edit),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.clickable { onEditClicked(holding.holding.id.value) },
+                    maxLines = 1,
                 )
             }
         }

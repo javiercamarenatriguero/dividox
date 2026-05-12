@@ -8,13 +8,17 @@ import kotlin.coroutines.resume
 
 @OptIn(ExperimentalForeignApi::class)
 actual class BiometricAuthenticator {
-    actual suspend fun authenticate(): BiometricResult = suspendCancellableCoroutine { cont ->
+    actual fun canAuthenticate(): Boolean {
         val context = LAContext()
-        val canEvaluate = context.canEvaluatePolicy(
+        return context.canEvaluatePolicy(
             policy = LAPolicyDeviceOwnerAuthenticationWithBiometrics,
             error = null,
         )
-        if (!canEvaluate) {
+    }
+
+    actual suspend fun authenticate(): BiometricResult = suspendCancellableCoroutine { cont ->
+        val context = LAContext()
+        if (!canAuthenticate()) {
             cont.resume(BiometricResult.NotAvailable)
             return@suspendCancellableCoroutine
         }

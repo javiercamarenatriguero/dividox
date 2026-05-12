@@ -52,7 +52,9 @@ class HoldingViewModel(
     init {
         viewModelScope.launch {
             val settings = observeAppSettings().first()
-            _state.value = _state.value.copy(currency = settings.currency)
+            val defaultMarket = ExchangeMarket.entries.firstOrNull { it.name == settings.defaultMarket }
+                ?: ExchangeMarket.ALL
+            _state.value = _state.value.copy(currency = settings.currency, selectedMarket = defaultMarket)
         }
         if (holdingId != null) {
             loadExistingHolding(holdingId)
@@ -85,7 +87,7 @@ class HoldingViewModel(
             is HoldingContract.HoldingViewEvent.SecuritySelected -> {
                 _state.value = _state.value.copy(
                     selectedSecurity = event.security,
-                    searchQuery = event.security.ticker,
+                    searchQuery = "",
                     searchResults = emptyList(),
                 )
                 checkPortfolioForExistingHolding(event.security.ticker)

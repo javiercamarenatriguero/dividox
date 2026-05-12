@@ -3,6 +3,7 @@ package com.akole.dividox.navigation
 import androidx.compose.runtime.getValue
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
 import com.akole.dividox.common.mvi.collectViewState
 import com.akole.dividox.feature.favorites.FavoritesContract.FavoritesSideEffect.Navigation
@@ -13,6 +14,10 @@ import org.koin.compose.viewmodel.koinViewModel
 
 @Serializable
 data object FavoritesRoute
+
+fun NavController.navigateToFavorites(navOptions: NavOptions? = null) {
+    this.navigate(FavoritesRoute, navOptions)
+}
 
 fun NavGraphBuilder.favoritesScreenNode(navController: NavController, rootNavController: NavController) {
     composable<FavoritesRoute> {

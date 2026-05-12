@@ -14,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.retain.retain
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -44,7 +45,7 @@ fun DividoxTopAppBar(
             if (showDate || onBack != null) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (showDate) {
-                        val dateText = remember {
+                        val dateText = retain {
                             val today = todayIn()
                             val month = today.month.name
                                 .take(3)

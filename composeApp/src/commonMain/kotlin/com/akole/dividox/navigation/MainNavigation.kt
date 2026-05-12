@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Search
@@ -16,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.retain.retain
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,6 +39,11 @@ import com.akole.dividox.common.mvi.collectViewState
 import com.akole.dividox.feature.dividends.DividendsContract.DividendsSideEffect
 import com.akole.dividox.feature.dividends.DividendsScreen
 import com.akole.dividox.feature.dividends.DividendsViewModel
+import com.akole.dividox.feature.settings.SettingsScreen
+import com.akole.dividox.feature.settings.SettingsViewEvent
+import com.akole.dividox.feature.settings.SettingsViewModel
+import com.akole.dividox.feature.settings.SettingsViewSideEffect
+import com.akole.dividox.common.mvi.collectViewState
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -67,7 +74,7 @@ fun NavGraphBuilder.mainGraphNode(rootNavController: NavController) {
     composable<MainGraphRoute> {
         val innerNavController = rememberNavController()
         val navBackStackEntry by innerNavController.currentBackStackEntryAsState()
-        var portfolioFabClick by remember { mutableStateOf({}) }
+        var portfolioFabClick by retain { mutableStateOf({}) }
 
         val currentRoute = navBackStackEntry?.destination?.route
         val selectedTab = when {
@@ -135,8 +142,7 @@ fun NavGraphBuilder.mainGraphNode(rootNavController: NavController) {
                     onRegisterFabClick = { callback -> portfolioFabClick = callback },
                 )
                 dividendsScreenNode(navController = innerNavController, rootNavController = rootNavController)
-                favoritesScreenNode(navController = innerNavController, rootNavController = rootNavController)
-                settingsScreenNode()
+                settingsScreenNode(navController = innerNavController, rootNavController = rootNavController)
             }
         }
     }
@@ -161,10 +167,29 @@ fun NavGraphBuilder.dividendsScreenNode(navController: NavController, rootNavCon
     }
 }
 
-fun NavGraphBuilder.settingsScreenNode() {
+fun NavGraphBuilder.settingsScreenNode(navController: NavController, rootNavController: NavController) {
     composable<SettingsRoute> {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text(stringResource(Res.string.section_settings))
+        val viewModel = koinViewModel<SettingsViewModel>()
+        val state by collectViewState(viewModel.viewState)
+
+        SettingsScreen(
+            state = state,
+            onEvent = viewModel::onViewEvent,
+        )
+
+        // Handle side effects
+        LaunchedEffect(Unit) {
+            viewModel.sideEffect.collect { effect ->
+                when (effect) {
+                    is SettingsViewSideEffect.Navigation.NavigateToFavorites ->
+                        rootNavController.navigateToFavorites()
+                    is SettingsViewSideEffect.Navigation.NavigateToLogin ->
+                        rootNavController.navigate(LoginRoute) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    else -> {}
+                }
+            }
         }
     }
 }

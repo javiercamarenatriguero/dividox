@@ -7,16 +7,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.retain.retain
 import androidx.compose.runtime.setValue
-import androidx.navigation.NavController
-import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import com.akole.dividox.component.auth.domain.model.SessionState
 import com.akole.dividox.component.auth.domain.usecase.ObserveSessionUseCase
-import com.akole.dividox.common.mvi.collectViewState
 import kotlinx.coroutines.delay
 import org.koin.compose.koinInject
 
@@ -25,16 +21,20 @@ private const val SPLASH_DURATION_MS = 2000L
 @Composable
 fun SetupRootNavGraph(navController: NavHostController) {
     val observeSession: ObserveSessionUseCase = koinInject()
-    val sessionState by remember { observeSession() }.collectAsState(initial = SessionState.Loading)
-    var splashReady by remember { mutableStateOf(false) }
+    val sessionState by retain { observeSession() }.collectAsState(initial = SessionState.Loading)
+    var splashReady by retain { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         delay(SPLASH_DURATION_MS)
         splashReady = true
     }
 
+    var lastHandledSessionState by retain { mutableStateOf<SessionState>(SessionState.Loading) }
+
     LaunchedEffect(sessionState, splashReady) {
         if (!splashReady || sessionState == SessionState.Loading) return@LaunchedEffect
+        if (sessionState == lastHandledSessionState) return@LaunchedEffect
+        lastHandledSessionState = sessionState
         when (sessionState) {
             is SessionState.Authenticated -> navController.navigate(MainGraphRoute) {
                 popUpTo(0) { inclusive = true }
@@ -64,6 +64,7 @@ fun SetupRootNavGraph(navController: NavHostController) {
         detailScreenNode(navController)
         securityDetailScreenNode(navController)
         searchScreenNode(navController = navController, rootNavController = navController)
+        favoritesScreenNode(navController = navController, rootNavController = navController)
         addHoldingScreenNode(navController)
         editHoldingScreenNode(navController)
     }

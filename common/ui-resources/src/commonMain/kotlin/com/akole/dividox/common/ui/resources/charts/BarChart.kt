@@ -18,6 +18,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.retain.retain
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -67,9 +68,9 @@ fun BarChart(
 ) {
     val onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
     val axisLabelStyle = MaterialTheme.typography.labelSmall.copy(color = onSurfaceVariant)
-    var popupEntry: BarChartEntry? by remember { mutableStateOf(null) }
-    var tapPosition by remember { mutableStateOf(Offset.Zero) }
-    var popupSize by remember { mutableStateOf(IntSize.Zero) }
+    var popupEntry: BarChartEntry? by retain { mutableStateOf(null) }
+    var tapPosition by retain { mutableStateOf(Offset.Zero) }
+    var popupSize by retain { mutableStateOf(IntSize.Zero) }
 
     LaunchedEffect(entries) {
         val current = popupEntry ?: return@LaunchedEffect

@@ -40,8 +40,8 @@ import com.akole.dividox.feature.search.SearchContract.SearchViewEvent.SecurityC
 import com.akole.dividox.feature.search.SearchContract.SearchViewEvent.TypeFilterChanged
 import com.akole.dividox.feature.search.SearchContract.SearchViewState
 import dividox.common.ui_resources.generated.resources.Res
+import dividox.common.ui_resources.generated.resources.holding_search_security_hint
 import dividox.common.ui_resources.generated.resources.search_no_results
-import dividox.common.ui_resources.generated.resources.search_placeholder_hint
 import dividox.common.ui_resources.generated.resources.search_title
 import dividox.common.ui_resources.generated.resources.security_type_all
 import dividox.common.ui_resources.generated.resources.security_type_equity
@@ -86,7 +86,7 @@ fun SearchScreen(
                 SearchBar(
                     query = state.query,
                     onQueryChange = { onEvent(QueryChanged(it)) },
-                    placeholder = stringResource(Res.string.search_placeholder_hint),
+                    placeholder = stringResource(Res.string.holding_search_security_hint),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(
