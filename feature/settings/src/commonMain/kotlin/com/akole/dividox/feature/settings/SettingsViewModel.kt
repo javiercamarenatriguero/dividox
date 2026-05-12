@@ -12,6 +12,9 @@ import com.akole.dividox.common.settings.domain.usecase.SetCurrencyUseCase
 import com.akole.dividox.common.settings.domain.usecase.SetDefaultMarketUseCase
 import com.akole.dividox.common.settings.domain.usecase.UpdateBiometricLockUseCase
 import com.akole.dividox.component.auth.domain.usecase.SignOutUseCase
+import com.akole.dividox.component.portfolio.domain.usecase.ExportPortfolioUseCase
+import com.akole.dividox.component.portfolio.domain.usecase.GetPortfolioUseCase
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 @Suppress("LongParameterList")
@@ -22,6 +25,8 @@ class SettingsViewModel(
     private val updateBiometricLock: UpdateBiometricLockUseCase,
     private val signOut: SignOutUseCase,
     private val authenticator: BiometricAuthenticator,
+    private val getPortfolio: GetPortfolioUseCase,
+    private val exportPortfolio: ExportPortfolioUseCase,
     private val appVersion: String,
 ) : ViewModel(),
     MVI<SettingsViewState, SettingsViewEvent, SettingsViewSideEffect> by mvi(SettingsViewState()) {
@@ -40,7 +45,7 @@ class SettingsViewModel(
             SettingsViewEvent.FavoritesClicked -> viewModelScope.emitSideEffect(
                 SettingsViewSideEffect.Navigation.NavigateToFavorites
             )
-            SettingsViewEvent.ExportClicked -> exportPortfolio()
+            SettingsViewEvent.ExportClicked -> doExportPortfolio()
             SettingsViewEvent.NotificationsClicked -> viewModelScope.emitSideEffect(
                 SettingsViewSideEffect.OpenUrl("https://help.dividox.app/notifications")
             )
@@ -107,11 +112,18 @@ class SettingsViewModel(
         }
     }
 
-    private fun exportPortfolio() {
-        // TODO: implement CSV export to temp dir + share sheet
-        viewModelScope.emitSideEffect(
-            SettingsViewSideEffect.ShowError("Export feature coming soon")
-        )
+    private fun doExportPortfolio() {
+        viewModelScope.launch {
+            updateViewState { copy(isExporting = true) }
+            val holdings = getPortfolio.execute().first().getOrElse {
+                updateViewState { copy(isExporting = false) }
+                viewModelScope.emitSideEffect(SettingsViewSideEffect.ShowError("Failed to load portfolio"))
+                return@launch
+            }
+            val csv = exportPortfolio(holdings)
+            updateViewState { copy(isExporting = false) }
+            viewModelScope.emitSideEffect(SettingsViewSideEffect.LaunchShareSheet(csvContent = csv))
+        }
     }
 
     private fun deleteAccount() {

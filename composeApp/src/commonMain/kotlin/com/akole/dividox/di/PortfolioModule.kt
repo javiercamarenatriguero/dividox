@@ -7,6 +7,7 @@ import com.akole.dividox.component.portfolio.data.datasource.PortfolioDataSource
 import com.akole.dividox.component.portfolio.data.repository.PortfolioRepositoryImpl
 import com.akole.dividox.component.portfolio.domain.repository.PortfolioRepository
 import com.akole.dividox.component.portfolio.domain.usecase.AddHoldingUseCase
+import com.akole.dividox.component.portfolio.domain.usecase.ExportPortfolioUseCase
 import com.akole.dividox.component.portfolio.domain.usecase.GetPortfolioUseCase
 import com.akole.dividox.component.portfolio.domain.usecase.RemoveHoldingUseCase
 import com.akole.dividox.component.portfolio.domain.usecase.UpdateHoldingUseCase
@@ -31,6 +32,7 @@ val portfolioModule: Module = module {
         )
     }
     factoryOf(::GetPortfolioUseCase)
+    factoryOf(::ExportPortfolioUseCase)
     factoryOf(::AddHoldingUseCase)
     factoryOf(::UpdateHoldingUseCase)
     factoryOf(::RemoveHoldingUseCase)

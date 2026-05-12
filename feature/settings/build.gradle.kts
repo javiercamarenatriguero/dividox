@@ -15,6 +15,7 @@ kotlin {
             api(projects.common.uiResources)
             implementation(projects.common.settings)
             implementation(projects.component.auth)
+            implementation(projects.component.portfolio)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.datetime)
             implementation(compose.materialIconsExtended)
