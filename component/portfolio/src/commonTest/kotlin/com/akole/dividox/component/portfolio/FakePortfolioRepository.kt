@@ -16,4 +16,5 @@ class FakePortfolioRepository : PortfolioRepository {
     override suspend fun addHolding(holding: Holding) = addResult
     override suspend fun updateHolding(holding: Holding) = updateResult
     override suspend fun removeHolding(holdingId: HoldingId) = removeResult
+    override suspend fun clearAll(): Result<Unit> = Result.success(Unit)
 }

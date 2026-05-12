@@ -154,4 +154,12 @@ class FirestorePortfolioDataSource(
     } catch (e: Exception) {
         Result.failure(e)
     }
+
+    override suspend fun clearAll(): Result<Unit> = try {
+        val snapshot = collectionRef.get()
+        snapshot.documents.forEach { doc -> collectionRef.document(doc.id).delete() }
+        Result.success(Unit)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
 }

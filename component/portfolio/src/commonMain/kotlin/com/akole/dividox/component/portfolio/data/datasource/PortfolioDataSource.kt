@@ -14,4 +14,5 @@ interface PortfolioDataSource {
     suspend fun addHolding(holding: Holding): Result<HoldingId>
     suspend fun updateHolding(holding: Holding): Result<Unit>
     suspend fun removeHolding(holdingId: HoldingId): Result<Unit>
+    suspend fun clearAll(): Result<Unit>
 }
