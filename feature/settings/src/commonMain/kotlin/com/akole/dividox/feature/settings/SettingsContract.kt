@@ -11,6 +11,7 @@ data class SettingsViewState(
     val isBiometricAvailable: Boolean = false,
     val appVersion: String = "",
     val isLoading: Boolean = true,
+    val isExporting: Boolean = false,
     val error: String? = null,
 ) : ViewState
 
@@ -38,7 +39,7 @@ sealed interface SettingsViewSideEffect : SideEffect {
     }
     data object ShowDeleteConfirmDialog : SettingsViewSideEffect
     data object ShowSignOutConfirmDialog : SettingsViewSideEffect
-    data class LaunchShareSheet(val fileUri: String) : SettingsViewSideEffect
+    data class LaunchShareSheet(val csvContent: String) : SettingsViewSideEffect
     data class OpenUrl(val url: String) : SettingsViewSideEffect
     data class ShowError(val message: String) : SettingsViewSideEffect
 }

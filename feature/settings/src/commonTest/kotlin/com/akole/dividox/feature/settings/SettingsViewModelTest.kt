@@ -6,12 +6,19 @@ import com.akole.dividox.common.settings.data.biometric.BiometricAuthenticator
 import com.akole.dividox.common.settings.data.biometric.BiometricResult
 import com.akole.dividox.common.settings.domain.usecase.ObserveAppSettingsUseCase
 import com.akole.dividox.common.settings.domain.usecase.SetCurrencyUseCase
+import com.akole.dividox.common.settings.domain.usecase.SetDefaultMarketUseCase
 import com.akole.dividox.common.settings.domain.usecase.UpdateBiometricLockUseCase
 import com.akole.dividox.component.auth.domain.usecase.SignOutUseCase
+import com.akole.dividox.component.portfolio.domain.model.Holding
+import com.akole.dividox.component.portfolio.domain.model.HoldingId
+import com.akole.dividox.component.portfolio.domain.usecase.ExportPortfolioUseCase
+import com.akole.dividox.component.portfolio.domain.usecase.GetPortfolioUseCase
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -20,54 +27,117 @@ class SettingsViewModelTest {
 
     private val mockObserveSettings = mockk<ObserveAppSettingsUseCase>()
     private val mockSetCurrency = mockk<SetCurrencyUseCase>()
+    private val mockSetDefaultMarket = mockk<SetDefaultMarketUseCase>()
     private val mockUpdateBiometric = mockk<UpdateBiometricLockUseCase>()
     private val mockSignOut = mockk<SignOutUseCase>()
     private val mockAuthenticator = mockk<BiometricAuthenticator>()
+    private val mockGetPortfolio = mockk<GetPortfolioUseCase>()
+    private val mockExportPortfolio = mockk<ExportPortfolioUseCase>()
 
-    // GIVEN biometric available
+    private fun buildViewModel(): SettingsViewModel {
+        every { mockObserveSettings() } returns flowOf(AppSettings())
+        every { mockAuthenticator.canAuthenticate() } returns false
+        return SettingsViewModel(
+            observeAppSettings = mockObserveSettings,
+            setCurrency = mockSetCurrency,
+            setDefaultMarket = mockSetDefaultMarket,
+            updateBiometricLock = mockUpdateBiometric,
+            signOut = mockSignOut,
+            authenticator = mockAuthenticator,
+            getPortfolio = mockGetPortfolio,
+            exportPortfolio = mockExportPortfolio,
+            appVersion = "1.0.0",
+        )
+    }
+
     @Test
     fun shouldShowBiometricToggleWhenAvailable() {
         // GIVEN
         every { mockObserveSettings() } returns flowOf(AppSettings())
         every { mockAuthenticator.canAuthenticate() } returns true
-        val vm = SettingsViewModel(mockObserveSettings, mockSetCurrency, mockUpdateBiometric, mockSignOut, mockAuthenticator)
-
-        // WHEN
-        // ViewState initialized
+        val vm = SettingsViewModel(
+            observeAppSettings = mockObserveSettings,
+            setCurrency = mockSetCurrency,
+            setDefaultMarket = mockSetDefaultMarket,
+            updateBiometricLock = mockUpdateBiometric,
+            signOut = mockSignOut,
+            authenticator = mockAuthenticator,
+            getPortfolio = mockGetPortfolio,
+            exportPortfolio = mockExportPortfolio,
+            appVersion = "1.0.0",
+        )
 
         // THEN
         assertEquals(true, vm.viewState.value.isBiometricAvailable)
     }
 
-    // WHEN SignOutConfirmed THEN emit NavigateToLogin
-    @Test
-    fun shouldNavigateToLoginOnSignOutConfirmed() {
-        // GIVEN
-        every { mockObserveSettings() } returns flowOf(AppSettings())
-        every { mockAuthenticator.canAuthenticate() } returns false
-        coEvery { mockSignOut() } returns Result.success(Unit)
-        val vm = SettingsViewModel(mockObserveSettings, mockSetCurrency, mockUpdateBiometric, mockSignOut, mockAuthenticator)
-
-        // WHEN
-        vm.onViewEvent(SettingsViewEvent.SignOutConfirmed)
-
-        // THEN — side effect queued (collected in real usage)
-        // Integration test would verify navigation
-    }
-
-    // WHEN BiometricToggled(enabled=true) AND authenticate succeeds THEN persist
     @Test
     fun shouldPersistBiometricOnSuccessfulAuth() {
         // GIVEN
         every { mockObserveSettings() } returns flowOf(AppSettings(biometricLockEnabled = false))
         every { mockAuthenticator.canAuthenticate() } returns true
         coEvery { mockUpdateBiometric(true) } returns BiometricResult.Success
-        val vm = SettingsViewModel(mockObserveSettings, mockSetCurrency, mockUpdateBiometric, mockSignOut, mockAuthenticator)
+        val vm = buildViewModel()
 
         // WHEN
         vm.onViewEvent(SettingsViewEvent.BiometricToggled(true))
 
-        // THEN — updateBiometric called with true
-        // Real persistence tested via DataStore integration
+        // THEN — updateBiometric called with true (persistence tested via DataStore integration)
+    }
+
+    @Test
+    fun exportClicked_withHoldings_emitsLaunchShareSheet() = runTest {
+        // GIVEN
+        val holdings = listOf(
+            Holding(
+                id = HoldingId("1"),
+                tickerId = "AAPL",
+                shares = 10.0,
+                purchasePrice = 150.0,
+                purchaseCurrency = Currency.USD,
+                purchaseDate = 1_705_276_800_000L,
+            ),
+        )
+        every { mockGetPortfolio.execute() } returns flowOf(Result.success(holdings))
+        every { mockExportPortfolio(holdings) } returns "Ticker,Shares,Purchase Price,Currency,Purchase Date\nAAPL,10.0,150.0,USD,2024-01-15"
+        val vm = buildViewModel()
+
+        // WHEN
+        vm.onViewEvent(SettingsViewEvent.ExportClicked)
+
+        // THEN
+        val effect = vm.sideEffect.first()
+        assertIs<SettingsViewSideEffect.LaunchShareSheet>(effect)
+        assertEquals(true, effect.csvContent.contains("AAPL"))
+    }
+
+    @Test
+    fun exportClicked_withEmptyPortfolio_emitsLaunchShareSheetWithHeaderOnly() = runTest {
+        // GIVEN
+        every { mockGetPortfolio.execute() } returns flowOf(Result.success(emptyList()))
+        every { mockExportPortfolio(emptyList()) } returns "Ticker,Shares,Purchase Price,Currency,Purchase Date"
+        val vm = buildViewModel()
+
+        // WHEN
+        vm.onViewEvent(SettingsViewEvent.ExportClicked)
+
+        // THEN
+        val effect = vm.sideEffect.first()
+        assertIs<SettingsViewSideEffect.LaunchShareSheet>(effect)
+        assertEquals("Ticker,Shares,Purchase Price,Currency,Purchase Date", effect.csvContent)
+    }
+
+    @Test
+    fun exportClicked_whenRepoFails_emitsShowError() = runTest {
+        // GIVEN
+        every { mockGetPortfolio.execute() } returns flowOf(Result.failure(Exception("Network error")))
+        val vm = buildViewModel()
+
+        // WHEN
+        vm.onViewEvent(SettingsViewEvent.ExportClicked)
+
+        // THEN
+        val effect = vm.sideEffect.first()
+        assertIs<SettingsViewSideEffect.ShowError>(effect)
     }
 }
