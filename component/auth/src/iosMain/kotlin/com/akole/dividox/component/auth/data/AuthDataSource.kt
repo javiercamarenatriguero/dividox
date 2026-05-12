@@ -3,7 +3,6 @@
 package com.akole.dividox.component.auth.data
 
 import cocoapods.FirebaseAuth.FIRAuth
-import cocoapods.FirebaseAuth.FIRAuthErrorCodeRequiresRecentLogin
 import cocoapods.FirebaseAuth.FIRGoogleAuthProvider
 import cocoapods.FirebaseAuth.FIRUser
 import cocoapods.FirebaseAuth.FIRUserInfoProtocol
@@ -80,7 +79,7 @@ actual class AuthDataSource actual constructor() {
             }
             user.deleteWithCompletion { error ->
                 if (error != null) {
-                    val exception = if (error.code.toLong() == FIRAuthErrorCodeRequiresRecentLogin) {
+                    val exception = if (error.code.toLong() == 17014L) { // FIRAuthErrorCodeRequiresRecentLogin
                         RecentLoginRequiredException()
                     } else {
                         error.toException()
