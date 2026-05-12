@@ -3,9 +3,11 @@
 package com.akole.dividox.component.auth.data
 
 import cocoapods.FirebaseAuth.FIRAuth
+import cocoapods.FirebaseAuth.FIRAuthErrorCodeRequiresRecentLogin
 import cocoapods.FirebaseAuth.FIRGoogleAuthProvider
 import cocoapods.FirebaseAuth.FIRUser
 import cocoapods.FirebaseAuth.FIRUserInfoProtocol
+import com.akole.dividox.component.auth.domain.exception.RecentLoginRequiredException
 import com.akole.dividox.component.auth.domain.model.AuthProvider
 import com.akole.dividox.component.auth.domain.model.AuthUser
 import kotlinx.coroutines.channels.awaitClose
@@ -68,6 +70,27 @@ actual class AuthDataSource actual constructor() {
     actual suspend fun signOut() {
         FIRAuth.auth().signOut(null)
     }
+
+    actual suspend fun deleteAccount(): Unit =
+        suspendCancellableCoroutine { cont ->
+            val user = FIRAuth.auth().currentUser()
+            if (user == null) {
+                cont.resumeWithException(Exception("No authenticated user"))
+                return@suspendCancellableCoroutine
+            }
+            user.deleteWithCompletion { error ->
+                if (error != null) {
+                    val exception = if (error.code.toLong() == FIRAuthErrorCodeRequiresRecentLogin) {
+                        RecentLoginRequiredException()
+                    } else {
+                        error.toException()
+                    }
+                    cont.resumeWithException(exception)
+                } else {
+                    cont.resume(Unit)
+                }
+            }
+        }
 
     /** Returns UID of currently authenticated user, or null if unauthenticated. */
     actual fun getCurrentUserId(): String? = FIRAuth.auth().currentUser()?.uid()
