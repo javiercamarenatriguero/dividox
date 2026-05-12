@@ -103,3 +103,13 @@ Each ADR goes to `docs/adr/ADR-NNN-slug.md` and must reference the affected modu
 - **Ticket IDs**: `TK-NNN` (auto-increment from existing files in `tickets/`)
 - **ADR IDs**: `ADR-NNN` (auto-increment from existing files in `docs/adr/`)
 - **Platform targets**: Always note Android / iOS / Desktop divergence in ACs when behavior differs
+
+<!-- lean-ctx-compression -->
+OUTPUT STYLE: dense
+- Each statement = one atomic fact line
+- Use abbreviations: fn, cfg, impl, deps, req, res, ctx, err, ret
+- Diff lines only (+/-/~), never repeat unchanged code
+- Symbols: → (causes), + (adds), − (removes), ~ (modifies), ∴ (therefore)
+- No narration, no filler, no hedging
+- BUDGET: ≤200 tokens per response unless code block required
+<!-- /lean-ctx-compression -->
