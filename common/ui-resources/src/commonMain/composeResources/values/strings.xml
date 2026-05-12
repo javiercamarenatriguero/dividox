@@ -158,6 +158,34 @@
     <string name="settings_default_market">Default Market</string>
     <string name="settings_market_picker_title">Select Market</string>
     <string name="settings_close">Close</string>
+    <!-- About screen -->
+    <string name="about_tagline">Track your dividends. Simply.</string>
+    <string name="about_description">DiviDox is a personal portfolio tracker focused on dividend investing. It shows you what you own and what you earn — nothing more. It does not give financial advice, recommend any action, or influence your investment decisions in any way.</string>
+    <string name="about_version_label">Version</string>
+    <string name="about_made_with">Made with ♥ by Akole</string>
+
+    <!-- Terms & Conditions screen -->
+    <string name="terms_title">Terms &amp; Conditions</string>
+    <string name="terms_section_informational">Informational Use Only</string>
+    <string name="terms_body_informational">DiviDox is a personal portfolio tracking tool provided for informational purposes only. The app does not constitute financial advice, investment advice, trading advice, or any other kind of advice. Nothing in the app should be interpreted as a recommendation to buy, sell, or hold any security or financial instrument. All investment decisions are solely your responsibility.</string>
+    <string name="terms_section_accuracy">Data Accuracy</string>
+    <string name="terms_body_accuracy">DiviDox displays data sourced from third-party providers. While we strive to present accurate information, we make no guarantees regarding the completeness, accuracy, or timeliness of any data shown. Always verify information through official sources before making any financial decision.</string>
+    <string name="terms_section_liability">Limitation of Liability</string>
+    <string name="terms_body_liability">To the fullest extent permitted by law, Akole shall not be liable for any loss or damage arising from your use of the app or reliance on information presented within it.</string>
+    <string name="terms_section_changes">Changes to These Terms</string>
+    <string name="terms_body_changes">We may update these Terms from time to time. Continued use of the app after changes are posted constitutes your acceptance of the revised Terms.</string>
+
+    <!-- Privacy Policy screen -->
+    <string name="privacy_title">Privacy Policy</string>
+    <string name="privacy_section_data">Data We Collect</string>
+    <string name="privacy_body_data">DiviDox stores your portfolio data (tickers, shares, purchase prices and dates) in your personal Firebase account. This data is only accessible to you and is used solely to display your portfolio within the app.</string>
+    <string name="privacy_section_third_party">Third-Party Services</string>
+    <string name="privacy_body_third_party">The app uses Firebase (Google) for authentication and data storage, and third-party APIs for market data. These services may collect usage data in accordance with their own privacy policies. DiviDox does not sell or share your personal data with any third party for advertising or marketing purposes.</string>
+    <string name="privacy_section_security">Security</string>
+    <string name="privacy_body_security">Your data is stored securely using Firebase services with industry-standard encryption. You can delete your account and all associated data at any time from the Settings screen.</string>
+    <string name="privacy_section_contact">Contact</string>
+    <string name="privacy_body_contact">For any privacy-related questions, contact us at privacy@dividox.app.</string>
+
     <string name="currency_name_usd">US Dollar</string>
     <string name="currency_name_eur">Euro</string>
     <string name="currency_name_gbp">British Pound</string>
