@@ -66,4 +66,6 @@ expect class AuthDataSource() {
      * No-op when unauthenticated or on Desktop.
      */
     suspend fun ensureTokenReady()
+
+    suspend fun deleteAccount()
 }
