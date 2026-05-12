@@ -8,6 +8,8 @@ import platform.Foundation.NSURL
 import platform.Foundation.writeToFile
 import platform.UIKit.UIActivityViewController
 import platform.UIKit.UIApplication
+import platform.darwin.dispatch_async
+import platform.darwin.dispatch_get_main_queue
 
 @OptIn(ExperimentalForeignApi::class)
 actual class FileShareService {
@@ -22,11 +24,13 @@ actual class FileShareService {
             error = null,
         )
         val fileUrl = NSURL.fileURLWithPath(filePath)
-        val controller = UIActivityViewController(
-            activityItems = listOf(fileUrl),
-            applicationActivities = null,
-        )
-        UIApplication.sharedApplication.keyWindow?.rootViewController
-            ?.presentViewController(controller, animated = true, completion = null)
+        dispatch_async(dispatch_get_main_queue()) {
+            val controller = UIActivityViewController(
+                activityItems = listOf(fileUrl),
+                applicationActivities = null,
+            )
+            UIApplication.sharedApplication.keyWindow?.rootViewController
+                ?.presentViewController(controller, animated = true, completion = null)
+        }
     }
 }
