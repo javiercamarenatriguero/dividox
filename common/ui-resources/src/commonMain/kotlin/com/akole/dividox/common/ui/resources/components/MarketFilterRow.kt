@@ -8,6 +8,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import com.akole.dividox.common.ui.resources.format.flag
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.akole.dividox.common.ui.resources.theme.spacing
@@ -30,7 +31,7 @@ fun MarketFilterRow(
                 onClick = { onMarketSelected(market) },
                 label = {
                     Text(
-                        text = "${market.emoji} ${market.label}",
+                        text = "${market.flag()} ${market.label}".trim(),
                         style = MaterialTheme.typography.labelSmall,
                     )
                 },
