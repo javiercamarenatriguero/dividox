@@ -39,6 +39,8 @@ actual class AuthDataSource actual constructor() {
             // No-op on Desktop if token fetch is unsupported.
         }
     }
+
+    actual suspend fun deleteAccount() = Unit
 }
 
 private fun FirebaseUser.toAuthUser(): AuthUser = AuthUser(
