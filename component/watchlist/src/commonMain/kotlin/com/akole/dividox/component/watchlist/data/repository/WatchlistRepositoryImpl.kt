@@ -35,4 +35,9 @@ class WatchlistRepositoryImpl(
         dataSource.observeWatchlist()
             .map { entries -> entries.any { it.tickerId == tickerId } }
             .flowOn(ioDispatcher)
+
+    override suspend fun clearAll(): Result<Unit> =
+        withContext(ioDispatcher) {
+            dataSource.clearAll()
+        }
 }

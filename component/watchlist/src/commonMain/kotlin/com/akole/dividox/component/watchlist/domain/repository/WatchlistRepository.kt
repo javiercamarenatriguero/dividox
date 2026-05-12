@@ -41,4 +41,6 @@ interface WatchlistRepository {
      * @return Flow emitting true if ticker is in watchlist, false otherwise
      */
     fun isInWatchlist(tickerId: String): Flow<Boolean>
+
+    suspend fun clearAll(): Result<Unit>
 }

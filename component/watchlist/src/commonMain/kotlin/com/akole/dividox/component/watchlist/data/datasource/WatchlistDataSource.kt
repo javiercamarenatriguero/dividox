@@ -11,4 +11,5 @@ interface WatchlistDataSource {
     fun observeWatchlist(): Flow<List<WatchlistEntry>>
     suspend fun addToWatchlist(tickerId: String)
     suspend fun removeFromWatchlist(tickerId: String)
+    suspend fun clearAll(): Result<Unit>
 }

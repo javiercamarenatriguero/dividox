@@ -68,6 +68,14 @@ class WatchlistFirestoreDataSource(
     override suspend fun removeFromWatchlist(tickerId: String) {
         collectionRef.document(tickerId).delete()
     }
+
+    override suspend fun clearAll(): Result<Unit> = try {
+        val snapshot = collectionRef.get()
+        snapshot.documents.forEach { doc -> collectionRef.document(doc.id).delete() }
+        Result.success(Unit)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
 }
 
 @Serializable
