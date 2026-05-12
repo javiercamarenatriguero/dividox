@@ -121,4 +121,6 @@ class FakeWatchlistDataSource : WatchlistDataSource {
     override suspend fun removeFromWatchlist(tickerId: String) {
         removedTickers += tickerId
     }
+
+    override suspend fun clearAll(): Result<Unit> = Result.success(Unit)
 }

@@ -2,8 +2,10 @@ package com.akole.dividox.component.auth.data
 
 import com.akole.dividox.component.auth.domain.model.AuthProvider
 import com.akole.dividox.component.auth.domain.model.AuthUser
+import com.akole.dividox.component.auth.domain.exception.RecentLoginRequiredException
 import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import kotlinx.coroutines.channels.awaitClose
@@ -47,6 +49,14 @@ actual class AuthDataSource actual constructor() {
     /** Signs out the currently authenticated user. */
     actual suspend fun signOut() {
         auth.signOut()
+    }
+
+    actual suspend fun deleteAccount() {
+        try {
+            auth.currentUser?.delete()?.await() ?: error("No authenticated user")
+        } catch (e: FirebaseAuthRecentLoginRequiredException) {
+            throw RecentLoginRequiredException()
+        }
     }
 
     /** Returns UID of currently authenticated user, or null if unauthenticated. */

@@ -51,4 +51,11 @@ class AuthRepositoryImpl(
     override fun getCurrentUserId(): String? = dataSource.getCurrentUserId()
 
     override suspend fun ensureTokenReady() = dataSource.ensureTokenReady()
+
+    override suspend fun deleteAccount(): Result<Unit> = try {
+        dataSource.deleteAccount()
+        Result.success(Unit)
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
 }

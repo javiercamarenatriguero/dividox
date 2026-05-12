@@ -16,6 +16,8 @@ kotlin {
             implementation(projects.common.settings)
             implementation(projects.component.auth)
             implementation(projects.component.portfolio)
+            implementation(projects.component.watchlist)
+            implementation(projects.component.dividend)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.datetime)
             implementation(compose.materialIconsExtended)

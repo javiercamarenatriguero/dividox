@@ -133,4 +133,5 @@ class FakePortfolioDataSource : PortfolioDataSource {
     override suspend fun addHolding(holding: Holding): Result<HoldingId> = addResult
     override suspend fun updateHolding(holding: Holding): Result<Unit> = updateResult
     override suspend fun removeHolding(holdingId: HoldingId): Result<Unit> = removeResult
+    override suspend fun clearAll(): Result<Unit> = Result.success(Unit)
 }

@@ -39,4 +39,9 @@ class PortfolioRepositoryImpl(
         withContext(ioDispatcher) {
             dataSource.removeHolding(holdingId)
         }
+
+    override suspend fun clearAll(): Result<Unit> =
+        withContext(ioDispatcher) {
+            dataSource.clearAll()
+        }
 }

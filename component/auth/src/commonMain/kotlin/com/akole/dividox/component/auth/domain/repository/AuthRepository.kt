@@ -61,4 +61,6 @@ interface AuthRepository {
      * caused by the auth token not yet propagating on a fresh install.
      */
     suspend fun ensureTokenReady()
+
+    suspend fun deleteAccount(): Result<Unit>
 }

@@ -46,4 +46,6 @@ interface PortfolioRepository {
      * @return Result.success on delete or error
      */
     suspend fun removeHolding(holdingId: HoldingId): Result<Unit>
+
+    suspend fun clearAll(): Result<Unit>
 }

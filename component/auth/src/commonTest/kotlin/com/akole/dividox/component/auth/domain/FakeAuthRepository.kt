@@ -46,6 +46,7 @@ internal class FakeAuthRepository(private val user: AuthUser? = null) : AuthRepo
     override fun getCurrentUserId(): String? = user?.uid
 
     override suspend fun ensureTokenReady() = Unit
+    override suspend fun deleteAccount(): Result<Unit> = Result.success(Unit)
 }
 
 /**
@@ -72,4 +73,5 @@ internal class FailingAuthRepository : AuthRepository {
     override fun getCurrentUserId(): String? = null
 
     override suspend fun ensureTokenReady() = Unit
+    override suspend fun deleteAccount(): Result<Unit> = Result.failure(IllegalStateException("Delete failed"))
 }
