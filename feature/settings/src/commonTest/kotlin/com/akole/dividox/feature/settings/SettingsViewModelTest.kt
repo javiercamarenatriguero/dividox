@@ -2,12 +2,9 @@ package com.akole.dividox.feature.settings
 
 import com.akole.dividox.common.currency.domain.model.Currency
 import com.akole.dividox.common.settings.domain.model.AppSettings
-import com.akole.dividox.common.settings.data.biometric.BiometricAuthenticator
-import com.akole.dividox.common.settings.data.biometric.BiometricResult
 import com.akole.dividox.common.settings.domain.usecase.ObserveAppSettingsUseCase
 import com.akole.dividox.common.settings.domain.usecase.SetCurrencyUseCase
 import com.akole.dividox.common.settings.domain.usecase.SetDefaultMarketUseCase
-import com.akole.dividox.common.settings.domain.usecase.UpdateBiometricLockUseCase
 import com.akole.dividox.component.auth.domain.exception.RecentLoginRequiredException
 import com.akole.dividox.component.auth.domain.usecase.SignOutUseCase
 import com.akole.dividox.component.portfolio.domain.model.Holding
@@ -29,64 +26,23 @@ class SettingsViewModelTest {
     private val mockObserveSettings = mockk<ObserveAppSettingsUseCase>()
     private val mockSetCurrency = mockk<SetCurrencyUseCase>()
     private val mockSetDefaultMarket = mockk<SetDefaultMarketUseCase>()
-    private val mockUpdateBiometric = mockk<UpdateBiometricLockUseCase>()
     private val mockSignOut = mockk<SignOutUseCase>()
-    private val mockAuthenticator = mockk<BiometricAuthenticator>()
     private val mockGetPortfolio = mockk<GetPortfolioUseCase>()
     private val mockExportPortfolio = mockk<ExportPortfolioUseCase>()
     private val mockDeleteAccount = mockk<DeleteAccountUseCase>()
 
     private fun buildViewModel(): SettingsViewModel {
         every { mockObserveSettings() } returns flowOf(AppSettings())
-        every { mockAuthenticator.canAuthenticate() } returns false
         return SettingsViewModel(
             observeAppSettings = mockObserveSettings,
             setCurrency = mockSetCurrency,
             setDefaultMarket = mockSetDefaultMarket,
-            updateBiometricLock = mockUpdateBiometric,
             signOut = mockSignOut,
-            authenticator = mockAuthenticator,
             getPortfolio = mockGetPortfolio,
             exportPortfolio = mockExportPortfolio,
             deleteAccountUseCase = mockDeleteAccount,
             appVersion = "1.0.0",
         )
-    }
-
-    @Test
-    fun shouldShowBiometricToggleWhenAvailable() {
-        // GIVEN
-        every { mockObserveSettings() } returns flowOf(AppSettings())
-        every { mockAuthenticator.canAuthenticate() } returns true
-        val vm = SettingsViewModel(
-            observeAppSettings = mockObserveSettings,
-            setCurrency = mockSetCurrency,
-            setDefaultMarket = mockSetDefaultMarket,
-            updateBiometricLock = mockUpdateBiometric,
-            signOut = mockSignOut,
-            authenticator = mockAuthenticator,
-            getPortfolio = mockGetPortfolio,
-            exportPortfolio = mockExportPortfolio,
-            deleteAccountUseCase = mockDeleteAccount,
-            appVersion = "1.0.0",
-        )
-
-        // THEN
-        assertEquals(true, vm.viewState.value.isBiometricAvailable)
-    }
-
-    @Test
-    fun shouldPersistBiometricOnSuccessfulAuth() {
-        // GIVEN
-        every { mockObserveSettings() } returns flowOf(AppSettings(biometricLockEnabled = false))
-        every { mockAuthenticator.canAuthenticate() } returns true
-        coEvery { mockUpdateBiometric(true) } returns BiometricResult.Success
-        val vm = buildViewModel()
-
-        // WHEN
-        vm.onViewEvent(SettingsViewEvent.BiometricToggled(true))
-
-        // THEN — updateBiometric called with true (persistence tested via DataStore integration)
     }
 
     @Test

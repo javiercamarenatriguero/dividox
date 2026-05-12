@@ -8,7 +8,6 @@ import com.akole.dividox.common.settings.domain.model.AppSettings
 
 data class SettingsViewState(
     val settings: AppSettings? = null,
-    val isBiometricAvailable: Boolean = false,
     val appVersion: String = "",
     val isLoading: Boolean = true,
     val isExporting: Boolean = false,
@@ -16,13 +15,10 @@ data class SettingsViewState(
 ) : ViewState
 
 sealed interface SettingsViewEvent : ViewEvent {
-    data class BiometricToggled(val enabled: Boolean) : SettingsViewEvent
     data class CurrencyChanged(val currency: Currency) : SettingsViewEvent
     data class MarketChanged(val market: String) : SettingsViewEvent
     data object FavoritesClicked : SettingsViewEvent
     data object ExportClicked : SettingsViewEvent
-    data object NotificationsClicked : SettingsViewEvent
-    data object HelpClicked : SettingsViewEvent
     data object AboutClicked : SettingsViewEvent
     data object TermsClicked : SettingsViewEvent
     data object PrivacyClicked : SettingsViewEvent
@@ -36,6 +32,9 @@ sealed interface SettingsViewSideEffect : SideEffect {
     sealed interface Navigation : SettingsViewSideEffect {
         data object NavigateToFavorites : Navigation
         data object NavigateToLogin : Navigation
+        data object NavigateToAbout : Navigation
+        data object NavigateToTerms : Navigation
+        data object NavigateToPrivacy : Navigation
     }
     data object ShowDeleteConfirmDialog : SettingsViewSideEffect
     data object ShowSignOutConfirmDialog : SettingsViewSideEffect

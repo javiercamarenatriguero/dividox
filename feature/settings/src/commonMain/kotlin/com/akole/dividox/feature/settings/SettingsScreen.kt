@@ -22,10 +22,7 @@ import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.DeleteForever
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.Gavel
-import androidx.compose.material.icons.filled.Help
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Lock
@@ -38,7 +35,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -62,9 +58,7 @@ import com.akole.dividox.common.ui.resources.theme.spacing
 import dividox.common.ui_resources.generated.resources.Res
 import dividox.common.ui_resources.generated.resources.section_settings
 import dividox.common.ui_resources.generated.resources.settings_about
-import dividox.common.ui_resources.generated.resources.settings_biometric_lock
 import dividox.common.ui_resources.generated.resources.settings_close
-import dividox.common.ui_resources.generated.resources.settings_contact_support
 import dividox.common.ui_resources.generated.resources.settings_currency
 import dividox.common.ui_resources.generated.resources.settings_currency_picker_title
 import dividox.common.ui_resources.generated.resources.settings_default_market
@@ -74,13 +68,11 @@ import dividox.common.ui_resources.generated.resources.settings_delete_confirm_m
 import dividox.common.ui_resources.generated.resources.settings_delete_confirm_title
 import dividox.common.ui_resources.generated.resources.settings_export
 import dividox.common.ui_resources.generated.resources.settings_favorites
-import dividox.common.ui_resources.generated.resources.settings_help_center
 import dividox.common.ui_resources.generated.resources.settings_privacy
 import dividox.common.ui_resources.generated.resources.settings_section_data
 import dividox.common.ui_resources.generated.resources.settings_section_legal
 import dividox.common.ui_resources.generated.resources.settings_section_portfolio
 import dividox.common.ui_resources.generated.resources.settings_section_preferences
-import dividox.common.ui_resources.generated.resources.settings_section_support
 import dividox.common.ui_resources.generated.resources.settings_sign_out
 import dividox.common.ui_resources.generated.resources.settings_sign_out_confirm_message
 import dividox.common.ui_resources.generated.resources.settings_sign_out_confirm_title
@@ -117,25 +109,6 @@ fun SettingsScreen(
                 // Preferences
                 SectionLabel(stringResource(Res.string.settings_section_preferences))
                 SettingsCard {
-                    if (state.isBiometricAvailable) {
-                        SettingsRow(
-                            label = stringResource(Res.string.settings_biometric_lock),
-                            icon = Icons.Filled.Fingerprint,
-                            iconContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                            iconTint = MaterialTheme.colorScheme.onPrimaryContainer,
-                            onClick = { onEvent(SettingsViewEvent.BiometricToggled(!state.settings.biometricLockEnabled)) },
-                            trailingContent = {
-                                Switch(
-                                    checked = state.settings.biometricLockEnabled,
-                                    onCheckedChange = { onEvent(SettingsViewEvent.BiometricToggled(it)) },
-                                )
-                            },
-                        )
-                        HorizontalDivider(
-                            modifier = Modifier.padding(horizontal = MaterialTheme.spacing.medium),
-                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
-                        )
-                    }
                     SettingsRow(
                         label = stringResource(Res.string.settings_currency),
                         icon = Icons.Filled.AttachMoney,
@@ -206,31 +179,6 @@ fun SettingsScreen(
                         iconContainerColor = MaterialTheme.colorScheme.secondaryContainer,
                         iconTint = MaterialTheme.colorScheme.onSecondaryContainer,
                         onClick = { onEvent(SettingsViewEvent.FavoritesClicked) },
-                    )
-                }
-
-                Spacer(Modifier.height(MaterialTheme.spacing.medium))
-
-                // Support & Help
-                SectionLabel(stringResource(Res.string.settings_section_support))
-                SettingsCard {
-                    SettingsRow(
-                        label = stringResource(Res.string.settings_help_center),
-                        icon = Icons.Filled.Help,
-                        iconContainerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                        iconTint = MaterialTheme.colorScheme.onTertiaryContainer,
-                        onClick = { onEvent(SettingsViewEvent.HelpClicked) },
-                    )
-                    HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = MaterialTheme.spacing.medium),
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
-                    )
-                    SettingsRow(
-                        label = stringResource(Res.string.settings_contact_support),
-                        icon = Icons.Filled.Email,
-                        iconContainerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                        iconTint = MaterialTheme.colorScheme.onTertiaryContainer,
-                        onClick = { onEvent(SettingsViewEvent.NotificationsClicked) },
                     )
                 }
 
