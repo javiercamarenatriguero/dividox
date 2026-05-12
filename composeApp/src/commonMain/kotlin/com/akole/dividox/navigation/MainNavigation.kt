@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Search
@@ -39,13 +40,17 @@ import com.akole.dividox.common.mvi.collectViewState
 import com.akole.dividox.feature.dividends.DividendsContract.DividendsSideEffect
 import com.akole.dividox.feature.dividends.DividendsScreen
 import com.akole.dividox.feature.dividends.DividendsViewModel
+import com.akole.dividox.common.settings.data.share.FileShareService
 import com.akole.dividox.feature.settings.SettingsScreen
 import com.akole.dividox.feature.settings.SettingsViewEvent
 import com.akole.dividox.feature.settings.SettingsViewModel
 import com.akole.dividox.feature.settings.SettingsViewSideEffect
 import com.akole.dividox.common.mvi.collectViewState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 @Serializable
@@ -171,13 +176,14 @@ fun NavGraphBuilder.settingsScreenNode(navController: NavController, rootNavCont
     composable<SettingsRoute> {
         val viewModel = koinViewModel<SettingsViewModel>()
         val state by collectViewState(viewModel.viewState)
+        val fileShareService: FileShareService = koinInject()
+        val uriHandler = LocalUriHandler.current
 
         SettingsScreen(
             state = state,
             onEvent = viewModel::onViewEvent,
         )
 
-        // Handle side effects
         LaunchedEffect(Unit) {
             viewModel.sideEffect.collect { effect ->
                 when (effect) {
@@ -187,6 +193,12 @@ fun NavGraphBuilder.settingsScreenNode(navController: NavController, rootNavCont
                         rootNavController.navigate(LoginRoute) {
                             popUpTo(0) { inclusive = true }
                         }
+                    is SettingsViewSideEffect.LaunchShareSheet ->
+                        withContext(Dispatchers.Default) {
+                            fileShareService.share("dividox_portfolio.csv", effect.csvContent)
+                        }
+                    is SettingsViewSideEffect.OpenUrl ->
+                        runCatching { uriHandler.openUri(effect.url) }
                     else -> {}
                 }
             }
