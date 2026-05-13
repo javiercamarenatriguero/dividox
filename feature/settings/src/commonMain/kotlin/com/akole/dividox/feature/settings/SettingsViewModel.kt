@@ -29,7 +29,7 @@ class SettingsViewModel(
     MVI<SettingsViewState, SettingsViewEvent, SettingsViewSideEffect> by mvi(SettingsViewState()) {
 
     init {
-        updateViewState { copy(appVersion = appVersion) }
+        updateViewState { copy(appVersion = this@SettingsViewModel.appVersion) }
         observeSettings()
     }
 

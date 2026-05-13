@@ -67,5 +67,8 @@ fun SetupRootNavGraph(navController: NavHostController) {
         favoritesScreenNode(navController = navController, rootNavController = navController)
         addHoldingScreenNode(navController)
         editHoldingScreenNode(navController)
+        aboutScreenNode(navController)
+        termsScreenNode(navController)
+        privacyScreenNode(navController)
     }
 }

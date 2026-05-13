@@ -18,22 +18,7 @@ import dividox.common.ui_resources.generated.resources.currency_name_usd
 import dividox.common.ui_resources.generated.resources.currency_name_zar
 import org.jetbrains.compose.resources.StringResource
 
-fun Currency.flag(): String = when (this) {
-    Currency.USD -> "🇺🇸"
-    Currency.EUR -> "🇪🇺"
-    Currency.GBP -> "🇬🇧"
-    Currency.GBX -> "🇬🇧"
-    Currency.JPY -> "🇯🇵"
-    Currency.CHF -> "🇨🇭"
-    Currency.CAD -> "🇨🇦"
-    Currency.AUD -> "🇦🇺"
-    Currency.NZD -> "🇳🇿"
-    Currency.CNY -> "🇨🇳"
-    Currency.INR -> "🇮🇳"
-    Currency.MXN -> "🇲🇽"
-    Currency.BRL -> "🇧🇷"
-    Currency.ZAR -> "🇿🇦"
-}
+expect fun Currency.flag(): String
 
 fun Currency.nameRes(): StringResource = when (this) {
     Currency.USD -> Res.string.currency_name_usd

@@ -157,6 +157,31 @@
     <string name="settings_default_market">Mercado Predeterminado</string>
     <string name="settings_market_picker_title">Seleccionar Mercado</string>
     <string name="settings_close">Cerrar</string>
+    <!-- About screen -->
+    <string name="about_tagline">Sigue tus dividendos. Sin complicaciones.</string>
+    <string name="about_description">DiviDox es una herramienta de seguimiento de cartera centrada en la inversión en dividendos. Te muestra lo que tienes y lo que ganas — nada más. No ofrece asesoramiento financiero, no recomienda ninguna acción ni influye en tus decisiones de inversión de ningún modo.</string>
+    <string name="about_version_label">Versión</string>
+    <string name="about_made_with">Hecho con ♥ por Akole</string>
+    <!-- Terms & Conditions screen -->
+    <string name="terms_title">Términos y Condiciones</string>
+    <string name="terms_section_informational">Solo para uso informativo</string>
+    <string name="terms_body_informational">DiviDox es una herramienta de seguimiento de cartera personal proporcionada exclusivamente con fines informativos. La aplicación no constituye asesoramiento financiero, de inversión, de negociación ni de ningún otro tipo. Nada en la aplicación debe interpretarse como una recomendación para comprar, vender o mantener ningún valor o instrumento financiero. Todas las decisiones de inversión son responsabilidad exclusiva del usuario.</string>
+    <string name="terms_section_accuracy">Precisión de los datos</string>
+    <string name="terms_body_accuracy">DiviDox muestra datos procedentes de proveedores externos. Aunque nos esforzamos por ofrecer información precisa, no garantizamos la exhaustividad, exactitud ni actualidad de los datos mostrados. Verifica siempre la información a través de fuentes oficiales antes de tomar cualquier decisión financiera.</string>
+    <string name="terms_section_liability">Limitación de responsabilidad</string>
+    <string name="terms_body_liability">En la máxima medida permitida por la ley, Akole no será responsable de ninguna pérdida o daño derivado del uso de la aplicación o de la confianza en la información presentada en ella.</string>
+    <string name="terms_section_changes">Cambios en estos Términos</string>
+    <string name="terms_body_changes">Podemos actualizar estos Términos periódicamente. El uso continuado de la aplicación tras la publicación de los cambios implica la aceptación de los Términos revisados.</string>
+    <!-- Privacy Policy screen -->
+    <string name="privacy_title">Política de Privacidad</string>
+    <string name="privacy_section_data">Datos que recopilamos</string>
+    <string name="privacy_body_data">DiviDox almacena los datos de tu cartera (tickers, acciones, precios y fechas de compra) en tu cuenta personal de Firebase. Estos datos solo son accesibles para ti y se utilizan exclusivamente para mostrar tu cartera dentro de la aplicación.</string>
+    <string name="privacy_section_third_party">Servicios de terceros</string>
+    <string name="privacy_body_third_party">La aplicación utiliza Firebase (Google) para la autenticación y el almacenamiento de datos, y APIs de terceros para datos de mercado. Estos servicios pueden recopilar datos de uso de acuerdo con sus propias políticas de privacidad. DiviDox no vende ni comparte tus datos personales con terceros para fines publicitarios o de marketing.</string>
+    <string name="privacy_section_security">Seguridad</string>
+    <string name="privacy_body_security">Tus datos se almacenan de forma segura mediante los servicios de Firebase con cifrado estándar del sector. Puedes eliminar tu cuenta y todos los datos asociados en cualquier momento desde la pantalla de Configuración.</string>
+    <string name="privacy_section_contact">Contacto</string>
+    <string name="privacy_body_contact">Para cualquier pregunta relacionada con la privacidad, contáctanos en privacy@dividox.app.</string>
     <string name="currency_name_usd">Dólar Estadounidense</string>
     <string name="currency_name_eur">Euro</string>
     <string name="currency_name_gbp">Libra Esterlina</string>

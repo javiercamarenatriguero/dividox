@@ -53,6 +53,7 @@ import com.akole.dividox.common.currency.domain.model.Currency
 import com.akole.dividox.common.ui.resources.components.DividoxTopAppBar
 import com.akole.dividox.common.ui.resources.components.ExchangeMarket
 import com.akole.dividox.common.ui.resources.format.flag
+import com.akole.dividox.common.ui.resources.format.flag
 import com.akole.dividox.common.ui.resources.format.nameRes
 import com.akole.dividox.common.ui.resources.theme.spacing
 import dividox.common.ui_resources.generated.resources.Res
@@ -153,7 +154,7 @@ fun SettingsScreen(
                                 horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xSmall),
                             ) {
                                 Text(
-                                    "${currentMarket.emoji} ${currentMarket.label}",
+                                    "${currentMarket.flag()} ${currentMarket.label}".trim(),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
@@ -506,7 +507,7 @@ private fun MarketPickerDialog(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            market.emoji,
+                            market.flag(),
                             style = MaterialTheme.typography.titleLarge,
                         )
                         Text(

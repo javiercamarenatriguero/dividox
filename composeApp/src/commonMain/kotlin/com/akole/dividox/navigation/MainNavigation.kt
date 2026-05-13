@@ -27,6 +27,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.toRoute
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.akole.dividox.common.ui.resources.components.BottomTab
@@ -41,10 +42,13 @@ import com.akole.dividox.feature.dividends.DividendsContract.DividendsSideEffect
 import com.akole.dividox.feature.dividends.DividendsScreen
 import com.akole.dividox.feature.dividends.DividendsViewModel
 import com.akole.dividox.common.settings.data.share.FileShareService
+import com.akole.dividox.feature.settings.AboutScreen
+import com.akole.dividox.feature.settings.PrivacyScreen
 import com.akole.dividox.feature.settings.SettingsScreen
 import com.akole.dividox.feature.settings.SettingsViewEvent
 import com.akole.dividox.feature.settings.SettingsViewModel
 import com.akole.dividox.feature.settings.SettingsViewSideEffect
+import com.akole.dividox.feature.settings.TermsScreen
 import com.akole.dividox.common.mvi.collectViewState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -70,6 +74,19 @@ data object DividendsRoute
 
 @Serializable
 data object SettingsRoute
+
+@Serializable
+data class AboutRoute(val appVersion: String)
+
+@Serializable
+data object TermsRoute
+
+@Serializable
+data object PrivacyRoute
+
+fun NavController.navigateToAbout(appVersion: String) = navigate(AboutRoute(appVersion))
+fun NavController.navigateToTerms() = navigate(TermsRoute)
+fun NavController.navigateToPrivacy() = navigate(PrivacyRoute)
 
 fun NavController.navigateToMain(navOptions: NavOptions? = null) {
     this.navigate(MainGraphRoute, navOptions)
@@ -153,6 +170,28 @@ fun NavGraphBuilder.mainGraphNode(rootNavController: NavController) {
     }
 }
 
+fun NavGraphBuilder.aboutScreenNode(navController: NavController) {
+    composable<AboutRoute> {
+        val route = it.toRoute<AboutRoute>()
+        AboutScreen(
+            appVersion = route.appVersion,
+            onBack = { navController.popBackStack() },
+        )
+    }
+}
+
+fun NavGraphBuilder.termsScreenNode(navController: NavController) {
+    composable<TermsRoute> {
+        TermsScreen(onBack = { navController.popBackStack() })
+    }
+}
+
+fun NavGraphBuilder.privacyScreenNode(navController: NavController) {
+    composable<PrivacyRoute> {
+        PrivacyScreen(onBack = { navController.popBackStack() })
+    }
+}
+
 fun NavGraphBuilder.dividendsScreenNode(navController: NavController, rootNavController: NavController) {
     composable<DividendsRoute> {
         val viewModel = koinViewModel<DividendsViewModel>()
@@ -193,6 +232,12 @@ fun NavGraphBuilder.settingsScreenNode(navController: NavController, rootNavCont
                         rootNavController.navigate(LoginRoute) {
                             popUpTo(0) { inclusive = true }
                         }
+                    is SettingsViewSideEffect.Navigation.NavigateToAbout ->
+                        rootNavController.navigateToAbout(state.appVersion)
+                    is SettingsViewSideEffect.Navigation.NavigateToTerms ->
+                        rootNavController.navigateToTerms()
+                    is SettingsViewSideEffect.Navigation.NavigateToPrivacy ->
+                        rootNavController.navigateToPrivacy()
                     is SettingsViewSideEffect.LaunchShareSheet ->
                         withContext(Dispatchers.Default) {
                             fileShareService.share("dividox_portfolio.csv", effect.csvContent)
