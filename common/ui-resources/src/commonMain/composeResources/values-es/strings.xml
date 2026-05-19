@@ -161,7 +161,7 @@
     <string name="about_tagline">Sigue tus dividendos. Sin complicaciones.</string>
     <string name="about_description">DiviDox es una herramienta de seguimiento de cartera centrada en la inversión en dividendos. Te muestra lo que tienes y lo que ganas — nada más. No ofrece asesoramiento financiero, no recomienda ninguna acción ni influye en tus decisiones de inversión de ningún modo.</string>
     <string name="about_version_label">Versión</string>
-    <string name="about_made_with">Hecho con ♥ por Akole</string>
+    <string name="about_made_with">Hecho con ♥ por aKole</string>
     <!-- Terms & Conditions screen -->
     <string name="terms_title">Términos y Condiciones</string>
     <string name="terms_section_informational">Solo para uso informativo</string>
@@ -169,7 +169,7 @@
     <string name="terms_section_accuracy">Precisión de los datos</string>
     <string name="terms_body_accuracy">DiviDox muestra datos procedentes de proveedores externos. Aunque nos esforzamos por ofrecer información precisa, no garantizamos la exhaustividad, exactitud ni actualidad de los datos mostrados. Verifica siempre la información a través de fuentes oficiales antes de tomar cualquier decisión financiera.</string>
     <string name="terms_section_liability">Limitación de responsabilidad</string>
-    <string name="terms_body_liability">En la máxima medida permitida por la ley, Akole no será responsable de ninguna pérdida o daño derivado del uso de la aplicación o de la confianza en la información presentada en ella.</string>
+    <string name="terms_body_liability">En la máxima medida permitida por la ley, aKole no será responsable de ninguna pérdida o daño derivado del uso de la aplicación o de la confianza en la información presentada en ella.</string>
     <string name="terms_section_changes">Cambios en estos Términos</string>
     <string name="terms_body_changes">Podemos actualizar estos Términos periódicamente. El uso continuado de la aplicación tras la publicación de los cambios implica la aceptación de los Términos revisados.</string>
     <!-- Privacy Policy screen -->

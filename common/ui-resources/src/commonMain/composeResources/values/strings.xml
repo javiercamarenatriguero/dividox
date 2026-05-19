@@ -162,7 +162,7 @@
     <string name="about_tagline">Track your dividends. Simply.</string>
     <string name="about_description">DiviDox is a personal portfolio tracker focused on dividend investing. It shows you what you own and what you earn — nothing more. It does not give financial advice, recommend any action, or influence your investment decisions in any way.</string>
     <string name="about_version_label">Version</string>
-    <string name="about_made_with">Made with ♥ by Akole</string>
+    <string name="about_made_with">Made with ♥ by aKole</string>
 
     <!-- Terms & Conditions screen -->
     <string name="terms_title">Terms &amp; Conditions</string>
@@ -171,7 +171,7 @@
     <string name="terms_section_accuracy">Data Accuracy</string>
     <string name="terms_body_accuracy">DiviDox displays data sourced from third-party providers. While we strive to present accurate information, we make no guarantees regarding the completeness, accuracy, or timeliness of any data shown. Always verify information through official sources before making any financial decision.</string>
     <string name="terms_section_liability">Limitation of Liability</string>
-    <string name="terms_body_liability">To the fullest extent permitted by law, Akole shall not be liable for any loss or damage arising from your use of the app or reliance on information presented within it.</string>
+    <string name="terms_body_liability">To the fullest extent permitted by law, aKole shall not be liable for any loss or damage arising from your use of the app or reliance on information presented within it.</string>
     <string name="terms_section_changes">Changes to These Terms</string>
     <string name="terms_body_changes">We may update these Terms from time to time. Continued use of the app after changes are posted constitutes your acceptance of the revised Terms.</string>
 
