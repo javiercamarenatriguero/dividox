@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.akole.dividox.component.market.domain.model.MarketIndexQuote
 import com.akole.dividox.common.ui.resources.theme.extendedColors
@@ -39,7 +40,8 @@ fun MarketIndicesSection(
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
             text = stringResource(Res.string.dashboard_market_indices_title),
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.SemiBold,
             modifier = Modifier.padding(
                 horizontal = MaterialTheme.spacing.medium,
                 vertical = MaterialTheme.spacing.small,
