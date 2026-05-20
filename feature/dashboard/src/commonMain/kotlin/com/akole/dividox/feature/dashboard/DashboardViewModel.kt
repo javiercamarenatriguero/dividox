@@ -11,6 +11,7 @@ import com.akole.dividox.common.settings.AppRefreshTracker
 import com.akole.dividox.common.settings.domain.usecase.ObserveAppSettingsUseCase
 import com.akole.dividox.common.settings.domain.usecase.SetCurrencyUseCase
 import com.akole.dividox.component.watchlist.domain.usecase.RemoveFromWatchlistUseCase
+import com.akole.dividox.component.market.domain.usecase.GetMajorMarketIndicesUseCase
 import com.akole.dividox.feature.dashboard.DashboardContract.DashboardSideEffect
 import com.akole.dividox.feature.dashboard.DashboardContract.DashboardViewEvent
 import com.akole.dividox.feature.dashboard.DashboardContract.DashboardViewEvent.CurrencySelected
@@ -41,6 +42,8 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 @Suppress("LongParameterList", "TooManyFunctions")
@@ -58,10 +61,12 @@ class DashboardViewModel(
     private val refreshTracker: AppRefreshTracker,
     private val observePortfolioChanges: ObservePortfolioChangesUseCase,
     private val syncDividendHistory: SyncDividendHistoryFromHoldingsUseCase,
+    private val getMajorMarketIndices: GetMajorMarketIndicesUseCase,
 ) : ViewModel(),
     MVI<DashboardViewState, DashboardViewEvent, DashboardSideEffect> by mvi(DashboardViewState()) {
 
     private var dataJob: Job? = null
+    private var marketIndicesJob: Job? = null
     private val periodFlow = MutableStateFlow(ChartPeriod.ONE_DAY)
     // Internal flows updated by separate coroutines so slow API calls don't block main UI data
     private val summaryFlow = MutableStateFlow<PortfolioSummary?>(null)         // null until portfolio API calls complete
@@ -77,6 +82,7 @@ class DashboardViewModel(
         observeData()
         observeConnectivity()
         observeRefreshTracker()
+        observeMarketIndices()
     }
 
     private fun observePortfolioAndSync() {
@@ -107,6 +113,7 @@ class DashboardViewModel(
             Refresh -> {
                 updateViewState { copy(isRefreshing = true) }
                 observeData()
+                observeMarketIndices()
             }
         }
     }
@@ -251,6 +258,7 @@ class DashboardViewModel(
             connectivityManager.observeConnectivity().collect { isConnected ->
                 if (!previousConnected && isConnected) {
                     observeData()
+                    observeMarketIndices()
                 }
                 previousConnected = isConnected
             }
@@ -263,6 +271,28 @@ class DashboardViewModel(
                 updateViewState { copy(lastUpdated = instant) }
             }
         }
+    }
+
+    private fun observeMarketIndices() {
+        marketIndicesJob?.cancel()
+        marketIndicesJob = viewModelScope.launch {
+            observeAppSettings()
+                .map { it.defaultMarket }
+                .distinctUntilChanged()
+                .collectLatest { market -> loadMarketIndices(market) }
+        }
+    }
+
+    private suspend fun loadMarketIndices(defaultMarket: String) {
+        updateViewState { copy(marketIndicesLoading = true, marketIndicesError = false) }
+        getMajorMarketIndices(defaultMarket).fold(
+            onSuccess = { indices ->
+                updateViewState { copy(marketIndices = indices, marketIndicesLoading = false) }
+            },
+            onFailure = {
+                updateViewState { copy(marketIndicesError = true, marketIndicesLoading = false) }
+            },
+        )
     }
 
 }

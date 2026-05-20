@@ -4,6 +4,7 @@ import com.akole.dividox.common.mvi.SideEffect
 import com.akole.dividox.common.mvi.ViewEvent
 import com.akole.dividox.common.mvi.ViewState
 import com.akole.dividox.common.currency.domain.model.Currency
+import com.akole.dividox.component.market.domain.model.MarketIndexQuote
 import com.akole.dividox.integration.security.domain.model.EnrichedWatchlistEntry
 import com.akole.dividox.integration.security.domain.model.PortfolioSummary
 import kotlin.time.Instant
@@ -29,6 +30,9 @@ interface DashboardContract {
         val totalGainAbsolute: Double = 0.0,
         val topGainers: List<PortfolioTodayItem> = emptyList(),
         val topLosers: List<PortfolioTodayItem> = emptyList(),
+        val marketIndices: List<MarketIndexQuote> = emptyList(),
+        val marketIndicesLoading: Boolean = false,
+        val marketIndicesError: Boolean = false,
     ) : ViewState
 
     sealed interface DashboardViewEvent : ViewEvent {
