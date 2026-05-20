@@ -4,6 +4,7 @@ import com.akole.dividox.common.network.connectivity.NetworkConnectivityManager
 import com.akole.dividox.common.settings.AppRefreshTracker
 import com.akole.dividox.common.settings.domain.model.AppSettings
 import com.akole.dividox.common.settings.domain.usecase.ObserveAppSettingsUseCase
+import com.akole.dividox.component.market.domain.usecase.GetMajorMarketIndicesUseCase
 import com.akole.dividox.common.currency.CurrencyConverter
 import com.akole.dividox.common.currency.domain.model.Currency
 import com.akole.dividox.common.settings.domain.usecase.SetCurrencyUseCase
@@ -39,6 +40,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -64,6 +66,7 @@ class DashboardViewModelTest {
     private val refreshTracker: AppRefreshTracker = AppRefreshTracker()
     private val observePortfolioChanges: ObservePortfolioChangesUseCase = mockk()
     private val syncDividendHistory: SyncDividendHistoryFromHoldingsUseCase = mockk()
+    private val getMajorMarketIndices: GetMajorMarketIndicesUseCase = mockk()
 
     @BeforeTest
     fun setup() {
@@ -74,12 +77,13 @@ class DashboardViewModelTest {
         every { getPeriodDividends(null) } returns emptyFlow()
         every { getPeriodDividends(any()) } returns emptyFlow()
         every { getEnrichedWatchlist() } returns emptyFlow()
-        every { observeAppSettings() } returns flowOf(AppSettings())
+        every { observeAppSettings() } returns MutableStateFlow(AppSettings())
         every { connectivityManager.observeConnectivity() } returns emptyFlow()
         every { observePortfolioChanges() } returns emptyFlow()
         coEvery { syncDividendHistory(any()) } returns Result.success(Unit)
         coEvery { setCurrency(any()) } just Runs
         coEvery { currencyConverter.convert(any(), any(), any()) } answers { Result.success(firstArg()) }
+        coEvery { getMajorMarketIndices(any()) } returns Result.success(emptyList())
     }
 
     @AfterTest
@@ -101,6 +105,7 @@ class DashboardViewModelTest {
         refreshTracker = refreshTracker,
         observePortfolioChanges = observePortfolioChanges,
         syncDividendHistory = syncDividendHistory,
+        getMajorMarketIndices = getMajorMarketIndices,
     )
 
     // ─── Initial state ────────────────────────────────────────────────────────
