@@ -42,11 +42,9 @@ fun MarketIndicesSection(
             text = stringResource(Res.string.dashboard_market_indices_title),
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.padding(
-                horizontal = MaterialTheme.spacing.medium,
-                vertical = MaterialTheme.spacing.small,
-            ),
         )
+
+        Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
 
         when {
             isLoading -> MarketIndicesLoadingPlaceholder()
@@ -60,7 +58,7 @@ fun MarketIndicesSection(
 private fun MarketIndicesLoadingPlaceholder() {
     LazyRow(
         modifier = Modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(horizontal = MaterialTheme.spacing.medium),
+        contentPadding = PaddingValues(0.dp),
         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
     ) {
         items(3) {
@@ -82,10 +80,6 @@ private fun MarketIndicesError() {
         text = stringResource(Res.string.dashboard_market_indices_error),
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.error,
-        modifier = Modifier.padding(
-            horizontal = MaterialTheme.spacing.medium,
-            vertical = MaterialTheme.spacing.small,
-        ),
     )
 }
 
@@ -93,7 +87,7 @@ private fun MarketIndicesError() {
 private fun MarketIndicesCarousel(indices: List<MarketIndexQuote>) {
     LazyRow(
         modifier = Modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(horizontal = MaterialTheme.spacing.medium),
+        contentPadding = PaddingValues(0.dp),
         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
     ) {
         items(indices, key = { it.ticker }) { index ->
