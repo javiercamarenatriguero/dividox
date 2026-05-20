@@ -20,12 +20,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import com.akole.dividox.component.market.domain.model.MarketIndexQuote
-import com.akole.dividox.common.ui.resources.theme.DividoxSpacing
+import com.akole.dividox.common.ui.resources.theme.extendedColors
+import com.akole.dividox.common.ui.resources.theme.spacing
 import org.jetbrains.compose.resources.stringResource
-import dividox.composeapp.generated.resources.Res
-import dividox.composeapp.generated.resources.dashboard_market_indices_title
-import dividox.composeapp.generated.resources.dashboard_market_indices_error
+import dividox.common.ui_resources.generated.resources.Res
+import dividox.common.ui_resources.generated.resources.dashboard_market_indices_title
+import dividox.common.ui_resources.generated.resources.dashboard_market_indices_error
 
 @Composable
 fun MarketIndicesSection(
