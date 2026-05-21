@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
@@ -195,19 +194,6 @@ fun OnboardingScreen(
             }
         }
 
-        // ── Page counter (overlay, top-right) ────────────────────────────────
-        Text(
-            text = "${state.currentPage + 1}/${state.totalPages}",
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onPrimaryContainer,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .statusBarsPadding()
-                .padding(
-                    end = MaterialTheme.spacing.medium,
-                    top = MaterialTheme.spacing.small,
-                ),
-        )
     }
 }
 
