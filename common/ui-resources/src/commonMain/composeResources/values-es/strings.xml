@@ -196,4 +196,6 @@
     <string name="currency_name_mxn">Peso Mexicano</string>
     <string name="currency_name_brl">Real Brasileño</string>
     <string name="currency_name_zar">Rand Sudafricano</string>
+    <string name="dashboard_market_indices_title">Índices bursátiles</string>
+    <string name="dashboard_market_indices_error">No se pudieron cargar los índices bursátiles</string>
 </resources>

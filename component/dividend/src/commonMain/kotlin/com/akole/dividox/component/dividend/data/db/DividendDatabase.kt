@@ -12,15 +12,17 @@ import androidx.room.RoomDatabase
  * - 1: Initial schema with [DividendPaymentEntity].
  * - 2: Removed `method` column (PaymentMethod cannot be determined automatically from APIs).
  * - 3: Added `amount_per_share` and `shares` columns for per-share breakdown display.
+ * - 4: Added [StockQuoteEntity] for persistent quote cache across sessions.
  *
  * Instances are created platform-specifically via [createDividendDatabaseBuilder].
  */
 @Database(
-    entities = [DividendPaymentEntity::class],
-    version = 3,
+    entities = [DividendPaymentEntity::class, StockQuoteEntity::class],
+    version = 4,
     autoMigrations = [
         AutoMigration(from = 1, to = 2, spec = DividendDatabase.Migration1To2::class),
         AutoMigration(from = 2, to = 3),
+        AutoMigration(from = 3, to = 4),
     ],
 )
 @androidx.room.ConstructedBy(DividendDatabaseConstructor::class)
@@ -31,4 +33,7 @@ abstract class DividendDatabase : RoomDatabase() {
 
     /** Returns the DAO for dividend payment access. */
     abstract fun dividendDao(): DividendDao
+
+    /** Returns the DAO for persistent stock quote cache. */
+    abstract fun stockQuoteDao(): StockQuoteDao
 }

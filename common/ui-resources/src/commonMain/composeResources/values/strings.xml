@@ -200,4 +200,6 @@
     <string name="currency_name_mxn">Mexican Peso</string>
     <string name="currency_name_brl">Brazilian Real</string>
     <string name="currency_name_zar">South African Rand</string>
+    <string name="dashboard_market_indices_title">Market Indices</string>
+    <string name="dashboard_market_indices_error">Unable to load market indices</string>
 </resources>

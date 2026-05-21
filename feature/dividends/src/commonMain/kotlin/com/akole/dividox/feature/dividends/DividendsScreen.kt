@@ -229,7 +229,7 @@ private fun DividendsContent(
             }
             upcomingByMonth.forEach { (yearMonth, payments) ->
                 item(key = "upcoming-month-${yearMonth}") {
-                    UpcomingMonthHeader(yearMonth = yearMonth)
+                    UpcomingMonthHeader(yearMonth = yearMonth, payments = payments, currency = state.currency)
                 }
                 items(payments, key = { it.payment.id.value }) { enrichedPayment ->
                     UpcomingPaymentRow(
@@ -589,19 +589,15 @@ private fun ProjectionChartSection(
                 }
             } else {
                 val barWidth: Dp = when (selectedRange) {
-                    DividendHistoryRange.YTD -> 24.dp
-                    // ONE_YEAR has ~16 bars; use a narrow bar so they fit without
-                    // scrolling and LazyRow's SpaceEvenly distributes gaps evenly.
-                    DividendHistoryRange.ONE_YEAR -> 20.dp
+                    DividendHistoryRange.YTD,
+                    DividendHistoryRange.ONE_YEAR -> 16.dp
                     DividendHistoryRange.FIVE_YEARS,
                     DividendHistoryRange.MAX -> 28.dp
                 }
                 // For ONE_YEAR, keep minBarSlotWidth small so the chart width
                 // stays within the viewport — SpaceEvenly then handles the gaps.
-                val minBarSlotWidth: Dp = when (selectedRange) {
-                    DividendHistoryRange.ONE_YEAR -> barWidth + 4.dp
-                    else -> barWidth + 20.dp
-                }
+                val minBarSlotWidth: Dp = 20.dp
+
                 BarChart(
                     entries = entries,
                     modifier = Modifier.fillMaxWidth(),
@@ -668,16 +664,31 @@ private fun LocalDate.monthYearLabel(): String = "${monthFull()} $year"
 // ─── Section 4: Past Activity ─────────────────────────────────────────────────
 
 @Composable
-private fun UpcomingMonthHeader(yearMonth: LocalDate, modifier: Modifier = Modifier) {
-    Text(
-        text = yearMonth.monthYearLabel(),
-        style = MaterialTheme.typography.titleSmall,
-        fontWeight = FontWeight.SemiBold,
-        modifier = modifier.padding(
-            horizontal = MaterialTheme.spacing.medium,
-            vertical = MaterialTheme.spacing.xSmall,
-        ),
-    )
+private fun UpcomingMonthHeader(
+    yearMonth: LocalDate,
+    payments: List<EnrichedPayment>,
+    currency: Currency,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = MaterialTheme.spacing.medium, vertical = MaterialTheme.spacing.xSmall),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = yearMonth.monthYearLabel(),
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.SemiBold,
+        )
+        val monthTotal = payments.sumOf { it.payment.amount }
+        Text(
+            text = monthTotal.formatPrice(currency),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
 }
 
 @Composable

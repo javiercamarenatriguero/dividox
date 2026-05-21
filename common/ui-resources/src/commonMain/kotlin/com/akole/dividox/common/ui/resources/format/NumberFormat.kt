@@ -112,6 +112,33 @@ private fun Double.formattedAbsIntAndDec(groupSep: Char): Pair<String, String> =
     abs(this).intAndDecFormatted(groupSep)
 
 /**
+ * Formats index points using EU-like notation: period thousands separator, comma decimal.
+ * e.g. 38490.14 → "38.490,14"
+ */
+fun Double.formatIndexPoints(): String {
+    val sign = if (this < 0.0) "-" else ""
+    val (intF, dec) = abs(this).intAndDecFormatted('.')
+    return "$sign$intF,$dec"
+}
+
+/** Signed variant of [formatIndexPoints], e.g. +382,00 or -54,10. */
+fun Double.formatIndexPointsSigned(): String {
+    val sign = if (this >= 0.0) "+" else "-"
+    val (intF, dec) = abs(this).intAndDecFormatted('.')
+    return "$sign$intF,$dec"
+}
+
+/** Signed EU-like percent for index cards: +2,16% or -1,08%. */
+fun Double.formatIndexPercent(): String {
+    val sign = if (this >= 0.0) "+" else "-"
+    val factor = 100L
+    val rounded = (abs(this) * factor).roundToLong()
+    val intPart = rounded / factor
+    val decPart = (rounded % factor).toString().padStart(2, '0')
+    return "$sign$intPart,$decPart%"
+}
+
+/**
  * Formats a large number with a compact suffix: B (billions), M (millions), K (thousands).
  * Values below 1 000 are formatted with two decimal places and no suffix.
  *
