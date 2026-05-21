@@ -2,10 +2,11 @@ package com.akole.dividox.feature.dashboard
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -18,9 +19,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.akole.dividox.component.market.domain.model.MarketIndexQuote
 import com.akole.dividox.common.ui.resources.theme.extendedColors
@@ -29,6 +29,9 @@ import org.jetbrains.compose.resources.stringResource
 import dividox.common.ui_resources.generated.resources.Res
 import dividox.common.ui_resources.generated.resources.dashboard_market_indices_title
 import dividox.common.ui_resources.generated.resources.dashboard_market_indices_error
+
+private val CARD_WIDTH = 136.dp
+private val CARD_HEIGHT = 110.dp
 
 @Composable
 fun MarketIndicesSection(
@@ -61,15 +64,16 @@ private fun MarketIndicesLoadingPlaceholder() {
         contentPadding = PaddingValues(0.dp),
         horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
     ) {
-        items(3) {
-            ElevatedCard(
+        items(4) {
+            Box(
                 modifier = Modifier
-                    .width(140.dp)
-                    .height(120.dp)
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
-            ) {
-                // Empty placeholder card
-            }
+                    .width(CARD_WIDTH)
+                    .height(CARD_HEIGHT)
+                    .background(
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        shape = MaterialTheme.shapes.medium,
+                    ),
+            )
         }
     }
 }
@@ -98,46 +102,54 @@ private fun MarketIndicesCarousel(indices: List<MarketIndexQuote>) {
 
 @Composable
 private fun MarketIndexCard(index: MarketIndexQuote) {
+    val changeColor = if (index.changePercent >= 0) {
+        MaterialTheme.extendedColors.profit
+    } else {
+        MaterialTheme.colorScheme.error
+    }
+    val changeSign = if (index.changePercent >= 0) "+" else ""
+
     ElevatedCard(
-        modifier = Modifier.width(140.dp),
+        modifier = Modifier
+            .width(CARD_WIDTH)
+            .height(CARD_HEIGHT),
     ) {
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(MaterialTheme.spacing.medium),
-            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xSmall),
+                .fillMaxSize()
+                .padding(
+                    horizontal = MaterialTheme.spacing.medium,
+                    vertical = MaterialTheme.spacing.small,
+                ),
+            verticalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(
                 text = index.name,
-                style = MaterialTheme.typography.labelSmall,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                maxLines = 2,
             )
 
-            val changeColor = if (index.changePercent >= 0) {
-                MaterialTheme.extendedColors.profit
-            } else {
-                MaterialTheme.colorScheme.error
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    text = "$changeSign${String.format("%.2f", index.changePercent)}%",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = changeColor,
+                )
+                Text(
+                    text = String.format("%.0f", index.points),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    text = "$changeSign${String.format("%.0f", index.changePoints)}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = changeColor,
+                )
             }
-            val changeSign = if (index.changePercent >= 0) "+" else ""
-
-            Text(
-                text = "$changeSign${String.format("%.2f%%", index.changePercent)}",
-                style = MaterialTheme.typography.titleSmall,
-                color = changeColor,
-            )
-
-            Text(
-                text = "${String.format("%.0f", index.points)} pts",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-
-            Text(
-                text = "$changeSign${String.format("%.0f", index.changePoints)} pts",
-                style = MaterialTheme.typography.labelSmall,
-                color = changeColor,
-            )
         }
     }
 }
