@@ -5,15 +5,21 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,8 +36,8 @@ import dividox.common.ui_resources.generated.resources.Res
 import dividox.common.ui_resources.generated.resources.dashboard_market_indices_title
 import dividox.common.ui_resources.generated.resources.dashboard_market_indices_error
 
-private val CARD_WIDTH = 136.dp
-private val CARD_HEIGHT = 110.dp
+private val CARD_WIDTH = 128.dp
+private val CARD_HEIGHT = 104.dp
 
 @Composable
 fun MarketIndicesSection(
@@ -102,12 +108,12 @@ private fun MarketIndicesCarousel(indices: List<MarketIndexQuote>) {
 
 @Composable
 private fun MarketIndexCard(index: MarketIndexQuote) {
-    val changeColor = if (index.changePercent >= 0) {
-        MaterialTheme.extendedColors.profit
-    } else {
-        MaterialTheme.colorScheme.error
-    }
-    val changeSign = if (index.changePercent >= 0) "+" else ""
+    val isPositive = index.changePercent >= 0
+    val changeColor = if (isPositive) MaterialTheme.extendedColors.profit
+    else MaterialTheme.colorScheme.error
+    val changeSign = if (isPositive) "+" else ""
+    val trendIcon = if (isPositive) Icons.Filled.KeyboardArrowUp
+    else Icons.Filled.KeyboardArrowDown
 
     ElevatedCard(
         modifier = Modifier
@@ -118,7 +124,7 @@ private fun MarketIndexCard(index: MarketIndexQuote) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(
-                    horizontal = MaterialTheme.spacing.medium,
+                    horizontal = MaterialTheme.spacing.small,
                     vertical = MaterialTheme.spacing.small,
                 ),
             verticalArrangement = Arrangement.SpaceBetween,
@@ -132,18 +138,32 @@ private fun MarketIndexCard(index: MarketIndexQuote) {
                 overflow = TextOverflow.Ellipsis,
             )
 
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(
-                    text = "$changeSign${String.format("%.2f", index.changePercent)}%",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = changeColor,
-                )
+            Column {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                ) {
+                    Icon(
+                        imageVector = trendIcon,
+                        contentDescription = null,
+                        tint = changeColor,
+                        modifier = Modifier.size(16.dp),
+                    )
+                    Text(
+                        text = "$changeSign${String.format("%.2f", index.changePercent)}%",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = changeColor,
+                    )
+                }
+
                 Text(
                     text = String.format("%.0f", index.points),
                     style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+
                 Text(
                     text = "$changeSign${String.format("%.0f", index.changePoints)}",
                     style = MaterialTheme.typography.labelSmall,

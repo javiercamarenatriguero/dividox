@@ -188,7 +188,7 @@ private fun DashboardContent(
                     isLoading = state.marketIndicesLoading,
                     isError = state.marketIndicesError,
                 )
-                Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
+                Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
 
                 FavouritesSection(
                     watchlist = state.watchlist,
