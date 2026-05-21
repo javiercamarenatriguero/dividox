@@ -20,11 +20,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.akole.dividox.component.market.domain.model.MarketIndexQuote
 import com.akole.dividox.common.ui.resources.theme.extendedColors
@@ -151,29 +148,25 @@ private fun MarketIndexCard(index: MarketIndexQuote) {
                 )
             }
 
-            // Points (large) + "pts" (small superscript-style)
-            Text(
-                text = buildAnnotatedString {
-                    withStyle(
-                        SpanStyle(
-                            fontSize = MaterialTheme.typography.titleLarge.fontSize,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                        )
-                    ) {
-                        append(String.format("%.0f", index.points))
-                    }
-                    withStyle(
-                        SpanStyle(
-                            fontSize = MaterialTheme.typography.labelSmall.fontSize,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    ) {
-                        append(" pts")
-                    }
-                },
-                maxLines = 1,
-            )
+            // Points (large) + "pts" (small)
+            Row(
+                verticalAlignment = Alignment.Bottom,
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                Text(
+                    text = String.format("%.0f", index.points),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                )
+                Text(
+                    text = "pts",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 3.dp),
+                )
+            }
 
             // Percent + delta stacked
             Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
