@@ -7,6 +7,7 @@ internal data class MarketIndexEntry(
 )
 
 internal val MARKET_INDICES = listOf(
+    MarketIndexEntry("S&P 500", "^GSPC", "US"),
     MarketIndexEntry("Nasdaq Composite", "^IXIC", "US"),
     MarketIndexEntry("Euro Stoxx 50", "^STOXX50E", "EU"),
     MarketIndexEntry("IBEX 35", "^IBEX", "ES"),

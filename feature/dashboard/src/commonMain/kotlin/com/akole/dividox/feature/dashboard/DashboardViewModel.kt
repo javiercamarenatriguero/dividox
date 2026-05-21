@@ -279,9 +279,7 @@ class DashboardViewModel(
             observeAppSettings()
                 .map { it.defaultMarket }
                 .distinctUntilChanged()
-                .collectLatest { market ->
-                    launch { loadMarketIndices(market) }
-                }
+                .collectLatest { market -> loadMarketIndices(market) }
         }
     }
 
