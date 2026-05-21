@@ -275,11 +275,16 @@ class DashboardViewModel(
 
     private fun observeMarketIndices() {
         marketIndicesJob?.cancel()
+        updateViewState { copy(marketIndicesLoading = true, marketIndicesError = false) }
         marketIndicesJob = viewModelScope.launch {
-            observeAppSettings()
-                .map { it.defaultMarket }
-                .distinctUntilChanged()
-                .collect { market -> loadMarketIndices(market) }
+            runCatching {
+                observeAppSettings()
+                    .map { it.defaultMarket }
+                    .distinctUntilChanged()
+                    .collect { market -> loadMarketIndices(market) }
+            }.onFailure {
+                updateViewState { copy(marketIndicesError = true, marketIndicesLoading = false) }
+            }
         }
     }
 
