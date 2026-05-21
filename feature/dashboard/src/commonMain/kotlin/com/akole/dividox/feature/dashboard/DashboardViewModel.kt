@@ -11,6 +11,7 @@ import com.akole.dividox.common.settings.AppRefreshTracker
 import com.akole.dividox.common.settings.domain.usecase.ObserveAppSettingsUseCase
 import com.akole.dividox.common.settings.domain.usecase.SetCurrencyUseCase
 import com.akole.dividox.component.watchlist.domain.usecase.RemoveFromWatchlistUseCase
+import com.akole.dividox.component.market.domain.model.MarketIndexQuote
 import com.akole.dividox.component.market.domain.usecase.GetMajorMarketIndicesUseCase
 import com.akole.dividox.feature.dashboard.DashboardContract.DashboardSideEffect
 import com.akole.dividox.feature.dashboard.DashboardContract.DashboardViewEvent
@@ -68,6 +69,9 @@ class DashboardViewModel(
     private var dataJob: Job? = null
     private var marketIndicesJob: Job? = null
     private val periodFlow = MutableStateFlow(ChartPeriod.ONE_DAY)
+    private val marketIndicesFlow = MutableStateFlow<List<MarketIndexQuote>>(emptyList())
+    private val marketIndicesLoadingFlow = MutableStateFlow(true)
+    private val marketIndicesErrorFlow = MutableStateFlow(false)
     // Internal flows updated by separate coroutines so slow API calls don't block main UI data
     private val summaryFlow = MutableStateFlow<PortfolioSummary?>(null)         // null until portfolio API calls complete
     private val periodGainFlow = MutableStateFlow<Pair<Double, Double>?>(null)  // null until first gain result
@@ -235,7 +239,14 @@ class DashboardViewModel(
             }.collect { newState ->
                 val now = Clock.System.now()
                 refreshTracker.notifyRefreshed(now)
-                updateViewState { newState.copy(lastUpdated = now) }
+                updateViewState {
+                    newState.copy(
+                        lastUpdated = now,
+                        marketIndices = marketIndicesFlow.value,
+                        marketIndicesLoading = marketIndicesLoadingFlow.value,
+                        marketIndicesError = marketIndicesErrorFlow.value,
+                    )
+                }
             }
         }
     }
@@ -275,7 +286,8 @@ class DashboardViewModel(
 
     private fun observeMarketIndices() {
         marketIndicesJob?.cancel()
-        updateViewState { copy(marketIndicesLoading = true, marketIndicesError = false) }
+        marketIndicesLoadingFlow.value = true
+        marketIndicesErrorFlow.value = false
         marketIndicesJob = viewModelScope.launch {
             runCatching {
                 observeAppSettings()
@@ -283,19 +295,23 @@ class DashboardViewModel(
                     .distinctUntilChanged()
                     .collect { market -> loadMarketIndices(market) }
             }.onFailure {
-                updateViewState { copy(marketIndicesError = true, marketIndicesLoading = false) }
+                marketIndicesErrorFlow.value = true
+                marketIndicesLoadingFlow.value = false
             }
         }
     }
 
     private suspend fun loadMarketIndices(defaultMarket: String) {
-        updateViewState { copy(marketIndicesLoading = true, marketIndicesError = false) }
+        marketIndicesLoadingFlow.value = true
+        marketIndicesErrorFlow.value = false
         getMajorMarketIndices(defaultMarket).fold(
             onSuccess = { indices ->
-                updateViewState { copy(marketIndices = indices, marketIndicesLoading = false) }
+                marketIndicesFlow.value = indices
+                marketIndicesLoadingFlow.value = false
             },
             onFailure = {
-                updateViewState { copy(marketIndicesError = true, marketIndicesLoading = false) }
+                marketIndicesErrorFlow.value = true
+                marketIndicesLoadingFlow.value = false
             },
         )
     }

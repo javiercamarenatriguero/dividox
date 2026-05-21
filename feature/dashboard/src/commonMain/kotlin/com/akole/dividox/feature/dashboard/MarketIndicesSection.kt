@@ -156,7 +156,7 @@ private fun MarketIndexCard(index: MarketIndexQuote) {
                 horizontalArrangement = Arrangement.spacedBy(2.dp),
             ) {
                 Text(
-                    text = index.points.formatIndexPoints(),
+                    text = index.points.formatIndexPoints().substringBefore(","),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -179,7 +179,7 @@ private fun MarketIndexCard(index: MarketIndexQuote) {
                     color = changeColor,
                 )
                 Text(
-                    text = index.changePoints.formatIndexPointsSigned(),
+                    text = index.changePoints.formatIndexPointsSigned().substringBefore(","),
                     style = MaterialTheme.typography.labelSmall,
                     color = changeColor,
                 )
