@@ -31,7 +31,7 @@ interface DashboardContract {
         val topGainers: List<PortfolioTodayItem> = emptyList(),
         val topLosers: List<PortfolioTodayItem> = emptyList(),
         val marketIndices: List<MarketIndexQuote> = emptyList(),
-        val marketIndicesLoading: Boolean = false,
+        val marketIndicesLoading: Boolean = true,
         val marketIndicesError: Boolean = false,
     ) : ViewState
 
