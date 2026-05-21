@@ -12,6 +12,7 @@ import androidx.compose.runtime.setValue
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import com.akole.dividox.component.auth.domain.model.SessionState
+import com.akole.dividox.common.settings.domain.usecase.ObserveAppSettingsUseCase
 import com.akole.dividox.component.auth.domain.usecase.ObserveSessionUseCase
 import com.akole.dividox.integration.security.domain.usecase.GetPortfolioWithQuotesUseCase
 import kotlinx.coroutines.delay
@@ -24,8 +25,10 @@ private const val SPLASH_DURATION_MS = 2000L
 @Composable
 fun SetupRootNavGraph(navController: NavHostController) {
     val observeSession: ObserveSessionUseCase = koinInject()
+    val observeAppSettings: ObserveAppSettingsUseCase = koinInject()
     val getPortfolioWithQuotes: GetPortfolioWithQuotesUseCase = koinInject()
     val sessionState by retain { observeSession() }.collectAsState(initial = SessionState.Loading)
+    val appSettings by retain { observeAppSettings() }.collectAsState(initial = null)
     var splashReady by retain { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
@@ -45,18 +48,31 @@ fun SetupRootNavGraph(navController: NavHostController) {
 
     var lastHandledSessionState by retain { mutableStateOf<SessionState>(SessionState.Loading) }
 
-    LaunchedEffect(sessionState, splashReady) {
+    LaunchedEffect(sessionState, splashReady, appSettings) {
         if (!splashReady || sessionState == SessionState.Loading) return@LaunchedEffect
         if (sessionState == lastHandledSessionState) return@LaunchedEffect
-        lastHandledSessionState = sessionState
         when (sessionState) {
-            is SessionState.Authenticated -> navController.navigate(MainGraphRoute) {
-                popUpTo(0) { inclusive = true }
-                launchSingleTop = true
+            is SessionState.Authenticated -> {
+                val settings = appSettings ?: return@LaunchedEffect
+                lastHandledSessionState = sessionState
+                if (settings.onboardingCompleted) {
+                    navController.navigate(MainGraphRoute) {
+                        popUpTo(0) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                } else {
+                    navController.navigate(OnboardingRoute) {
+                        popUpTo(0) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }
             }
-            SessionState.Unauthenticated -> navController.navigate(LoginRoute) {
-                popUpTo(0) { inclusive = true }
-                launchSingleTop = true
+            SessionState.Unauthenticated -> {
+                lastHandledSessionState = sessionState
+                navController.navigate(LoginRoute) {
+                    popUpTo(0) { inclusive = true }
+                    launchSingleTop = true
+                }
             }
             SessionState.Loading -> Unit
         }
@@ -71,6 +87,7 @@ fun SetupRootNavGraph(navController: NavHostController) {
         popExitTransition = { slideOutHorizontally { it } },
     ) {
         splashScreenNode()
+        onboardingScreenNode(navController)
         loginScreenNode(navController)
         signUpScreenNode(navController)
         forgotPasswordScreenNode(navController)
