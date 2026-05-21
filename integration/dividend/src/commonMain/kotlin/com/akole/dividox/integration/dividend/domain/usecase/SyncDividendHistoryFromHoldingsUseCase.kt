@@ -6,6 +6,9 @@ import com.akole.dividox.component.dividend.domain.repository.DividendRepository
 import com.akole.dividox.component.market.domain.model.DividendHistoryRange
 import com.akole.dividox.component.market.domain.repository.MarketRepository
 import com.akole.dividox.component.portfolio.domain.model.Holding
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -46,37 +49,40 @@ class SyncDividendHistoryFromHoldingsUseCase(
         if (holdings.isEmpty()) return@runCatching
 
         val holdingsByTicker = holdings.groupBy { it.tickerId }
-        val eligiblePayments = mutableListOf<DividendPayment>()
 
-        for ((ticker, tickerHoldings) in holdingsByTicker) {
-            val events = marketRepository.getHistoricalDividendEvents(
-                ticker = ticker,
-                range = DividendHistoryRange.MAX,
-            ).getOrNull() ?: continue
+        val eligiblePayments = coroutineScope {
+            holdingsByTicker.map { (ticker, tickerHoldings) ->
+                async {
+                    val events = marketRepository.getHistoricalDividendEvents(
+                        ticker = ticker,
+                        range = DividendHistoryRange.MAX,
+                    ).getOrNull() ?: return@async emptyList()
 
-            for (event in events) {
-                // Only count shares from lots purchased strictly before the ex-dividend date.
-                // Stock market convention: you must own the stock before ex-date to receive it.
-                val sharesOnExDate = tickerHoldings
-                    .filter { holding ->
-                        Instant.fromEpochMilliseconds(holding.purchaseDate)
-                            .toLocalDateTime(TimeZone.UTC)
-                            .date < event.exDividendDate
+                    events.mapNotNull { event ->
+                        // Only count shares from lots purchased strictly before the ex-dividend date.
+                        // Stock market convention: you must own the stock before ex-date to receive it.
+                        val sharesOnExDate = tickerHoldings
+                            .filter { holding ->
+                                Instant.fromEpochMilliseconds(holding.purchaseDate)
+                                    .toLocalDateTime(TimeZone.UTC)
+                                    .date < event.exDividendDate
+                            }
+                            .sumOf { it.shares }
+
+                        if (sharesOnExDate <= 0.0) return@mapNotNull null
+
+                        DividendPayment(
+                            id = DividendPaymentId("$ticker-${event.exDividendDate}"),
+                            tickerId = ticker,
+                            amount = event.amountPerShare * sharesOnExDate,
+                            amountPerShare = event.amountPerShare,
+                            shares = sharesOnExDate,
+                            currency = event.currency,
+                            paymentDate = event.exDividendDate,
+                        )
                     }
-                    .sumOf { it.shares }
-
-                if (sharesOnExDate <= 0.0) continue
-
-                eligiblePayments += DividendPayment(
-                    id = DividendPaymentId("$ticker-${event.exDividendDate}"),
-                    tickerId = ticker,
-                    amount = event.amountPerShare * sharesOnExDate,
-                    amountPerShare = event.amountPerShare,
-                    shares = sharesOnExDate,
-                    currency = event.currency,
-                    paymentDate = event.exDividendDate,
-                )
-            }
+                }
+            }.awaitAll().flatten()
         }
 
         // Replace the entire cache — removes any stale pre-purchase dividends

@@ -1,6 +1,7 @@
 package com.akole.dividox.component.market.data.repository
 
 import com.akole.dividox.component.market.data.api.YahooFinanceApi
+import com.akole.dividox.component.market.data.datasource.StockQuoteLocalDataSource
 import io.ktor.client.HttpClient
 import com.akole.dividox.component.market.data.mapper.toCompanyInfo
 import com.akole.dividox.component.market.data.mapper.toDividendInfo
@@ -31,6 +32,7 @@ import kotlin.time.Clock
 class MarketRepositoryImpl(
     httpClient: HttpClient,
     private val ioDispatcher: CoroutineDispatcher,
+    private val localDataSource: StockQuoteLocalDataSource? = null,
 ) : MarketRepository {
 
     private val api = YahooFinanceApi(httpClient)
@@ -61,6 +63,8 @@ class MarketRepositoryImpl(
                     val now = Clock.System.now().toEpochMilliseconds()
                     val fromCache = mutableListOf<StockQuote>()
                     val toFetch = mutableListOf<String>()
+
+                    // 1. Check in-memory cache first (fastest)
                     tickers.forEach { ticker ->
                         val cached = quoteCache[ticker]
                         if (cached != null && !isExpired(cached.second, QUOTE_TTL_MS)) {
@@ -69,8 +73,28 @@ class MarketRepositoryImpl(
                             toFetch += ticker
                         }
                     }
+
+                    // 2. Check persistent Room cache for remaining tickers (fast, survives app restart)
+                    if (toFetch.isNotEmpty() && localDataSource != null) {
+                        val persisted = localDataSource.getQuotes(toFetch)
+                        val stillMissing = mutableListOf<String>()
+                        toFetch.forEach { ticker ->
+                            val cached = persisted[ticker]
+                            if (cached != null && !isExpired(cached.cachedAt, QUOTE_TTL_MS)) {
+                                fromCache += cached.quote
+                                quoteCache[ticker] = cached.quote to cached.cachedAt
+                            } else {
+                                stillMissing += ticker
+                            }
+                        }
+                        toFetch.clear()
+                        toFetch.addAll(stillMissing)
+                    }
+
+                    // 3. Fetch remaining from network
                     // Semaphore caps concurrent requests to avoid Yahoo Finance rate-limiting.
                     // Per-ticker runCatching means one failed ticker doesn't kill the whole batch.
+                    val freshQuotes = mutableMapOf<String, StockQuote>()
                     val fromApi = toFetch
                         .map { ticker ->
                             async {
@@ -83,8 +107,21 @@ class MarketRepositoryImpl(
                             val (dto, ticker) = deferred.await() ?: return@mapNotNull null
                             dto.chart.result?.firstOrNull()?.meta
                                 ?.toStockQuote()
-                                ?.also { quote -> quoteCache[ticker] = quote to now }
+                                ?.also { quote ->
+                                    quoteCache[ticker] = quote to now
+                                    freshQuotes[ticker] = quote
+                                }
                         }
+
+                    // Persist fresh quotes to Room for next session
+                    if (freshQuotes.isNotEmpty()) {
+                        localDataSource?.saveQuotes(
+                            freshQuotes.mapValues { (_, quote) ->
+                                StockQuoteLocalDataSource.CachedQuote(quote, now)
+                            },
+                        )
+                    }
+
                     fromCache + fromApi
                 }
             }.mapError()

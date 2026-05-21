@@ -170,8 +170,11 @@ private fun MarketIndexCard(index: MarketIndexQuote) {
                 )
             }
 
-            // Percent + delta stacked
-            Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
+            // Percent + delta in same row
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
                 Text(
                     text = index.changePercent.formatIndexPercent(),
                     style = MaterialTheme.typography.labelMedium,
@@ -179,7 +182,7 @@ private fun MarketIndexCard(index: MarketIndexQuote) {
                     color = changeColor,
                 )
                 Text(
-                    text = index.changePoints.formatIndexPointsSigned().substringBefore(","),
+                    text = "(${index.changePoints.formatIndexPointsSigned().substringBefore(",")} pts)",
                     style = MaterialTheme.typography.labelSmall,
                     color = changeColor,
                 )

@@ -115,6 +115,15 @@ class DividendsViewModel(
                 val projected = projectUpcomingPayments(convertedHistory, today, endOfYear)
                 val allUpcoming = (dbConfirmed + projected.filter { it.payment.tickerId !in dbConfirmedTickers })
                     .sortedBy { it.payment.paymentDate }
+                // Rebuild projected bars using allUpcoming so YTD/5Y/MAX include all months until Dec 31
+                val thisMonthStart = LocalDate(today.year, today.month, 1)
+                val projectedBars = allUpcoming
+                    .filter { LocalDate(it.payment.paymentDate.year, it.payment.paymentDate.month, 1) > thisMonthStart }
+                    .groupBy { LocalDate(it.payment.paymentDate.year, it.payment.paymentDate.month, 1) }
+                    .map { (yearMonth, payments) ->
+                        MonthBar(yearMonth = yearMonth, amount = payments.sumOf { it.payment.amount }, isProjected = true)
+                    }
+                allBars = (allBars.filter { !it.isProjected } + projectedBars).sortedBy { it.yearMonth }
                 val historyByMonth = convertedHistory.groupByMonth()
                 val mostRecentMonth = historyByMonth.keys.maxOrNull()
                 val expandedMonths = if (mostRecentMonth != null) setOf(mostRecentMonth) else emptySet()

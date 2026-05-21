@@ -13,7 +13,10 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import com.akole.dividox.component.auth.domain.model.SessionState
 import com.akole.dividox.component.auth.domain.usecase.ObserveSessionUseCase
+import com.akole.dividox.integration.security.domain.usecase.GetPortfolioWithQuotesUseCase
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.take
 import org.koin.compose.koinInject
 
 private const val SPLASH_DURATION_MS = 2000L
@@ -21,12 +24,23 @@ private const val SPLASH_DURATION_MS = 2000L
 @Composable
 fun SetupRootNavGraph(navController: NavHostController) {
     val observeSession: ObserveSessionUseCase = koinInject()
+    val getPortfolioWithQuotes: GetPortfolioWithQuotesUseCase = koinInject()
     val sessionState by retain { observeSession() }.collectAsState(initial = SessionState.Loading)
     var splashReady by retain { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         delay(SPLASH_DURATION_MS)
         splashReady = true
+    }
+
+    // Warm up the quote cache while the splash is visible — only when authenticated.
+    LaunchedEffect(sessionState) {
+        if (sessionState is SessionState.Authenticated) {
+            getPortfolioWithQuotes()
+                .take(1)
+                .catch { }
+                .collect { }
+        }
     }
 
     var lastHandledSessionState by retain { mutableStateOf<SessionState>(SessionState.Loading) }
