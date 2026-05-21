@@ -6,4 +6,5 @@ data class AppSettings(
     val currency: Currency = Currency.EUR,
     val biometricLockEnabled: Boolean = false,
     val defaultMarket: String = "ALL",
+    val onboardingCompleted: Boolean = false,
 )
