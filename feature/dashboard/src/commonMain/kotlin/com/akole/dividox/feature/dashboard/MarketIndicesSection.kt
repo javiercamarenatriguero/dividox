@@ -24,6 +24,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.akole.dividox.component.market.domain.model.MarketIndexQuote
+import com.akole.dividox.common.ui.resources.format.formatIndexPoints
+import com.akole.dividox.common.ui.resources.format.formatIndexPointsSigned
+import com.akole.dividox.common.ui.resources.format.formatIndexPercent
 import com.akole.dividox.common.ui.resources.theme.extendedColors
 import com.akole.dividox.common.ui.resources.theme.spacing
 import org.jetbrains.compose.resources.stringResource
@@ -116,7 +119,6 @@ private fun MarketIndexCard(index: MarketIndexQuote) {
     val isPositive = index.changePercent >= 0
     val changeColor = if (isPositive) MaterialTheme.extendedColors.profit
     else MaterialTheme.colorScheme.error
-    val changeSign = if (isPositive) "+" else ""
 
     ElevatedCard(
         modifier = Modifier
@@ -154,7 +156,7 @@ private fun MarketIndexCard(index: MarketIndexQuote) {
                 horizontalArrangement = Arrangement.spacedBy(2.dp),
             ) {
                 Text(
-                    text = String.format("%.0f", index.points),
+                    text = index.points.formatIndexPoints(),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -171,13 +173,13 @@ private fun MarketIndexCard(index: MarketIndexQuote) {
             // Percent + delta stacked
             Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
                 Text(
-                    text = "$changeSign${String.format("%.2f", index.changePercent)}%",
+                    text = index.changePercent.formatIndexPercent(),
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = changeColor,
                 )
                 Text(
-                    text = "$changeSign${String.format("%.0f", index.changePoints)}",
+                    text = index.changePoints.formatIndexPointsSigned(),
                     style = MaterialTheme.typography.labelSmall,
                     color = changeColor,
                 )
