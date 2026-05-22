@@ -217,16 +217,30 @@ class MarketRepositoryImpl(
         }.mapError()
     }
 
-    override suspend fun getNews(query: String, count: Int, lang: String, region: String): Result<List<NewsItem>> = withContext(ioDispatcher) {
-        val cacheKey = "$query:$count:$lang:$region"
+    override suspend fun getNews(query: String, count: Int, lang: String, region: String, filterTicker: String?): Result<List<NewsItem>> = withContext(ioDispatcher) {
+        val cacheKey = "$query:$count:$lang:$region:${filterTicker.orEmpty()}"
         val cached = newsCache[cacheKey]
         if (cached != null && !isExpired(cached.second, NEWS_TTL_MS)) return@withContext Result.success(cached.first)
         apiSemaphore.withPermit {
             runCatching {
                 val dto = api.getNews(query, count, lang, region)
-                (dto.news?.map { it.toNewsItem() } ?: emptyList())
-                    .also { newsCache[cacheKey] = it to Clock.System.now().toEpochMilliseconds() }
+                val allNews = dto.news?.map { it.toNewsItem(it.relatedTickers) } ?: emptyList()
+                val filtered = if (filterTicker != null) filterByTicker(allNews, dto.news, filterTicker) else allNews
+                filtered.also { newsCache[cacheKey] = it to Clock.System.now().toEpochMilliseconds() }
             }.mapError()
+        }
+    }
+
+    private fun filterByTicker(
+        news: List<NewsItem>,
+        dtos: List<com.akole.dividox.component.market.data.dto.NewsItemDto>?,
+        ticker: String,
+    ): List<NewsItem> {
+        val baseTicker = ticker.substringBefore(".")
+        val tickerVariants = setOf(ticker, baseTicker)
+        return news.filterIndexed { i, _ ->
+            val related = dtos?.getOrNull(i)?.relatedTickers ?: return@filterIndexed false
+            related.any { it in tickerVariants || it.substringBefore(".") in tickerVariants }
         }
     }
 

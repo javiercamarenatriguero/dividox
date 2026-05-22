@@ -43,5 +43,5 @@ class FakeMarketRepository : MarketRepository {
         quoteResult.map { listOf(it) }
 
     var newsResult: Result<List<NewsItem>> = Result.success(emptyList())
-    override suspend fun getNews(query: String, count: Int, lang: String, region: String): Result<List<NewsItem>> = newsResult
+    override suspend fun getNews(query: String, count: Int, lang: String, region: String, filterTicker: String?): Result<List<NewsItem>> = newsResult
 }

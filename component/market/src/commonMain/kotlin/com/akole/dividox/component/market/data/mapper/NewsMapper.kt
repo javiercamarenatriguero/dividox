@@ -4,7 +4,7 @@ import com.akole.dividox.component.market.data.dto.NewsItemDto
 import com.akole.dividox.component.market.domain.model.NewsItem
 import kotlinx.datetime.Instant
 
-internal fun NewsItemDto.toNewsItem(): NewsItem = NewsItem(
+internal fun NewsItemDto.toNewsItem(relatedTickers: List<String>? = null): NewsItem = NewsItem(
     id = uuid,
     title = title,
     publisher = publisher ?: "",

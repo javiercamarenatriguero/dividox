@@ -4,9 +4,12 @@ import com.akole.dividox.component.market.domain.model.NewsItem
 import com.akole.dividox.component.market.domain.repository.MarketRepository
 
 class GetStockNewsUseCase(private val repository: MarketRepository) {
-    suspend operator fun invoke(query: String, exchange: String? = null, count: Int = 10): Result<List<NewsItem>> {
+
+    suspend operator fun invoke(ticker: String, exchange: String? = null, count: Int = 10): Result<List<NewsItem>> {
         val (lang, region) = exchangeToLangRegion(exchange)
-        return repository.getNews(query, count, lang, region)
+        // Fetch more than needed so we can filter by relatedTickers and still hit count
+        return repository.getNews(ticker, count = FETCH_MULTIPLIER * count, lang = lang, region = region, filterTicker = ticker)
+            .map { it.take(count) }
     }
 
     private fun exchangeToLangRegion(exchange: String?): Pair<String, String> {
@@ -24,5 +27,9 @@ class GetStockNewsUseCase(private val repository: MarketRepository) {
             e.contains("ASX") -> "en" to "AU"
             else -> "en" to "US"
         }
+    }
+
+    private companion object {
+        const val FETCH_MULTIPLIER = 5
     }
 }
