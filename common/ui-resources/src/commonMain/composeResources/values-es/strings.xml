@@ -115,7 +115,7 @@
     <string name="analysis_error_loading">Error cargando detalles</string>
     <string name="analysis_retry">Reintentar</string>
     <string name="analysis_price_chart">Gráfico de Precios</string>
-    <string name="analysis_metric_yield">Rendimiento</string>
+    <string name="analysis_metric_yield">Rend. de Dividendos</string>
     <string name="analysis_metric_annual_payout">Pago Anual</string>
     <string name="analysis_metric_payout_ratio">Ratio de Pago</string>
     <string name="analysis_metric_5y_growth">Crecimiento 5A</string>
