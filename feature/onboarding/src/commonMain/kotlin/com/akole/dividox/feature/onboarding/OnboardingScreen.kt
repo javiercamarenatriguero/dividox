@@ -96,19 +96,21 @@ fun OnboardingScreen(
         }
     }
 
-    Box(modifier = modifier.fillMaxSize()) {
+    Box(
+        modifier = modifier
+        .fillMaxSize()
+        .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)),
+    ) {
 
         // ── Image area (top 55%) ─────────────────────────────────────────────
         HorizontalPager(
             state = pagerState,
             modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxHeight(0.57f),
+                .fillMaxHeight(0.68f),
         ) { page ->
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)),
+                modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center,
             ) {
                 Image(
@@ -116,8 +118,7 @@ fun OnboardingScreen(
                     contentDescription = null,
                     contentScale = ContentScale.Fit,
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .fillMaxHeight(0.85f)
+                        .fillMaxSize()
                         .padding(horizontal = MaterialTheme.spacing.medium),
                 )
             }
