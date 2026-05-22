@@ -6,6 +6,7 @@ import com.akole.dividox.component.market.domain.model.DividendHistoryRange
 import com.akole.dividox.component.market.domain.model.DividendInfo
 import com.akole.dividox.component.market.domain.model.MarketDividendEvent
 import com.akole.dividox.component.market.domain.model.PricePoint
+import com.akole.dividox.component.market.domain.model.NewsItem
 import com.akole.dividox.component.market.domain.model.StockQuote
 import kotlinx.coroutines.flow.Flow
 
@@ -33,4 +34,5 @@ interface MarketRepository {
 
     fun getPriceHistory(ticker: String, period: ChartPeriod): Flow<List<PricePoint>>
     suspend fun searchSecurities(query: String, region: String? = null): Result<List<StockQuote>>
+    suspend fun getNews(query: String, count: Int = 10): Result<List<NewsItem>>
 }
