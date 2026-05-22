@@ -55,7 +55,7 @@
     <string name="favorites_title">Favourites</string>
     <string name="disclaimer_prices_delayed">Prices delayed 15 minutes</string>
     <string name="portfolio_search_placeholder">Filter holdings...</string>
-    <string name="portfolio_add_holding">Add holding</string>
+    <string name="portfolio_add_holding">Add Stock</string>
     <string name="portfolio_empty_state">No holdings yet.\nTap + to add your first one.</string>
     <string name="portfolio_sort_gain">Gain</string>
     <string name="portfolio_sort_value">Value</string>
@@ -111,7 +111,7 @@
     <string name="metric_volume">Volume</string>
     <string name="metric_day_range">Day Range</string>
     <string name="analysis_add_security">Add Security</string>
-    <string name="analysis_edit_holding">Edit Holding</string>
+    <string name="analysis_edit_holding">Edit Stock</string>
     <string name="analysis_error_loading">Error loading security details</string>
     <string name="analysis_retry">Retry</string>
     <string name="analysis_price_chart">Price Chart</string>
