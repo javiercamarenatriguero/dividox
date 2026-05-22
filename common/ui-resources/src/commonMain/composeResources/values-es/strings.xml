@@ -41,7 +41,7 @@
     <string name="dashboard_losers">Perdedores</string>
     <string name="metric_dividends">Dividendos</string>
     <string name="metric_dividends_lifetime">total</string>
-    <string name="section_favourites">Favoritos</string>
+    <string name="section_favourites">Tus Favoritos</string>
     <string name="action_view_all">VER TODO</string>
     <string name="favourites_empty_hint">Sin favoritos aún. Busca una acción para añadirla.</string>
     <string name="cd_remove_from_favourites">Quitar de favoritos</string>

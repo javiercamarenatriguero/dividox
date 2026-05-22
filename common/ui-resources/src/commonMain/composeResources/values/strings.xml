@@ -213,7 +213,7 @@
     <string name="onboarding_page3_title">El mercado de un vistazo</string>
     <string name="onboarding_page3_subtitle">Índices mundiales actualizados al instante</string>
     <string name="onboarding_page4_title">Busca y sigue valores</string>
-    <string name="onboarding_page4_subtitle">Crea tu watchlist sin necesidad de comprar</string>
+    <string name="onboarding_page4_subtitle">Crea tu lista de favoritos sin necesidad de comprar</string>
     <string name="onboarding_page5_title">¡Todo listo!</string>
     <string name="onboarding_page5_subtitle">Empieza a construir tu futuro financiero</string>
 </resources>
