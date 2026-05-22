@@ -225,7 +225,11 @@ class MarketRepositoryImpl(
             runCatching {
                 val dto = api.getNews(query, count, lang, region)
                 val allNews = dto.news?.map { it.toNewsItem(it.relatedTickers) } ?: emptyList()
-                val filtered = if (filterTicker != null) filterByTicker(allNews, dto.news, filterTicker) else allNews
+                val filtered = if (filterTicker != null) {
+                    filterByTicker(allNews, dto.news, filterTicker).ifEmpty { allNews }
+                } else {
+                    allNews
+                }
                 filtered.also { newsCache[cacheKey] = it to Clock.System.now().toEpochMilliseconds() }
             }.mapError()
         }
