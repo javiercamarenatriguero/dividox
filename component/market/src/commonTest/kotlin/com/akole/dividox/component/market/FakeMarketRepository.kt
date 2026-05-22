@@ -5,6 +5,7 @@ import com.akole.dividox.component.market.domain.model.DividendHistoryRange
 import com.akole.dividox.component.market.domain.model.MarketDividendEvent
 import com.akole.dividox.component.market.domain.model.CompanyInfo
 import com.akole.dividox.component.market.domain.model.DividendInfo
+import com.akole.dividox.component.market.domain.model.NewsItem
 import com.akole.dividox.component.market.domain.model.PricePoint
 import com.akole.dividox.component.market.domain.model.StockQuote
 import com.akole.dividox.component.market.domain.repository.MarketRepository
@@ -40,4 +41,7 @@ class FakeMarketRepository : MarketRepository {
         flowOf(priceHistoryResult)
     override suspend fun searchSecurities(query: String, region: String?): Result<List<StockQuote>> =
         quoteResult.map { listOf(it) }
+
+    var newsResult: Result<List<NewsItem>> = Result.success(emptyList())
+    override suspend fun getNews(query: String, count: Int): Result<List<NewsItem>> = newsResult
 }
