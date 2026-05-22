@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import com.akole.dividox.common.mvi.CollectSideEffect
 import com.akole.dividox.common.currency.domain.model.Currency
 import com.akole.dividox.common.ui.resources.components.AnimatedValueText
+import com.akole.dividox.common.ui.resources.components.NewsSection
 import com.akole.dividox.common.ui.resources.components.DividoxPullToRefreshBox
 import com.akole.dividox.common.ui.resources.components.SecurityCard
 import com.akole.dividox.common.ui.resources.components.DividoxTopAppBar
@@ -183,13 +184,6 @@ private fun DashboardContent(
                     Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
                 }
 
-                MarketIndicesSection(
-                    indices = state.marketIndices,
-                    isLoading = state.marketIndicesLoading,
-                    isError = state.marketIndicesError,
-                )
-                Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
-
                 FavouritesSection(
                     watchlist = state.watchlist,
                     convertedPrices = state.convertedWatchlistPrices,
@@ -203,6 +197,19 @@ private fun DashboardContent(
                     onViewAllClicked = { onEvent(DashboardViewEvent.ViewAllFavouritesClicked) },
                 )
 
+                Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
+
+                MarketIndicesSection(
+                    indices = state.marketIndices,
+                    isLoading = state.marketIndicesLoading,
+                    isError = state.marketIndicesError,
+                )
+                Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
+
+                NewsSection(
+                    news = state.marketNews,
+                    isLoading = state.marketNewsLoading,
+                )
                 Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
 
                 DisclaimerText()

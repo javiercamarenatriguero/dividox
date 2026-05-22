@@ -11,8 +11,10 @@ import com.akole.dividox.common.settings.AppRefreshTracker
 import com.akole.dividox.common.settings.domain.usecase.ObserveAppSettingsUseCase
 import com.akole.dividox.common.settings.domain.usecase.SetCurrencyUseCase
 import com.akole.dividox.component.watchlist.domain.usecase.RemoveFromWatchlistUseCase
+import com.akole.dividox.common.ui.resources.components.NewsItemUi
 import com.akole.dividox.component.market.domain.model.MarketIndexQuote
 import com.akole.dividox.component.market.domain.usecase.GetMajorMarketIndicesUseCase
+import com.akole.dividox.component.market.domain.usecase.GetMarketNewsUseCase
 import com.akole.dividox.feature.dashboard.DashboardContract.DashboardSideEffect
 import com.akole.dividox.feature.dashboard.DashboardContract.DashboardViewEvent
 import com.akole.dividox.feature.dashboard.DashboardContract.DashboardViewEvent.CurrencySelected
@@ -63,11 +65,14 @@ class DashboardViewModel(
     private val observePortfolioChanges: ObservePortfolioChangesUseCase,
     private val syncDividendHistory: SyncDividendHistoryFromHoldingsUseCase,
     private val getMajorMarketIndices: GetMajorMarketIndicesUseCase,
+    private val getMarketNews: GetMarketNewsUseCase,
 ) : ViewModel(),
     MVI<DashboardViewState, DashboardViewEvent, DashboardSideEffect> by mvi(DashboardViewState()) {
 
     private var dataJob: Job? = null
     private var marketIndicesJob: Job? = null
+    private val marketNewsFlow = MutableStateFlow<List<NewsItemUi>>(emptyList())
+    private val marketNewsLoadingFlow = MutableStateFlow(false)
     private val periodFlow = MutableStateFlow(ChartPeriod.ONE_DAY)
     private val marketIndicesFlow = MutableStateFlow<List<MarketIndexQuote>>(emptyList())
     private val marketIndicesLoadingFlow = MutableStateFlow(true)
@@ -87,6 +92,7 @@ class DashboardViewModel(
         observeConnectivity()
         observeRefreshTracker()
         observeMarketIndices()
+        loadMarketNews()
     }
 
     private fun observePortfolioAndSync() {
@@ -245,6 +251,8 @@ class DashboardViewModel(
                         marketIndices = marketIndicesFlow.value,
                         marketIndicesLoading = marketIndicesLoadingFlow.value,
                         marketIndicesError = marketIndicesErrorFlow.value,
+                        marketNews = marketNewsFlow.value,
+                        marketNewsLoading = marketNewsLoadingFlow.value,
                     )
                 }
             }
@@ -281,6 +289,29 @@ class DashboardViewModel(
             refreshTracker.lastRefreshed.filterNotNull().collect { instant ->
                 updateViewState { copy(lastUpdated = instant) }
             }
+        }
+    }
+
+    private fun loadMarketNews() {
+        viewModelScope.launch {
+            marketNewsLoadingFlow.value = true
+            observeAppSettings()
+                .map { it.defaultMarket }
+                .distinctUntilChanged()
+                .collect { market ->
+                    getMarketNews(market, count = 5).onSuccess { news ->
+                        marketNewsFlow.value = news.map { item ->
+                            NewsItemUi(
+                                title = item.title,
+                                publisher = item.publisher,
+                                link = item.link,
+                                publishedAtEpochSeconds = item.publishedAt.epochSeconds,
+                            )
+                        }
+                    }
+                    marketNewsLoadingFlow.value = false
+                    updateViewState { copy(marketNews = marketNewsFlow.value, marketNewsLoading = false) }
+                }
         }
     }
 

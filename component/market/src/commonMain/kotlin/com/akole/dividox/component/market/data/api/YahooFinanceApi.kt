@@ -50,6 +50,15 @@ internal class YahooFinanceApi(
      *
      * @param query Free-text search string (ticker or company name).
      */
+    suspend fun getNews(query: String, count: Int = 10, lang: String = "es", region: String = "ES"): SearchResponseDto =
+        client.get("https://query1.finance.yahoo.com/v1/finance/search") {
+            parameter("q", query)
+            parameter("quotesCount", 0)
+            parameter("newsCount", count)
+            parameter("lang", lang)
+            parameter("region", region)
+        }.body()
+
     suspend fun search(query: String, region: String? = null): SearchResponseDto =
         client.get("https://query1.finance.yahoo.com/v1/finance/search") {
             parameter("q", query)

@@ -6,6 +6,7 @@ import io.ktor.client.HttpClient
 import com.akole.dividox.component.market.data.mapper.toCompanyInfo
 import com.akole.dividox.component.market.data.mapper.toDividendInfo
 import com.akole.dividox.component.market.data.mapper.toMarketDividendEvents
+import com.akole.dividox.component.market.data.mapper.toNewsItem
 import com.akole.dividox.component.market.data.mapper.toPricePoints
 import com.akole.dividox.component.market.data.mapper.toStockQuote
 import com.akole.dividox.component.market.domain.model.ChartPeriod
@@ -15,6 +16,7 @@ import com.akole.dividox.component.market.domain.model.DividendHistoryRange
 import com.akole.dividox.component.market.domain.model.DividendInfo
 import com.akole.dividox.component.market.domain.model.MarketDividendEvent
 import com.akole.dividox.component.market.domain.model.MarketError
+import com.akole.dividox.component.market.domain.model.NewsItem
 import com.akole.dividox.component.market.domain.model.PricePoint
 import com.akole.dividox.component.market.domain.model.StockQuote
 import com.akole.dividox.component.market.domain.repository.MarketRepository
@@ -44,6 +46,7 @@ class MarketRepositoryImpl(
     private val dividendCache = mutableMapOf<String, Pair<DividendInfo, Long>>()
     private val companyCache = mutableMapOf<String, Pair<CompanyInfo, Long>>()
     private val historicalDividendCache = mutableMapOf<String, Pair<List<MarketDividendEvent>, Long>>()
+    private val newsCache = mutableMapOf<String, Pair<List<NewsItem>, Long>>()
 
     override suspend fun getStockQuote(ticker: String): Result<StockQuote> = withContext(ioDispatcher) {
         val cached = quoteCache[ticker]
@@ -214,6 +217,19 @@ class MarketRepositoryImpl(
         }.mapError()
     }
 
+    override suspend fun getNews(query: String, count: Int, lang: String, region: String): Result<List<NewsItem>> = withContext(ioDispatcher) {
+        val cacheKey = "$query:$count:$lang:$region"
+        val cached = newsCache[cacheKey]
+        if (cached != null && !isExpired(cached.second, NEWS_TTL_MS)) return@withContext Result.success(cached.first)
+        apiSemaphore.withPermit {
+            runCatching {
+                val dto = api.getNews(query, count, lang, region)
+                (dto.news?.map { it.toNewsItem() } ?: emptyList())
+                    .also { newsCache[cacheKey] = it to Clock.System.now().toEpochMilliseconds() }
+            }.mapError()
+        }
+    }
+
     private fun exchangePriority(exchange: String?): Int {
         val e = exchange?.uppercase() ?: return Int.MAX_VALUE
         return EXCHANGE_PRIORITY.indexOfFirst { e.contains(it) }
@@ -235,6 +251,7 @@ class MarketRepositoryImpl(
         private const val QUOTE_TTL_MS = 300_000L              // 5 minutes
         private const val DIVIDEND_TTL_MS = 3_600_000L         // 1 hour
         private const val HISTORICAL_DIVIDEND_TTL_MS = 86_400_000L  // 24 hours
+        private const val NEWS_TTL_MS = 600_000L                    // 10 minutes
         private const val MAX_CONCURRENT_REQUESTS = 8
 
         /**
