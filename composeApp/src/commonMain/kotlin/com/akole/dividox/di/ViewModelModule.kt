@@ -56,7 +56,6 @@ val viewModelModule: Module = module {
             observeAppSettings = get(),
             currencyConverter = get(),
             refreshTracker = get(),
-            getStockNews = get(),
         )
     }
 

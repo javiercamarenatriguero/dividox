@@ -44,7 +44,6 @@ import com.akole.dividox.common.ui.resources.charts.BarChart
 import com.akole.dividox.common.ui.resources.charts.BarChartEntry
 import com.akole.dividox.common.ui.resources.charts.LineChart
 import com.akole.dividox.common.ui.resources.components.DividoxTopAppBar
-import com.akole.dividox.common.ui.resources.components.NewsSection
 import com.akole.dividox.common.ui.resources.format.formatBarChartPopupLabel
 import com.akole.dividox.common.ui.resources.format.formatLargeNumber
 import com.akole.dividox.common.ui.resources.format.formatPercentSigned
@@ -181,14 +180,6 @@ fun SecurityDetailScreen(
                         }
 
                         FundamentalsSection(state = state)
-                        Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
-
-                        NewsSection(
-                            news = state.news,
-                            isLoading = state.newsLoading,
-                            compact = true,
-                            modifier = Modifier.padding(horizontal = MaterialTheme.spacing.medium),
-                        )
                         Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
 
                         CtaButton(state = state, onEvent = onEvent)

@@ -8,8 +8,6 @@ import com.akole.dividox.common.mvi.viewmodel.mvi
 import com.akole.dividox.common.network.connectivity.NetworkConnectivityManager
 import com.akole.dividox.common.settings.AppRefreshTracker
 import com.akole.dividox.common.settings.domain.usecase.ObserveAppSettingsUseCase
-import com.akole.dividox.common.ui.resources.components.NewsItemUi
-import com.akole.dividox.component.market.domain.usecase.GetStockNewsUseCase
 import com.akole.dividox.component.market.domain.model.ChartPeriod
 import com.akole.dividox.component.market.domain.model.DividendHistoryRange
 import com.akole.dividox.component.market.domain.usecase.GetHistoricalDividendEventsUseCase
@@ -46,42 +44,14 @@ class SecurityDetailViewModel(
     private val observeAppSettings: ObserveAppSettingsUseCase,
     private val currencyConverter: CurrencyConverter,
     private val refreshTracker: AppRefreshTracker,
-    private val getStockNews: GetStockNewsUseCase,
 ) : ViewModel(),
     MVI<SecurityDetailViewState, SecurityDetailViewEvent, SecurityDetailSideEffect>
     by mvi(SecurityDetailViewState(ticker = ticker)) {
 
     private var priceHistoryJob: Job? = null
-    private var newsLoaded = false
 
     init {
         observeData()
-    }
-
-    private fun loadNews(companyName: String?, exchange: String?) {
-        if (newsLoaded) return
-        newsLoaded = true
-        val query = companyName?.takeIf { it.isNotBlank() } ?: ticker
-        viewModelScope.launch {
-            updateViewState { copy(newsLoading = true) }
-            getStockNews(query, exchange = exchange, count = 3).onSuccess { news ->
-                updateViewState {
-                    copy(
-                        news = news.map { item ->
-                            NewsItemUi(
-                                title = item.title,
-                                publisher = item.publisher,
-                                link = item.link,
-                                publishedAtEpochSeconds = item.publishedAt.epochSeconds,
-                            )
-                        },
-                        newsLoading = false,
-                    )
-                }
-            }.onFailure {
-                updateViewState { copy(newsLoading = false) }
-            }
-        }
     }
 
     override fun onViewEvent(viewEvent: SecurityDetailViewEvent) {
@@ -150,7 +120,6 @@ class SecurityDetailViewModel(
                             isLoading = false,
                         )
                     }
-                    loadNews(detail.companyInfo?.name, detail.companyInfo?.exchange)
                 }
         }
     }

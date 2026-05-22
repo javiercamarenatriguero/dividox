@@ -34,5 +34,5 @@ interface MarketRepository {
 
     fun getPriceHistory(ticker: String, period: ChartPeriod): Flow<List<PricePoint>>
     suspend fun searchSecurities(query: String, region: String? = null): Result<List<StockQuote>>
-    suspend fun getNews(query: String, count: Int = 10, lang: String = "es", region: String = "ES", filterTicker: String? = null): Result<List<NewsItem>>
+    suspend fun getNews(query: String, count: Int = 10, lang: String = "es", region: String = "ES"): Result<List<NewsItem>>
 }

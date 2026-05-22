@@ -16,7 +16,6 @@ internal data class NewsItemDto(
     val link: String,
     val providerPublishTime: Long,
     val thumbnail: NewsThumbDto? = null,
-    val relatedTickers: List<String>? = null,
 )
 
 @Serializable

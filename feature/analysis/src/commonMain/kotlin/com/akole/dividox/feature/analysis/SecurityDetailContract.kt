@@ -4,7 +4,6 @@ import com.akole.dividox.common.currency.domain.model.Currency
 import com.akole.dividox.common.mvi.SideEffect
 import com.akole.dividox.common.mvi.ViewEvent
 import com.akole.dividox.common.mvi.ViewState
-import com.akole.dividox.common.ui.resources.components.NewsItemUi
 import com.akole.dividox.component.market.domain.model.ChartPeriod
 import com.akole.dividox.component.market.domain.model.CompanyInfo
 import com.akole.dividox.component.market.domain.model.DividendInfo
@@ -34,8 +33,6 @@ interface SecurityDetailContract {
         val isInPortfolio: Boolean = false,
         val holdingId: HoldingId? = null,
         val error: String? = null,
-        val news: List<NewsItemUi> = emptyList(),
-        val newsLoading: Boolean = false,
     ) : ViewState
 
     data class DividendGrowthBar(
