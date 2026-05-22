@@ -55,7 +55,7 @@
     <string name="favorites_title">Favourites</string>
     <string name="disclaimer_prices_delayed">Prices delayed 15 minutes</string>
     <string name="portfolio_search_placeholder">Filter holdings...</string>
-    <string name="portfolio_add_holding">Add holding</string>
+    <string name="portfolio_add_holding">Add Stock</string>
     <string name="portfolio_empty_state">No holdings yet.\nTap + to add your first one.</string>
     <string name="portfolio_sort_gain">Gain</string>
     <string name="portfolio_sort_value">Value</string>
@@ -111,7 +111,7 @@
     <string name="metric_volume">Volume</string>
     <string name="metric_day_range">Day Range</string>
     <string name="analysis_add_security">Add Security</string>
-    <string name="analysis_edit_holding">Edit Holding</string>
+    <string name="analysis_edit_holding">Edit Stock</string>
     <string name="analysis_error_loading">Error loading security details</string>
     <string name="analysis_retry">Retry</string>
     <string name="analysis_price_chart">Price Chart</string>
@@ -202,4 +202,18 @@
     <string name="currency_name_zar">South African Rand</string>
     <string name="dashboard_market_indices_title">Market Indices</string>
     <string name="dashboard_market_indices_error">Unable to load market indices</string>
+
+    <string name="onboarding_skip">Saltar</string>
+    <string name="onboarding_next">Siguiente</string>
+    <string name="onboarding_start">Empezar</string>
+    <string name="onboarding_page1_title">Tu portfolio, en un lugar</string>
+    <string name="onboarding_page1_subtitle">Añade holdings y sigue su valor en tiempo real</string>
+    <string name="onboarding_page2_title">No pierdas ningún dividendo</string>
+    <string name="onboarding_page2_subtitle">Calendario de cobros y proyección anual de ingresos</string>
+    <string name="onboarding_page3_title">El mercado de un vistazo</string>
+    <string name="onboarding_page3_subtitle">Índices mundiales actualizados al instante</string>
+    <string name="onboarding_page4_title">Busca y sigue valores</string>
+    <string name="onboarding_page4_subtitle">Crea tu lista de favoritos sin necesidad de comprar</string>
+    <string name="onboarding_page5_title">¡Todo listo!</string>
+    <string name="onboarding_page5_subtitle">Empieza a construir tu futuro financiero</string>
 </resources>

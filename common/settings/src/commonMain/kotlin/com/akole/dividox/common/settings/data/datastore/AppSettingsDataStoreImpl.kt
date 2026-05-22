@@ -18,6 +18,7 @@ class AppSettingsDataStoreImpl(
     private val currencyKey = stringPreferencesKey(KEY_CURRENCY)
     private val biometricLockKey = booleanPreferencesKey(KEY_BIOMETRIC_LOCK)
     private val defaultMarketKey = stringPreferencesKey(KEY_DEFAULT_MARKET)
+    private val onboardingCompletedKey = booleanPreferencesKey(KEY_ONBOARDING_COMPLETED)
 
     override fun observe(): Flow<AppSettings> =
         dataStore.data.map { prefs ->
@@ -27,7 +28,13 @@ class AppSettingsDataStoreImpl(
             } ?: AppSettings().currency
             val biometricLockEnabled = prefs[biometricLockKey] ?: false
             val defaultMarket = prefs[defaultMarketKey] ?: AppSettings().defaultMarket
-            AppSettings(currency = currency, biometricLockEnabled = biometricLockEnabled, defaultMarket = defaultMarket)
+            val onboardingCompleted = prefs[onboardingCompletedKey] ?: false
+            AppSettings(
+                currency = currency,
+                biometricLockEnabled = biometricLockEnabled,
+                defaultMarket = defaultMarket,
+                onboardingCompleted = onboardingCompleted,
+            )
         }
 
     override suspend fun setCurrency(currency: Currency) {
@@ -48,9 +55,16 @@ class AppSettingsDataStoreImpl(
         }
     }
 
+    override suspend fun setOnboardingCompleted() {
+        dataStore.edit { prefs ->
+            prefs[onboardingCompletedKey] = true
+        }
+    }
+
     companion object {
         private const val KEY_CURRENCY = "currency"
         private const val KEY_BIOMETRIC_LOCK = "biometric_lock_enabled"
         private const val KEY_DEFAULT_MARKET = "default_market"
+        private const val KEY_ONBOARDING_COMPLETED = "onboarding_completed"
     }
 }

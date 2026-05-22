@@ -67,6 +67,7 @@ kotlin {
             implementation(projects.feature.favorites)
             implementation(projects.feature.search)
             implementation(projects.feature.settings)
+            implementation(projects.feature.onboarding)
             implementation(projects.component.dividend)
             implementation(libs.androidx.navigation.compose)
             implementation(libs.kotlinx.serialization.core)

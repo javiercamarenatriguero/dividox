@@ -9,4 +9,5 @@ interface AppSettingsDataStore {
     suspend fun setCurrency(currency: Currency)
     suspend fun setBiometricLock(enabled: Boolean)
     suspend fun setDefaultMarket(market: String)
+    suspend fun setOnboardingCompleted()
 }

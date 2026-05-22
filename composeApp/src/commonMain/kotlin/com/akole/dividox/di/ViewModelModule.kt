@@ -10,6 +10,7 @@ import com.akole.dividox.feature.favorites.FavoritesViewModel
 import com.akole.dividox.feature.search.SearchViewModel
 import com.akole.dividox.feature.dashboard.DashboardViewModel
 import com.akole.dividox.feature.home.HomeViewModel
+import com.akole.dividox.feature.onboarding.OnboardingViewModel
 import com.akole.dividox.feature.settings.DeleteAccountUseCase
 import com.akole.dividox.feature.settings.SettingsViewModel
 import com.akole.dividox.feature.portfolio.HoldingViewModel
@@ -31,6 +32,7 @@ val viewModelModule: Module = module {
     viewModel { LoginViewModel(get(), get(), get()) }
     viewModelOf(::SignUpViewModel)
     viewModelOf(::ForgotPasswordViewModel)
+    viewModelOf(::OnboardingViewModel)
     viewModelOf(::DashboardViewModel)
     viewModelOf(::DividendsViewModel)
     viewModelOf(::FavoritesViewModel)

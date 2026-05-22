@@ -41,7 +41,7 @@
     <string name="dashboard_losers">Perdedores</string>
     <string name="metric_dividends">Dividendos</string>
     <string name="metric_dividends_lifetime">total</string>
-    <string name="section_favourites">Favoritos</string>
+    <string name="section_favourites">Tus Favoritos</string>
     <string name="action_view_all">VER TODO</string>
     <string name="favourites_empty_hint">Sin favoritos aún. Busca una acción para añadirla.</string>
     <string name="cd_remove_from_favourites">Quitar de favoritos</string>
@@ -55,7 +55,7 @@
     <string name="favorites_title">Favoritos</string>
     <string name="disclaimer_prices_delayed">Precios atrasados 15 minutos</string>
     <string name="portfolio_search_placeholder">Filtrar tenencias...</string>
-    <string name="portfolio_add_holding">Añadir tenencia</string>
+    <string name="portfolio_add_holding">Añadir Acción</string>
     <string name="portfolio_empty_state">Sin tenencias aún.\nToca + para añadir la primera.</string>
     <string name="portfolio_sort_gain">Ganancia</string>
     <string name="portfolio_sort_value">Valor</string>
@@ -66,7 +66,7 @@
     <string name="portfolio_per_share">/acción</string>
     <string name="portfolio_shares_format">%1$s acciones</string>
     <string name="portfolio_yield_label">Rend. de Dividendos: %1$s</string>
-    <string name="action_add_position">Añadir Posición</string>
+    <string name="action_add_position">Añadir Acción</string>
     <string name="action_update_position">Actualizar</string>
     <string name="action_delete">Eliminar</string>
     <string name="action_cancel">Cancelar</string>
@@ -111,11 +111,11 @@
     <string name="metric_volume">Volumen</string>
     <string name="metric_day_range">Rango del Día</string>
     <string name="analysis_add_security">Añadir Acción</string>
-    <string name="analysis_edit_holding">Editar Tenencia</string>
+    <string name="analysis_edit_holding">Editar Acción</string>
     <string name="analysis_error_loading">Error cargando detalles</string>
     <string name="analysis_retry">Reintentar</string>
     <string name="analysis_price_chart">Gráfico de Precios</string>
-    <string name="analysis_metric_yield">Rendimiento</string>
+    <string name="analysis_metric_yield">Rend. de Dividendos</string>
     <string name="analysis_metric_annual_payout">Pago Anual</string>
     <string name="analysis_metric_payout_ratio">Ratio de Pago</string>
     <string name="analysis_metric_5y_growth">Crecimiento 5A</string>
