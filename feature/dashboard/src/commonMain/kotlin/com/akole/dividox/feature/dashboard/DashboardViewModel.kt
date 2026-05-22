@@ -299,7 +299,7 @@ class DashboardViewModel(
                 .map { it.defaultMarket }
                 .distinctUntilChanged()
                 .collect { market ->
-                    getMarketNews(market).onSuccess { news ->
+                    getMarketNews(market, count = 5).onSuccess { news ->
                         marketNewsFlow.value = news.map { item ->
                             NewsItemUi(
                                 title = item.title,

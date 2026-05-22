@@ -13,6 +13,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.akole.dividox.common.ui.resources.theme.spacing
@@ -33,7 +34,7 @@ fun NewsSection(
         Text(
             text = stringResource(Res.string.news_section_title),
             style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontWeight = FontWeight.SemiBold,
             modifier = Modifier.padding(bottom = MaterialTheme.spacing.small),
         )
 
