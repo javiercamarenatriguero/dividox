@@ -15,13 +15,12 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import com.akole.dividox.common.ui.resources.theme.spacing
-import com.akole.dividox.component.market.domain.model.NewsItem
 import kotlin.math.abs
 import kotlin.time.Clock
 
 @Composable
 fun NewsCard(
-    item: NewsItem,
+    item: NewsItemUi,
     compact: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
@@ -56,7 +55,7 @@ fun NewsCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
-                text = relativeTime(item.publishedAt.epochSeconds),
+                text = relativeTime(item.publishedAtEpochSeconds),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

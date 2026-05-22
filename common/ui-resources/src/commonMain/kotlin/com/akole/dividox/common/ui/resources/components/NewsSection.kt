@@ -16,14 +16,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.akole.dividox.common.ui.resources.theme.spacing
-import com.akole.dividox.component.market.domain.model.NewsItem
 import dividox.common.ui_resources.generated.resources.Res
 import dividox.common.ui_resources.generated.resources.news_section_title
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun NewsSection(
-    news: List<NewsItem>,
+    news: List<NewsItemUi>,
     isLoading: Boolean,
     compact: Boolean = false,
     modifier: Modifier = Modifier,
