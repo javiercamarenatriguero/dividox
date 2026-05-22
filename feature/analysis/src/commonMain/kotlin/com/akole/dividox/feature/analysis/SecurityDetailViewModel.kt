@@ -58,12 +58,13 @@ class SecurityDetailViewModel(
         observeData()
     }
 
-    private fun loadNews(exchange: String?) {
+    private fun loadNews(companyName: String?, exchange: String?) {
         if (newsLoaded) return
         newsLoaded = true
+        val query = companyName?.takeIf { it.isNotBlank() } ?: ticker
         viewModelScope.launch {
             updateViewState { copy(newsLoading = true) }
-            getStockNews(ticker, exchange = exchange, count = 3).onSuccess { news ->
+            getStockNews(query, exchange = exchange, count = 3).onSuccess { news ->
                 updateViewState {
                     copy(
                         news = news.map { item ->
@@ -149,7 +150,7 @@ class SecurityDetailViewModel(
                             isLoading = false,
                         )
                     }
-                    loadNews(detail.companyInfo?.exchange)
+                    loadNews(detail.companyInfo?.name, detail.companyInfo?.exchange)
                 }
         }
     }

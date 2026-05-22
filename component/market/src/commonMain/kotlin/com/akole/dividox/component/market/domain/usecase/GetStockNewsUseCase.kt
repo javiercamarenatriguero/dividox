@@ -4,9 +4,9 @@ import com.akole.dividox.component.market.domain.model.NewsItem
 import com.akole.dividox.component.market.domain.repository.MarketRepository
 
 class GetStockNewsUseCase(private val repository: MarketRepository) {
-    suspend operator fun invoke(ticker: String, exchange: String? = null, count: Int = 10): Result<List<NewsItem>> {
+    suspend operator fun invoke(query: String, exchange: String? = null, count: Int = 10): Result<List<NewsItem>> {
         val (lang, region) = exchangeToLangRegion(exchange)
-        return repository.getNews(ticker, count, lang, region)
+        return repository.getNews(query, count, lang, region)
     }
 
     private fun exchangeToLangRegion(exchange: String?): Pair<String, String> {
