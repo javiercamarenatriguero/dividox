@@ -217,13 +217,13 @@ class MarketRepositoryImpl(
         }.mapError()
     }
 
-    override suspend fun getNews(query: String, count: Int): Result<List<NewsItem>> = withContext(ioDispatcher) {
-        val cacheKey = "$query:$count"
+    override suspend fun getNews(query: String, count: Int, lang: String, region: String): Result<List<NewsItem>> = withContext(ioDispatcher) {
+        val cacheKey = "$query:$count:$lang:$region"
         val cached = newsCache[cacheKey]
         if (cached != null && !isExpired(cached.second, NEWS_TTL_MS)) return@withContext Result.success(cached.first)
         apiSemaphore.withPermit {
             runCatching {
-                val dto = api.getNews(query, count)
+                val dto = api.getNews(query, count, lang, region)
                 (dto.news?.map { it.toNewsItem() } ?: emptyList())
                     .also { newsCache[cacheKey] = it to Clock.System.now().toEpochMilliseconds() }
             }.mapError()

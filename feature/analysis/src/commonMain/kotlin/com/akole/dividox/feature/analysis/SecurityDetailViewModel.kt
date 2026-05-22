@@ -52,16 +52,18 @@ class SecurityDetailViewModel(
     by mvi(SecurityDetailViewState(ticker = ticker)) {
 
     private var priceHistoryJob: Job? = null
+    private var newsLoaded = false
 
     init {
         observeData()
-        loadNews()
     }
 
-    private fun loadNews() {
+    private fun loadNews(exchange: String?) {
+        if (newsLoaded) return
+        newsLoaded = true
         viewModelScope.launch {
             updateViewState { copy(newsLoading = true) }
-            getStockNews(ticker, count = 3).onSuccess { news ->
+            getStockNews(ticker, exchange = exchange, count = 3).onSuccess { news ->
                 updateViewState {
                     copy(
                         news = news.map { item ->
@@ -147,6 +149,7 @@ class SecurityDetailViewModel(
                             isLoading = false,
                         )
                     }
+                    loadNews(detail.companyInfo?.exchange)
                 }
         }
     }
