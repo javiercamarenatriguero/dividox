@@ -6,6 +6,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
+import io.ktor.client.statement.bodyAsText
 
 /** Low-level HTTP client for Yahoo Finance v8 public endpoints (no auth required). */
 internal class YahooFinanceApi(
@@ -50,14 +51,12 @@ internal class YahooFinanceApi(
      *
      * @param query Free-text search string (ticker or company name).
      */
-    suspend fun getNews(query: String, count: Int = 10, lang: String = "es", region: String = "ES"): SearchResponseDto =
-        client.get("https://query1.finance.yahoo.com/v1/finance/search") {
-            parameter("q", query)
-            parameter("quotesCount", 0)
-            parameter("newsCount", count)
-            parameter("lang", lang)
+    suspend fun getRssNews(ticker: String, lang: String = "es", region: String = "ES"): String =
+        client.get("https://feeds.finance.yahoo.com/rss/2.0/headline") {
+            parameter("s", ticker)
             parameter("region", region)
-        }.body()
+            parameter("lang", "$lang-$region")
+        }.bodyAsText()
 
     suspend fun search(query: String, region: String? = null): SearchResponseDto =
         client.get("https://query1.finance.yahoo.com/v1/finance/search") {

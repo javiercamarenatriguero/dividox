@@ -14,6 +14,7 @@ import com.akole.dividox.component.market.domain.usecase.GetHistoricalDividendEv
 import com.akole.dividox.component.market.domain.usecase.GetMajorMarketIndicesUseCase
 import com.akole.dividox.component.market.domain.usecase.GetMarketNewsUseCase
 import com.akole.dividox.component.market.domain.usecase.GetMultipleQuotesUseCase
+import com.akole.dividox.component.market.domain.usecase.GetStockNewsUseCase
 import com.akole.dividox.component.market.domain.usecase.GetPriceHistoryUseCase
 import com.akole.dividox.component.market.domain.usecase.GetStockQuoteUseCase
 import com.akole.dividox.component.market.domain.usecase.SearchSecuritiesUseCase
@@ -52,4 +53,5 @@ val marketModule: Module = module {
     factoryOf(::GetMajorMarketIndicesUseCase)
 
     factoryOf(::GetMarketNewsUseCase)
+    factoryOf(::GetStockNewsUseCase)
 }

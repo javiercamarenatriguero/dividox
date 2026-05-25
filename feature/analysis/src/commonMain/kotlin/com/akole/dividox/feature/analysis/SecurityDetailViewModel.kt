@@ -10,8 +10,10 @@ import com.akole.dividox.common.settings.AppRefreshTracker
 import com.akole.dividox.common.settings.domain.usecase.ObserveAppSettingsUseCase
 import com.akole.dividox.component.market.domain.model.ChartPeriod
 import com.akole.dividox.component.market.domain.model.DividendHistoryRange
+import com.akole.dividox.common.ui.resources.components.NewsItemUi
 import com.akole.dividox.component.market.domain.usecase.GetHistoricalDividendEventsUseCase
 import com.akole.dividox.component.market.domain.usecase.GetPriceHistoryUseCase
+import com.akole.dividox.component.market.domain.usecase.GetStockNewsUseCase
 import com.akole.dividox.component.market.domain.usecase.GetStockQuoteUseCase
 import com.akole.dividox.component.watchlist.domain.usecase.AddToWatchlistUseCase
 import com.akole.dividox.component.watchlist.domain.usecase.IsInWatchlistUseCase
@@ -44,6 +46,7 @@ class SecurityDetailViewModel(
     private val observeAppSettings: ObserveAppSettingsUseCase,
     private val currencyConverter: CurrencyConverter,
     private val refreshTracker: AppRefreshTracker,
+    private val getStockNews: GetStockNewsUseCase,
 ) : ViewModel(),
     MVI<SecurityDetailViewState, SecurityDetailViewEvent, SecurityDetailSideEffect>
     by mvi(SecurityDetailViewState(ticker = ticker)) {
@@ -97,6 +100,29 @@ class SecurityDetailViewModel(
             observeSecurityDetail(viewState.value.selectedChartPeriod)
         }
         loadHistoricalDividendGrowth()
+        loadStockNews()
+    }
+
+    private fun loadStockNews() {
+        viewModelScope.launch {
+            updateViewState { copy(stockNewsLoading = true) }
+            getStockNews(ticker).onSuccess { news ->
+                updateViewState {
+                    copy(
+                        stockNews = news.map { item ->
+                            NewsItemUi(
+                                title = item.title,
+                                publisher = item.publisher,
+                                link = item.link,
+                                publishedAtEpochSeconds = item.publishedAt.epochSeconds,
+                                summary = item.summary,
+                            )
+                        },
+                    )
+                }
+            }
+            updateViewState { copy(stockNewsLoading = false) }
+        }
     }
 
     private fun observeSecurityDetail(period: ChartPeriod) {

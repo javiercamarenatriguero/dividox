@@ -173,7 +173,7 @@ private fun DashboardContent(
                     currency = state.currency,
                 )
 
-                Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
+                Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
 
                 if (state.topGainers.isNotEmpty() || state.topLosers.isNotEmpty()) {
                     PortfolioTodaySection(
@@ -181,7 +181,7 @@ private fun DashboardContent(
                         topLosers = state.topLosers,
                         onViewAllClicked = { onEvent(DashboardViewEvent.ViewAllPortfolioClicked) },
                     )
-                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
+                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
                 }
 
                 FavouritesSection(

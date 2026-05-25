@@ -33,7 +33,7 @@ fun NewsSection(
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
             text = stringResource(Res.string.news_section_title),
-            style = MaterialTheme.typography.titleSmall,
+            style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
             modifier = Modifier.padding(bottom = MaterialTheme.spacing.small),
         )

@@ -5,4 +5,5 @@ data class NewsItemUi(
     val publisher: String,
     val link: String,
     val publishedAtEpochSeconds: Long,
+    val summary: String? = null,
 )

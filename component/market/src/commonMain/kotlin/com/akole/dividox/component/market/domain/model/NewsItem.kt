@@ -9,4 +9,5 @@ data class NewsItem(
     val link: String,
     val publishedAt: Instant,
     val thumbnailUrl: String?,
+    val summary: String? = null,
 )

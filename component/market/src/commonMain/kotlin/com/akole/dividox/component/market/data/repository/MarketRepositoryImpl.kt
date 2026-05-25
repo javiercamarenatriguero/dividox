@@ -6,8 +6,8 @@ import io.ktor.client.HttpClient
 import com.akole.dividox.component.market.data.mapper.toCompanyInfo
 import com.akole.dividox.component.market.data.mapper.toDividendInfo
 import com.akole.dividox.component.market.data.mapper.toMarketDividendEvents
-import com.akole.dividox.component.market.data.mapper.toNewsItem
 import com.akole.dividox.component.market.data.mapper.toPricePoints
+import com.akole.dividox.component.market.data.parser.RssParser
 import com.akole.dividox.component.market.data.mapper.toStockQuote
 import com.akole.dividox.component.market.domain.model.ChartPeriod
 import com.akole.dividox.component.market.domain.model.SecurityType
@@ -223,8 +223,8 @@ class MarketRepositoryImpl(
         if (cached != null && !isExpired(cached.second, NEWS_TTL_MS)) return@withContext Result.success(cached.first)
         apiSemaphore.withPermit {
             runCatching {
-                val dto = api.getNews(query, count, lang, region)
-                (dto.news?.map { it.toNewsItem() } ?: emptyList())
+                val rss = api.getRssNews(query, lang, region)
+                RssParser.parseNewsItems(rss, maxCount = count)
                     .also { newsCache[cacheKey] = it to Clock.System.now().toEpochMilliseconds() }
             }.mapError()
         }

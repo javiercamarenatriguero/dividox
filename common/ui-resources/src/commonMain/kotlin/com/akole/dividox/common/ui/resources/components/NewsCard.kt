@@ -39,6 +39,15 @@ fun NewsCard(
             maxLines = if (compact) 1 else 2,
             overflow = TextOverflow.Ellipsis,
         )
+        if (!compact && item.summary != null) {
+            Text(
+                text = item.summary,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
         Row(
             horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xSmall),
             verticalAlignment = Alignment.CenterVertically,

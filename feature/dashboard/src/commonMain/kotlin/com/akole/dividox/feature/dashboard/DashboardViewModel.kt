@@ -306,6 +306,7 @@ class DashboardViewModel(
                                 publisher = item.publisher,
                                 link = item.link,
                                 publishedAtEpochSeconds = item.publishedAt.epochSeconds,
+                                summary = item.summary,
                             )
                         }
                     }
