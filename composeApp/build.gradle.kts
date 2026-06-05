@@ -37,7 +37,7 @@ kotlin {
             isStatic = true
         }
         pod("FirebaseAuth") { version = "~> 11.0" }
-        pod("FirebaseFirestore") { version = "~> 11.0" }
+        pod("FirebaseFirestore") { version = "~> 11.0"; linkOnly = true }
         pod("GoogleSignIn") { version = "~> 8.0" }
         podfile = project.file("../iosApp/Podfile")
     }

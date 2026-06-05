@@ -66,7 +66,59 @@ jobs:
         with:
           name: android-apk
           path: composeApp-release.apk
-          retention-days: 1
+          retention-days: 90
+
+  build-ios:
+    name: Build iOS
+    runs-on: macos-latest
+    needs: [prepare]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build KMP framework
+        run: ./gradlew :composeApp:podPublishReleaseXCFramework
+
+      - name: Install CocoaPods
+        run: pod install --project-directory=iosApp
+
+      - name: Build iOS app (unsigned)
+        run: |
+          xcodebuild build \
+            -workspace iosApp/iosApp.xcworkspace \
+            -scheme iosApp \
+            -configuration Release \
+            -destination "generic/platform=iOS" \
+            -derivedDataPath $RUNNER_TEMP/DerivedData \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            CURRENT_PROJECT_VERSION=${{ needs.prepare.outputs.build_number }}
+
+      - name: Package as IPA
+        run: |
+          APP_PATH=$(find $RUNNER_TEMP/DerivedData -name "*.app" | head -1)
+          mkdir -p $RUNNER_TEMP/ipa/Payload
+          cp -r "$APP_PATH" $RUNNER_TEMP/ipa/Payload/
+          cd $RUNNER_TEMP/ipa
+          zip -r iosApp-${{ needs.prepare.outputs.build_number }}.ipa Payload
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: iosApp-release
+          path: ${{ runner.temp }}/ipa/iosApp-*.ipa
+          retention-days: 90
 
   distribute-android:
     name: Distribute Android

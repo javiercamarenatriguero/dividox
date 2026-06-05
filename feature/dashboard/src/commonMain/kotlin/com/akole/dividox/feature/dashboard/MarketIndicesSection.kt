@@ -61,7 +61,7 @@ fun MarketIndicesSection(
             fontWeight = FontWeight.SemiBold,
         )
 
-        Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
+        Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
 
         when {
             isLoading -> MarketIndicesLoadingPlaceholder()

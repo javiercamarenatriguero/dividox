@@ -202,6 +202,7 @@
     <string name="currency_name_zar">South African Rand</string>
     <string name="dashboard_market_indices_title">Market Indices</string>
     <string name="dashboard_market_indices_error">Unable to load market indices</string>
+    <string name="news_section_title">News</string>
 
     <string name="onboarding_skip">Saltar</string>
     <string name="onboarding_next">Siguiente</string>

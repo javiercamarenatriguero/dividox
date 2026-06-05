@@ -11,8 +11,10 @@ import com.akole.dividox.common.settings.AppRefreshTracker
 import com.akole.dividox.common.settings.domain.usecase.ObserveAppSettingsUseCase
 import com.akole.dividox.common.settings.domain.usecase.SetCurrencyUseCase
 import com.akole.dividox.component.watchlist.domain.usecase.RemoveFromWatchlistUseCase
+import com.akole.dividox.common.ui.resources.components.NewsItemUi
 import com.akole.dividox.component.market.domain.model.MarketIndexQuote
 import com.akole.dividox.component.market.domain.usecase.GetMajorMarketIndicesUseCase
+import com.akole.dividox.component.market.domain.usecase.GetMarketNewsUseCase
 import com.akole.dividox.feature.dashboard.DashboardContract.DashboardSideEffect
 import com.akole.dividox.feature.dashboard.DashboardContract.DashboardViewEvent
 import com.akole.dividox.feature.dashboard.DashboardContract.DashboardViewEvent.CurrencySelected
@@ -63,23 +65,25 @@ class DashboardViewModel(
     private val observePortfolioChanges: ObservePortfolioChangesUseCase,
     private val syncDividendHistory: SyncDividendHistoryFromHoldingsUseCase,
     private val getMajorMarketIndices: GetMajorMarketIndicesUseCase,
+    private val getMarketNews: GetMarketNewsUseCase,
 ) : ViewModel(),
     MVI<DashboardViewState, DashboardViewEvent, DashboardSideEffect> by mvi(DashboardViewState()) {
 
     private var dataJob: Job? = null
     private var marketIndicesJob: Job? = null
+    private val marketNewsFlow = MutableStateFlow<List<NewsItemUi>>(emptyList())
+    private val marketNewsLoadingFlow = MutableStateFlow(false)
     private val periodFlow = MutableStateFlow(ChartPeriod.ONE_DAY)
     private val marketIndicesFlow = MutableStateFlow<List<MarketIndexQuote>>(emptyList())
     private val marketIndicesLoadingFlow = MutableStateFlow(true)
     private val marketIndicesErrorFlow = MutableStateFlow(false)
-    // Internal flows updated by separate coroutines so slow API calls don't block main UI data
-    private val summaryFlow = MutableStateFlow<PortfolioSummary?>(null)         // null until portfolio API calls complete
-    private val periodGainFlow = MutableStateFlow<Pair<Double, Double>?>(null)  // null until first gain result
+    private val summaryFlow = MutableStateFlow<PortfolioSummary?>(null)
+    private val periodGainFlow = MutableStateFlow<Pair<Double, Double>?>(null)
     private val portfolioTodayFlow = MutableStateFlow<Pair<List<SecurityHolding>, List<SecurityHolding>>>(
         emptyList<SecurityHolding>() to emptyList(),
     )
-    private val periodDividendsFlow = MutableStateFlow(0.0)   // USD, unconverted
-    private val lifetimeDividendsFlow = MutableStateFlow(0.0) // USD, unconverted
+    private val periodDividendsFlow = MutableStateFlow(0.0)
+    private val lifetimeDividendsFlow = MutableStateFlow(0.0)
 
     init {
         observePortfolioAndSync()
@@ -87,6 +91,7 @@ class DashboardViewModel(
         observeConnectivity()
         observeRefreshTracker()
         observeMarketIndices()
+        loadMarketNews()
     }
 
     private fun observePortfolioAndSync() {
@@ -126,12 +131,26 @@ class DashboardViewModel(
     private fun observeData() {
         dataJob?.cancel()
         dataJob = viewModelScope.launch {
-            // Single upstream shared between gain coroutine and summary — no double API calls.
             val portfolioShared = getPortfolioWithQuotes()
                 .filter { it.isNotEmpty() }
                 .shareIn(this, SharingStarted.WhileSubscribed(), replay = 1)
 
-            // 1. Period dividends — Room query, fast, restarts on period change
+            // Watchlist enrichment runs independently — N company-info API calls per entry
+            // must not block portfolio render.
+            launch {
+                combine(getEnrichedWatchlist(), observeAppSettings()) { watchlist, settings ->
+                    watchlist to settings.currency
+                }.collect { (watchlist, currency) ->
+                    val convertedPrices = currencyConverter.convertWatchlistPrices(watchlist, currency)
+                    updateViewState {
+                        copy(
+                            watchlist = watchlist,
+                            convertedWatchlistPrices = convertedPrices,
+                        )
+                    }
+                }
+            }
+
             launch {
                 periodFlow.flatMapLatest { period ->
                     getPeriodDividends(period.toStartDate())
@@ -140,22 +159,18 @@ class DashboardViewModel(
                 }
             }
 
-            // 1b. Lifetime dividends — collected once, updates reactively
             launch {
                 getPeriodDividends(null).collect { lifetime ->
                     lifetimeDividendsFlow.value = lifetime
                 }
             }
 
-            // 2. Portfolio summary — slowest flow (requires all quote API calls to complete).
-            // Feeds summaryFlow; isLoading stays true until first emission.
             launch {
                 getPortfolioSummary(portfolioShared).collect { summary ->
                     summaryFlow.value = summary
                 }
             }
 
-            // 3. Period gain — cancelled and restarted on new portfolio or period emission.
             launch {
                 combine(portfolioShared, periodFlow) { holdings, period ->
                     holdings to period
@@ -165,7 +180,6 @@ class DashboardViewModel(
                 }
             }
 
-            // 3b. Portfolio Today — top 3 gainers and losers by today's % change.
             launch {
                 portfolioShared.collect { holdings ->
                     val gainers = holdings.filter { it.quote.changePercent > 0 }
@@ -178,20 +192,19 @@ class DashboardViewModel(
                 }
             }
 
-            // 4. Main combine — skeleton stays until summaryFlow has its first real value.
             val dividendPairFlow =
                 combine(periodDividendsFlow, lifetimeDividendsFlow) { period, lifetime -> period to lifetime }
             val allGainsAndTodayFlow = combine(
                 periodGainFlow,
                 portfolioTodayFlow,
             ) { period, today -> period to today }
+
             combine(
                 summaryFlow,
-                getEnrichedWatchlist(),
                 observeAppSettings(),
                 dividendPairFlow,
                 allGainsAndTodayFlow,
-            ) { summary, watchlist, settings, dividendPair, gainsAndToday ->
+            ) { summary, settings, dividendPair, gainsAndToday ->
                 val (dividends, lifetime) = dividendPair
                 val (periodGain, rawTodayPair) = gainsAndToday
                 val (rawGainers, rawLosers) = rawTodayPair
@@ -199,7 +212,6 @@ class DashboardViewModel(
                 val gainPct = periodGain?.second ?: 0.0
                 val targetCurrency = settings.currency
                 val convertedSummary = summary?.let { currencyConverter.convertSummary(it, targetCurrency) }
-                val convertedWatchlistPrices = currencyConverter.convertWatchlistPrices(watchlist, targetCurrency)
                 val topGainers = rawGainers.map { h ->
                     PortfolioTodayItem(
                         ticker = h.holding.tickerId,
@@ -219,14 +231,12 @@ class DashboardViewModel(
                     )
                 }
                 viewState.value.copy(
-                    isLoading = summary == null || periodGain == null || summary.totalValue == 0.0,
+                    isLoading = summary == null || periodGain == null,
                     isRefreshing = false,
                     summary = convertedSummary,
-                    watchlist = watchlist,
                     currency = targetCurrency,
                     error = null,
                     convertedSummary = convertedSummary,
-                    convertedWatchlistPrices = convertedWatchlistPrices,
                     periodGainPercent = gainPct,
                     periodGainAbsolute = currencyConverter.convertAmount(gainAbs, targetCurrency),
                     periodDividends = currencyConverter.convertAmount(dividends, targetCurrency),
@@ -240,11 +250,16 @@ class DashboardViewModel(
                 val now = Clock.System.now()
                 refreshTracker.notifyRefreshed(now)
                 updateViewState {
+                    // Preserve watchlist/convertedWatchlistPrices managed by the separate coroutine.
                     newState.copy(
+                        watchlist = watchlist,
+                        convertedWatchlistPrices = convertedWatchlistPrices,
                         lastUpdated = now,
                         marketIndices = marketIndicesFlow.value,
                         marketIndicesLoading = marketIndicesLoadingFlow.value,
                         marketIndicesError = marketIndicesErrorFlow.value,
+                        marketNews = marketNewsFlow.value,
+                        marketNewsLoading = marketNewsLoadingFlow.value,
                     )
                 }
             }
@@ -284,6 +299,30 @@ class DashboardViewModel(
         }
     }
 
+    private fun loadMarketNews() {
+        viewModelScope.launch {
+            marketNewsLoadingFlow.value = true
+            observeAppSettings()
+                .map { it.defaultMarket }
+                .distinctUntilChanged()
+                .collect { market ->
+                    getMarketNews(market, count = 5).onSuccess { news ->
+                        marketNewsFlow.value = news.map { item ->
+                            NewsItemUi(
+                                title = item.title,
+                                publisher = item.publisher,
+                                link = item.link,
+                                publishedAtEpochSeconds = item.publishedAt.epochSeconds,
+                                summary = item.summary,
+                            )
+                        }
+                    }
+                    marketNewsLoadingFlow.value = false
+                    updateViewState { copy(marketNews = marketNewsFlow.value, marketNewsLoading = false) }
+                }
+        }
+    }
+
     private fun observeMarketIndices() {
         marketIndicesJob?.cancel()
         marketIndicesLoadingFlow.value = true
@@ -315,5 +354,4 @@ class DashboardViewModel(
             },
         )
     }
-
 }

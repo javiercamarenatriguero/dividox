@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import com.akole.dividox.common.mvi.CollectSideEffect
 import com.akole.dividox.common.currency.domain.model.Currency
 import com.akole.dividox.common.ui.resources.components.AnimatedValueText
+import com.akole.dividox.common.ui.resources.components.NewsSection
 import com.akole.dividox.common.ui.resources.components.DividoxPullToRefreshBox
 import com.akole.dividox.common.ui.resources.components.SecurityCard
 import com.akole.dividox.common.ui.resources.components.DividoxTopAppBar
@@ -139,76 +140,82 @@ private fun DashboardContent(
                     onRefresh = { onEvent(DashboardViewEvent.Refresh) },
                     modifier = Modifier.fillMaxSize(),
                 ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                        .padding(horizontal = MaterialTheme.spacing.medium),
-                ) {
-                Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState())
+                            .padding(horizontal = MaterialTheme.spacing.medium),
+                    ) {
+                        Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
 
-                MetricsBlock(
-                    summary = state.convertedSummary ?: state.summary,
-                    currency = state.currency,
-                    totalGainPercent = state.totalGainPercent,
-                    totalGainAbsolute = state.totalGainAbsolute,
-                    lifetimeDividends = state.lifetimeDividends,
-                )
+                        MetricsBlock(
+                            summary = state.convertedSummary ?: state.summary,
+                            currency = state.currency,
+                            totalGainPercent = state.totalGainPercent,
+                            totalGainAbsolute = state.totalGainAbsolute,
+                            lifetimeDividends = state.lifetimeDividends,
+                        )
 
-                Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
+                        Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
 
-                PeriodSelectorRow(
-                    selectedPeriod = state.selectedPeriod,
-                    onPeriodSelected = { onEvent(DashboardViewEvent.PeriodSelected(it)) },
-                )
+                        PeriodSelectorRow(
+                            selectedPeriod = state.selectedPeriod,
+                            onPeriodSelected = { onEvent(DashboardViewEvent.PeriodSelected(it)) },
+                        )
 
-                Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
+                        Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
 
-                PeriodDetailRow(
-                    selectedPeriod = state.selectedPeriod,
-                    periodGainPercent = state.periodGainPercent,
-                    periodGainAbsolute = state.periodGainAbsolute,
-                    periodDividends = state.periodDividends,
-                    currency = state.currency,
-                )
+                        PeriodDetailRow(
+                            selectedPeriod = state.selectedPeriod,
+                            periodGainPercent = state.periodGainPercent,
+                            periodGainAbsolute = state.periodGainAbsolute,
+                            periodDividends = state.periodDividends,
+                            currency = state.currency,
+                        )
 
-                Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
+                        Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
 
-                if (state.topGainers.isNotEmpty() || state.topLosers.isNotEmpty()) {
-                    PortfolioTodaySection(
-                        topGainers = state.topGainers,
-                        topLosers = state.topLosers,
-                        onViewAllClicked = { onEvent(DashboardViewEvent.ViewAllPortfolioClicked) },
-                    )
-                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
-                }
+                        if (state.topGainers.isNotEmpty() || state.topLosers.isNotEmpty()) {
+                            PortfolioTodaySection(
+                                topGainers = state.topGainers,
+                                topLosers = state.topLosers,
+                                onViewAllClicked = { onEvent(DashboardViewEvent.ViewAllPortfolioClicked) },
+                            )
+                            Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
+                        }
 
-                MarketIndicesSection(
-                    indices = state.marketIndices,
-                    isLoading = state.marketIndicesLoading,
-                    isError = state.marketIndicesError,
-                )
-                Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
+                        FavouritesSection(
+                            watchlist = state.watchlist,
+                            convertedPrices = state.convertedWatchlistPrices,
+                            displayCurrency = state.currency,
+                            onFavouriteToggled = { ticker ->
+                                onEvent(DashboardViewEvent.FavouriteToggled(ticker))
+                            },
+                            onSecurityClicked = { ticker ->
+                                onEvent(DashboardViewEvent.SecurityClicked(ticker))
+                            },
+                            onViewAllClicked = { onEvent(DashboardViewEvent.ViewAllFavouritesClicked) },
+                        )
 
-                FavouritesSection(
-                    watchlist = state.watchlist,
-                    convertedPrices = state.convertedWatchlistPrices,
-                    displayCurrency = state.currency,
-                    onFavouriteToggled = { ticker ->
-                        onEvent(DashboardViewEvent.FavouriteToggled(ticker))
-                    },
-                    onSecurityClicked = { ticker ->
-                        onEvent(DashboardViewEvent.SecurityClicked(ticker))
-                    },
-                    onViewAllClicked = { onEvent(DashboardViewEvent.ViewAllFavouritesClicked) },
-                )
+                        Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
 
-                Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
+                        MarketIndicesSection(
+                            indices = state.marketIndices,
+                            isLoading = state.marketIndicesLoading,
+                            isError = state.marketIndicesError,
+                        )
+                        Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
 
-                DisclaimerText()
+                        NewsSection(
+                            news = state.marketNews,
+                            isLoading = state.marketNewsLoading,
+                        )
+                        Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
 
-                Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
-                }
+                        DisclaimerText()
+
+                        Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
+                    }
                 }
             }
         }

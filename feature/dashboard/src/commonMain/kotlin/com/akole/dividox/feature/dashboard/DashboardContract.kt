@@ -4,6 +4,7 @@ import com.akole.dividox.common.mvi.SideEffect
 import com.akole.dividox.common.mvi.ViewEvent
 import com.akole.dividox.common.mvi.ViewState
 import com.akole.dividox.common.currency.domain.model.Currency
+import com.akole.dividox.common.ui.resources.components.NewsItemUi
 import com.akole.dividox.component.market.domain.model.MarketIndexQuote
 import com.akole.dividox.integration.security.domain.model.EnrichedWatchlistEntry
 import com.akole.dividox.integration.security.domain.model.PortfolioSummary
@@ -33,6 +34,8 @@ interface DashboardContract {
         val marketIndices: List<MarketIndexQuote> = emptyList(),
         val marketIndicesLoading: Boolean = true,
         val marketIndicesError: Boolean = false,
+        val marketNews: List<NewsItemUi> = emptyList(),
+        val marketNewsLoading: Boolean = false,
     ) : ViewState
 
     sealed interface DashboardViewEvent : ViewEvent {
