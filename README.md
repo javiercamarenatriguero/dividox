@@ -77,37 +77,84 @@ graph TD
 - `common` modules have no internal dependencies.
 - All modules target Android, iOS, and Desktop via Kotlin Multiplatform.
 
-### Build and Run Android Application
+---
 
-To build and run the development version of the Android app, use the run configuration from the run widget
-in your IDE’s toolbar or build it directly from the terminal:
-- on macOS/Linux
-  ```shell
-  ./gradlew :composeApp:assembleDebug
-  ```
-- on Windows
-  ```shell
-  .\gradlew.bat :composeApp:assembleDebug
-  ```
+## How to test the app
 
-### Build and Run Desktop (JVM) Application
+Builds are produced automatically by the **On Distribute** CI workflow. No need to clone the repo or install any SDK.
 
-To build and run the development version of the desktop app, use the run configuration from the run widget
-in your IDE’s toolbar or run it directly from the terminal:
-- on macOS/Linux
-  ```shell
-  ./gradlew :composeApp:run
-  ```
-- on Windows
-  ```shell
-  .\gradlew.bat :composeApp:run
-  ```
+### Step 1 — Download the build
 
-### Build and Run iOS Application
-
-To build and run the development version of the iOS app, use the run configuration from the run widget
-in your IDE’s toolbar or open the [/iosApp](./iosApp) directory in Xcode and run it from there.
+1. Go to the **Actions** tab in this repository
+2. Click **On Distribute** in the left sidebar
+3. Click the latest successful run
+4. Scroll to the bottom — **Artifacts** section
+5. Download the artifact for your platform
 
 ---
 
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…
+### Android
+
+**What you need:** an Android phone (Android 11 / API 31 or newer).
+
+#### Option A — Firebase App Distribution (recommended)
+
+The easiest way. Builds are pushed automatically on every release.
+
+1. You need to be added to the **internal-testers** group — ask a maintainer to add your email in Firebase Console
+2. You will receive an email from Firebase with a download link
+3. Follow the link, install the Firebase App Tester app if prompted, and download the build directly from there
+
+#### Option B — GitHub Actions artifact
+
+1. Go to the **Actions** tab → **On Distribute** → latest run → **Artifacts** → download `composeApp-release.apk` *(expires after 90 days)*
+2. Transfer it to your phone (Google Drive, USB cable, etc.)
+3. Open the file on your phone
+4. If prompted: **Settings → Install unknown apps** → allow your file manager or browser
+5. Tap **Install**
+
+---
+
+### Desktop
+
+**What you need:** nothing — just your computer.
+
+1. Download the artifact for your OS *(expires after 90 days)*:
+   - **macOS** → `.dmg`
+   - **Windows** → `.msi` or `.exe`
+   - **Linux** → `.deb` or `.AppImage`
+2. Open the downloaded file and follow the installer
+3. Launch **DiviDox** from your Applications folder / Start menu
+
+---
+
+### iOS
+
+> The iOS build produced by CI is **unsigned**. It cannot be installed on a regular iPhone without a paid Apple Developer account. Two options:
+
+#### Option A — iOS Simulator (Mac only)
+
+**What you need:** a Mac with Xcode installed (free).
+
+1. Download `iosApp-<build>.ipa` *(expires after 90 days)*
+2. Rename it to `.zip` and unzip it — you will get a `.app` folder inside `Payload/`
+3. Open Xcode → **Window → Devices and Simulators** → start any iPhone simulator
+4. Drag and drop the `.app` folder onto the simulator window
+
+#### Option B — Physical iPhone with TrollStore
+
+**What you need:** an iPhone with a [TrollStore-compatible iOS version](https://ios.cfw.guide/installing-trollstore/).
+
+1. Download `iosApp-<build>.ipa`
+2. Transfer it to your iPhone
+3. Open TrollStore → tap `+` → select the `.ipa` → **Install**
+
+---
+
+## How to build from source
+
+See the [Development Setup](#) section below *(coming soon)*.
+
+---
+
+Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)
