@@ -65,19 +65,11 @@ fun AboutScreen(
                 painter = painterResource(Res.drawable.ic_dividox),
                 contentDescription = null,
                 modifier = Modifier
-                    .size(88.dp)
+                    .fillMaxWidth(0.5f)
                     .clip(CircleShape),
             )
 
             Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
-
-            Text(
-                text = "DiviDox",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-            )
-
-            Spacer(modifier = Modifier.height(MaterialTheme.spacing.xSmall))
 
             Text(
                 text = stringResource(Res.string.about_tagline),
