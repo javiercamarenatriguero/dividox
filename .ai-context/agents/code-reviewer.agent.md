@@ -36,7 +36,16 @@ Analyze code changes in the Dividox KMP project and deliver **strict, actionable
 **Use these skills:**
 - `skill: audit-compose-performance` — **MANDATORY** for all Compose code changes
 - `skill: manage-git-flow` — Validate branch naming and commit conventions
-- `skill: owasp-security-review` — **MANDATORY** for code handling sensitive data, auth, networking, or storage
+- `skill: owasp-security-review` — **MANDATORY** quick gate for auth, networking, storage, or sensitive data changes
+- `skill: masvs-secure-storage-audit` — Full audit when SharedPreferences, DataStore, Room, or logging is changed
+- `skill: masvs-crypto-review` — Full audit when keys, encryption, or Keystore/Keychain is changed
+- `skill: masvs-auth-assessment` — Full audit when login, token storage, biometrics, or session is changed
+- `skill: masvs-network-security-check` — Full audit when Ktor, OkHttp, TLS, or NSC config is changed
+- `skill: masvs-platform-interaction-review` — Full audit when deep links, Intents, WebViews, or Manifest is changed
+- `skill: masvs-code-quality-scan` — Full audit when libs.versions.toml, minSdk, or R8 rules are changed
+- `skill: masvs-privacy-audit` — Full audit when permissions, analytics SDKs, or user data flow is changed
+
+Consult `.ai-context/security-instructions.md` for the full trigger table (which area → which skill).
 
 ---
 
@@ -120,7 +129,9 @@ Highlight good practices to reinforce positive patterns.
 ## Review Checklist
 
 - [ ] `skill: audit-compose-performance` executed for Compose changes
-- [ ] `skill: owasp-security-review` executed for sensitive data, auth, networking, or storage changes
+- [ ] `skill: owasp-security-review` executed (quick gate) for any security-relevant changes
+- [ ] Matching `masvs-*` deep-audit skill executed per `.ai-context/security-instructions.md` trigger table
+- [ ] Security findings tagged `[SECURITY-FAIL]` (Critical) or `[SECURITY-WARN]` (Improvement)
 - [ ] No platform APIs in `commonMain` (no android.*, UIKit, etc.)
 - [ ] Convention plugins used — no manual SDK/Compose config in modules
 - [ ] All versions in `libs.versions.toml`
