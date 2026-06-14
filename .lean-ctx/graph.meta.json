@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
-  "built_at": "2026-06-14T14:47:50.022599+00:00",
-  "git_head": "d604ce8",
-  "git_dirty": true,
+  "built_at": "2026-06-14T15:37:44.486053+00:00",
+  "git_head": "c532555",
+  "git_dirty": false,
   "nodes": 0,
   "edges": 0,
   "files_indexed": 0,
-  "build_time_ms": 87
+  "build_time_ms": 90
 }
