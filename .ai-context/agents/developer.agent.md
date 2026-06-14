@@ -124,6 +124,8 @@ Even in Autonomous Mode, automatically switch to Assisted when:
 ### 6. Verification
 - Run tests (`./gradlew :composeApp:jvmTest`).
 - Run detekt (`./gradlew detekt`).
+- If PR touches auth, storage, networking, or sensitive data: run `skill: owasp-security-review`.
+- Consult `.ai-context/security-instructions.md` to determine if a `masvs-*` deep-audit skill is required.
 
 ### 7. Termination
 - Once all tasks in the `task.md` are completed, terminate execution.
@@ -143,5 +145,15 @@ Even in Autonomous Mode, automatically switch to Assisted when:
 | `skill: write-unit-test` | Write unit tests in commonTest |
 | `skill: manage-git-flow` | Branch creation, commit formatting, PR generation |
 | `skill: audit-compose-performance` | Audit and optimize Compose Multiplatform performance |
-| `skill: owasp-security-review` | Review code against OWASP MASVS security controls |
+| `skill: owasp-security-review` | Quick PR gate — PASS/WARN/FAIL per MASVS control |
+| `skill: masvs-secure-storage-audit` | Deep audit: SharedPreferences, DataStore, Room, logs, backups |
+| `skill: masvs-crypto-review` | Deep audit: keys, encryption algorithms, Keystore/Keychain |
+| `skill: masvs-auth-assessment` | Deep audit: login, tokens, biometrics, session, Google Sign-In |
+| `skill: masvs-network-security-check` | Deep audit: Ktor/OkHttp, TLS, certificates, NSC |
+| `skill: masvs-platform-interaction-review` | Deep audit: deep links, Intents, WebViews, exported components |
+| `skill: masvs-code-quality-scan` | Deep audit: deps CVEs, minSdk, R8, input validation |
+| `skill: masvs-privacy-audit` | Deep audit: permissions, analytics SDKs, user data controls |
+| `skill: masvs-resilience-assessment` | Deep audit: root detection, obfuscation, anti-tampering (Tier 3) |
+| `skill: masvs-checklist` | Full MASVS v2 compliance checklist for release readiness |
+| `skill: masvs-mobile-threat-model` | STRIDE threat model mapped to MASVS controls |
 | `skill: write-meta-prompt` | Transform ideas into structured prompts |

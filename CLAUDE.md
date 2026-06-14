@@ -90,6 +90,10 @@ Example: `.padding(horizontal = MaterialTheme.spacing.medium)` not `.padding(hor
 
 **All UI text must come from `strings.xml`.** Add new strings to `/common/ui-resources/src/commonMain/composeResources/values/strings.xml`, then reference via `stringResource(Res.string.key_name)`. Never hardcode strings like `"Add Security"` or `"Refreshed X min ago"` in composables.
 
+## Security
+
+@.ai-context/security-instructions.md
+
 ## Key Tech
 
 - Kotlin 2.3.20, Compose Multiplatform 1.10.2, AGP 9.1.0, Gradle 9.3.1
