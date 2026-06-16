@@ -190,15 +190,17 @@ jobs:
           cp "$PP_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/"$PP_UUID".mobileprovision
           echo "PP_UUID=$PP_UUID" >> $GITHUB_ENV
 
-      - name: Build KMP framework
-        env:
-          GRADLE_OPTS: "-Xmx1g -Dfile.encoding=UTF-8"
-        run: ./gradlew :composeApp:podPublishReleaseXCFramework --max-workers 2
+      - name: Create dummy KMP framework for pod install
+        run: |
+          mkdir -p composeApp/build/cocoapods/framework/ComposeApp.framework
+          touch composeApp/build/cocoapods/framework/ComposeApp.framework/ComposeApp
 
       - name: Install CocoaPods
         run: pod install --project-directory=iosApp
 
       - name: Build & Archive iOS
+        env:
+          GRADLE_OPTS: "-Xmx1g -Dfile.encoding=UTF-8"
         run: |
           xcodebuild archive \
             -workspace iosApp/iosApp.xcworkspace \
