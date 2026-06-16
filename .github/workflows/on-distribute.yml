@@ -88,7 +88,9 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Build KMP framework
-        run: ./gradlew :composeApp:podPublishReleaseXCFramework
+        env:
+          GRADLE_OPTS: "-Xmx1g -Dfile.encoding=UTF-8"
+        run: ./gradlew :composeApp:podPublishReleaseXCFramework --max-workers 2
 
       - name: Install CocoaPods
         run: pod install --project-directory=iosApp
