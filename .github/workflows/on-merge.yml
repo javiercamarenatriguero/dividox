@@ -149,7 +149,7 @@ jobs:
   distribute-ios:
     name: Distribute iOS
     runs-on: macos-latest
-    if: false
+    if: ${{ secrets.IOS_CERTIFICATE_BASE64 != '' }}
     needs: [prepare, build, lint, test]
     steps:
       - uses: actions/checkout@v4
@@ -191,10 +191,18 @@ jobs:
           cp "$PP_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/"$PP_UUID".mobileprovision
           echo "PP_UUID=$PP_UUID" >> $GITHUB_ENV
 
+      - name: Create dummy KMP framework for pod install
+        run: |
+          mkdir -p composeApp/build/cocoapods/framework/ComposeApp.framework
+          touch composeApp/build/cocoapods/framework/ComposeApp.framework/ComposeApp
+
+      - name: Install CocoaPods
+        run: pod install --project-directory=iosApp
+
       - name: Build & Archive iOS
         run: |
           xcodebuild archive \
-            -project iosApp/iosApp.xcodeproj \
+            -workspace iosApp/iosApp.xcworkspace \
             -scheme iosApp \
             -configuration Release \
             -archivePath $RUNNER_TEMP/Dividox.xcarchive \

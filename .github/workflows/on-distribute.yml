@@ -71,6 +71,7 @@ jobs:
   build-ios:
     name: Build iOS
     runs-on: macos-latest
+    if: ${{ secrets.IOS_CERTIFICATE_BASE64 != '' }}
     needs: [prepare]
     steps:
       - uses: actions/checkout@v4
@@ -87,8 +88,10 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Build KMP framework
-        run: ./gradlew :composeApp:podPublishReleaseXCFramework
+      - name: Create dummy KMP framework for pod install
+        run: |
+          mkdir -p composeApp/build/cocoapods/framework/ComposeApp.framework
+          touch composeApp/build/cocoapods/framework/ComposeApp.framework/ComposeApp
 
       - name: Install CocoaPods
         run: pod install --project-directory=iosApp
