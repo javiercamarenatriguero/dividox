@@ -1,5 +1,15 @@
 # DiviDox
 
+<p align="center">
+  <img src="docs/images/img_dividox_banner.png" alt="DiviDox Banner" width="100%">
+</p>
+
+DiviDox is a mobile application designed for investors focused on **Dividend Growth Investing (DGI)** and passive income. Keep an exhaustive track of your assets' cash flow.
+
+<p align="center">
+  <img src="docs/images/img_dividox_features.png" alt="DiviDox Features Showcase" width="100%">
+</p>
+
 DiviDox is a **dividend-focused stock portfolio tracker** for investors who want to understand and grow their passive income from equities. Built with Kotlin Multiplatform, it runs natively on Android, iOS, and Desktop (JVM) from a single shared codebase.
 
 ## What DiviDox does
@@ -15,6 +25,15 @@ Follow tickers you don't own yet. Track price and dividend data for stocks you'r
 
 ### Account management
 Manage your profile, base currency, and app preferences. Authentication via Google, Apple, or email/password through Firebase.
+
+### Key Features
+
+* **Market API:** International ticker integration (ANA.MC, CABK.MC, GOOG, HSY).
+* **Multiplatform:** Available in iOS, Android, MacOS/Windows/Linux.
+* **Dual Interface:** Full native support for Dark Mode and Light Mode.
+* **Multiple Currencies:** View your total value and invested capital adapted to your local currency (GBP, EUR, USD).
+* **Key Metrics:** Instantly check your updated *Dividend Yield* and total accumulated dividends.
+* **Payment Calendar:** Stay on top of your *Upcoming Payments* with precise Ex-dates.
 
 ## Tech stack
 
@@ -74,6 +93,7 @@ graph TD
 
 - `app` depends on everything.
 - `feature` modules are isolated — they do not depend on each other.
+- `component` modules can be used by multiple `feature` modules.
 - `common` modules have no internal dependencies.
 - All modules target Android, iOS, and Desktop via Kotlin Multiplatform.
 
