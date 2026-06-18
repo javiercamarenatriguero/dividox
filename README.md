@@ -1,6 +1,16 @@
 # DiviDox
 
 <p align="center">
+  <img src="https://img.shields.io/badge/Kotlin-2.3.21-7F52FF?logo=kotlin&logoColor=white" alt="Kotlin">
+  <img src="https://img.shields.io/badge/Compose%20Multiplatform-1.11.0-4285F4?logo=jetpackcompose&logoColor=white" alt="Compose Multiplatform">
+  <img src="https://img.shields.io/badge/KMP-Android%20%7C%20iOS%20%7C%20Desktop-0095D5?logo=kotlin&logoColor=white" alt="Kotlin Multiplatform">
+  <img src="https://img.shields.io/badge/Android-API%2031%2B-3DDC84?logo=android&logoColor=white" alt="Android">
+  <img src="https://img.shields.io/badge/iOS-16%2B-000000?logo=apple&logoColor=white" alt="iOS">
+  <img src="https://img.shields.io/badge/Material%20Design-3-757575?logo=materialdesign&logoColor=white" alt="Material Design 3">
+  <img src="https://img.shields.io/badge/Firebase-Auth%20%7C%20Firestore-FFCA28?logo=firebase&logoColor=black" alt="Firebase">
+</p>
+
+<p align="center">
   <img src="docs/images/img_dividox_banner.png" alt="DiviDox Banner" width="100%">
 </p>
 
