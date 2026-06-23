@@ -1,5 +1,25 @@
 # DiviDox
 
+<p align="center">
+  <img src="https://img.shields.io/badge/Kotlin-2.3.21-7F52FF?logo=kotlin&logoColor=white" alt="Kotlin">
+  <img src="https://img.shields.io/badge/Compose%20Multiplatform-1.11.0-4285F4?logo=jetpackcompose&logoColor=white" alt="Compose Multiplatform">
+  <img src="https://img.shields.io/badge/KMP-Android%20%7C%20iOS%20%7C%20Desktop-0095D5?logo=kotlin&logoColor=white" alt="Kotlin Multiplatform">
+  <img src="https://img.shields.io/badge/Android-API%2031%2B-3DDC84?logo=android&logoColor=white" alt="Android">
+  <img src="https://img.shields.io/badge/iOS-16%2B-000000?logo=apple&logoColor=white" alt="iOS">
+  <img src="https://img.shields.io/badge/Material%20Design-3-757575?logo=materialdesign&logoColor=white" alt="Material Design 3">
+  <img src="https://img.shields.io/badge/Firebase-Auth%20%7C%20Firestore-FFCA28?logo=firebase&logoColor=black" alt="Firebase">
+</p>
+
+<p align="center">
+  <img src="docs/images/img_dividox_banner.png" alt="DiviDox Banner" width="100%">
+</p>
+
+DiviDox is a mobile application designed for investors focused on **Dividend Growth Investing (DGI)** and passive income. Keep an exhaustive track of your assets' cash flow.
+
+<p align="center">
+  <img src="docs/images/img_dividox_features.png" alt="DiviDox Features Showcase" width="100%">
+</p>
+
 DiviDox is a **dividend-focused stock portfolio tracker** for investors who want to understand and grow their passive income from equities. Built with Kotlin Multiplatform, it runs natively on Android, iOS, and Desktop (JVM) from a single shared codebase.
 
 ## What DiviDox does
@@ -15,6 +35,19 @@ Follow tickers you don't own yet. Track price and dividend data for stocks you'r
 
 ### Account management
 Manage your profile, base currency, and app preferences. Authentication via Google, Apple, or email/password through Firebase.
+
+### Key Features
+
+* **Market API:** International ticker integration (ANA.MC, CABK.MC, GOOG, HSY).
+* **Multiplatform:** Available in iOS, Android, MacOS/Windows/Linux.
+* **Dual Interface:** Full native support for Dark Mode and Light Mode.
+* **Multiple Currencies:** View your total value and invested capital adapted to your local currency (GBP, EUR, USD).
+* **Key Metrics:** Instantly check your updated *Dividend Yield* and total accumulated dividends.
+* **Payment Calendar:** Stay on top of your *Upcoming Payments* with precise Ex-dates.
+
+<p align="center">
+  <img src="docs/images/img_app.gif" alt="DiviDox App Demo" width="280">
+</p>
 
 ## Tech stack
 
@@ -74,6 +107,7 @@ graph TD
 
 - `app` depends on everything.
 - `feature` modules are isolated — they do not depend on each other.
+- `component` modules can be used by multiple `feature` modules.
 - `common` modules have no internal dependencies.
 - All modules target Android, iOS, and Desktop via Kotlin Multiplatform.
 
@@ -81,7 +115,7 @@ graph TD
 
 ## How to test the app
 
-Builds are produced automatically by the **On Distribute** CI workflow. No need to clone the repo or install any SDK.
+DiviDox is available on **Android**, **iOS**, and **macOS/Desktop**. Android and Desktop builds are produced automatically by the **On Distribute** CI workflow. iOS requires building locally with Xcode.
 
 ### Step 1 — Download the build
 
@@ -130,24 +164,14 @@ The easiest way. Builds are pushed automatically on every release.
 
 ### iOS
 
-> The iOS build produced by CI is **unsigned**. It cannot be installed on a regular iPhone without a paid Apple Developer account. Two options:
+> iOS deployment is **not included** in the CI pipeline. The only way to run DiviDox on iOS is by building it locally with Xcode.
 
-#### Option A — iOS Simulator (Mac only)
+**What you need:** a Mac with [Xcode](https://developer.apple.com/xcode/) installed (free from the App Store).
 
-**What you need:** a Mac with Xcode installed (free).
-
-1. Download `iosApp-<build>.ipa` *(expires after 90 days)*
-2. Rename it to `.zip` and unzip it — you will get a `.app` folder inside `Payload/`
-3. Open Xcode → **Window → Devices and Simulators** → start any iPhone simulator
-4. Drag and drop the `.app` folder onto the simulator window
-
-#### Option B — Physical iPhone with TrollStore
-
-**What you need:** an iPhone with a [TrollStore-compatible iOS version](https://ios.cfw.guide/installing-trollstore/).
-
-1. Download `iosApp-<build>.ipa`
-2. Transfer it to your iPhone
-3. Open TrollStore → tap `+` → select the `.ipa` → **Install**
+1. Clone the repository
+2. Open the `iosApp/iosApp.xcodeproj` project in Xcode
+3. Select an iOS Simulator or a connected device as the run destination
+4. Press **⌘R** to build and run
 
 ---
 

@@ -235,8 +235,9 @@
       "Bash(GIT_SSH_COMMAND=\"ssh -o BatchMode=yes\" git add integration/security/build.gradle.kts settings.gradle.kts task.md)",
       "Bash(./gradlew :integration:security:jvmTest)",
       "Bash(./gradlew :integration:security:jvmTest --info)",
-      "Bash(./gradlew :integration:security:detekt --info)"
-      "Bash(grep -E \"\\\\.kt$\")"
+      "Bash(./gradlew :integration:security:detekt --info)",
+      "mcp__lean-ctx__ctx_search",
+      "mcp__lean-ctx__ctx_read"
     ],
     "defaultMode": "bypassPermissions"
   },

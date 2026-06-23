@@ -71,7 +71,7 @@ jobs:
   build-ios:
     name: Build iOS
     runs-on: macos-latest
-    if: ${{ secrets.IOS_CERTIFICATE_BASE64 != '' }}
+    if: false
     needs: [prepare]
     steps:
       - uses: actions/checkout@v4
