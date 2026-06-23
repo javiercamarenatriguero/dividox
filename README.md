@@ -45,6 +45,10 @@ Manage your profile, base currency, and app preferences. Authentication via Goog
 * **Key Metrics:** Instantly check your updated *Dividend Yield* and total accumulated dividends.
 * **Payment Calendar:** Stay on top of your *Upcoming Payments* with precise Ex-dates.
 
+<p align="center">
+  <img src="docs/images/img_app.gif" alt="DiviDox App Demo" width="280">
+</p>
+
 ## Tech stack
 
 Kotlin Multiplatform · Compose Multiplatform · Firebase Auth · Firestore · Yahoo Finance API · Material Design 3 · Koin · Clean Architecture
@@ -111,7 +115,7 @@ graph TD
 
 ## How to test the app
 
-Builds are produced automatically by the **On Distribute** CI workflow. No need to clone the repo or install any SDK.
+DiviDox is available on **Android**, **iOS**, and **macOS/Desktop**. Android and Desktop builds are produced automatically by the **On Distribute** CI workflow. iOS requires building locally with Xcode.
 
 ### Step 1 — Download the build
 
@@ -160,24 +164,14 @@ The easiest way. Builds are pushed automatically on every release.
 
 ### iOS
 
-> The iOS build produced by CI is **unsigned**. It cannot be installed on a regular iPhone without a paid Apple Developer account. Two options:
+> iOS deployment is **not included** in the CI pipeline. The only way to run DiviDox on iOS is by building it locally with Xcode.
 
-#### Option A — iOS Simulator (Mac only)
+**What you need:** a Mac with [Xcode](https://developer.apple.com/xcode/) installed (free from the App Store).
 
-**What you need:** a Mac with Xcode installed (free).
-
-1. Download `iosApp-<build>.ipa` *(expires after 90 days)*
-2. Rename it to `.zip` and unzip it — you will get a `.app` folder inside `Payload/`
-3. Open Xcode → **Window → Devices and Simulators** → start any iPhone simulator
-4. Drag and drop the `.app` folder onto the simulator window
-
-#### Option B — Physical iPhone with TrollStore
-
-**What you need:** an iPhone with a [TrollStore-compatible iOS version](https://ios.cfw.guide/installing-trollstore/).
-
-1. Download `iosApp-<build>.ipa`
-2. Transfer it to your iPhone
-3. Open TrollStore → tap `+` → select the `.ipa` → **Install**
+1. Clone the repository
+2. Open the `iosApp/iosApp.xcodeproj` project in Xcode
+3. Select an iOS Simulator or a connected device as the run destination
+4. Press **⌘R** to build and run
 
 ---
 
