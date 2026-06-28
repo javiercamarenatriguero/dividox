@@ -1,5 +1,6 @@
 package com.akole.dividox.component.auth.domain
 
+import com.akole.dividox.component.auth.domain.model.AuthError
 import com.akole.dividox.component.auth.domain.model.AuthProvider
 import com.akole.dividox.component.auth.domain.model.AuthUser
 import com.akole.dividox.component.auth.domain.repository.AuthRepository
@@ -56,22 +57,22 @@ internal class FailingAuthRepository : AuthRepository {
     override fun observeAuthState(): Flow<AuthUser?> = flowOf(null)
 
     override suspend fun signInWithEmail(email: String, password: String): Result<Unit> =
-        Result.failure(IllegalStateException("Sign in failed"))
+        Result.failure(AuthError.InvalidCredentials)
 
     override suspend fun signUpWithEmail(email: String, password: String): Result<Unit> =
-        Result.failure(IllegalStateException("Sign up failed"))
+        Result.failure(AuthError.EmailAlreadyInUse)
 
     override suspend fun signInWithGoogle(idToken: String): Result<Unit> =
-        Result.failure(IllegalStateException("Google sign in failed"))
+        Result.failure(AuthError.InvalidCredentials)
 
     override suspend fun sendPasswordResetEmail(email: String): Result<Unit> =
-        Result.failure(IllegalStateException("Password reset failed"))
+        Result.failure(AuthError.AccountNotFound)
 
     override suspend fun signOut(): Result<Unit> =
-        Result.failure(IllegalStateException("Sign out failed"))
+        Result.failure(AuthError.Unknown("Sign out failed"))
 
     override fun getCurrentUserId(): String? = null
 
     override suspend fun ensureTokenReady() = Unit
-    override suspend fun deleteAccount(): Result<Unit> = Result.failure(IllegalStateException("Delete failed"))
+    override suspend fun deleteAccount(): Result<Unit> = Result.failure(AuthError.RecentLoginRequired)
 }

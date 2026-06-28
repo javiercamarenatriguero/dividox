@@ -20,6 +20,16 @@
     <string name="auth_sign_up">Registrarse</string>
     <string name="auth_tagline">Rastrear tus dividendos. Hacer crecer tu patrimonio.</string>
     <string name="auth_terms_agreement">Acepto los Términos de Servicio y la Política de Privacidad</string>
+    <string name="auth_error_invalid_credentials">Email o contraseña incorrectos. Inténtalo de nuevo.</string>
+    <string name="auth_error_account_not_found">No se encontró ninguna cuenta con este email.</string>
+    <string name="auth_error_email_in_use">Ya existe una cuenta con este email.</string>
+    <string name="auth_error_weak_password">La contraseña es muy débil. Usa al menos 6 caracteres.</string>
+    <string name="auth_error_invalid_email">Introduce una dirección de email válida.</string>
+    <string name="auth_error_network">Error de red. Comprueba tu conexión e inténtalo de nuevo.</string>
+    <string name="auth_error_too_many_attempts">Demasiados intentos. Inténtalo más tarde.</string>
+    <string name="auth_error_recent_login_required">Inicia sesión de nuevo para completar esta acción.</string>
+    <string name="auth_error_terms_required">Debes aceptar los Términos de Servicio para continuar.</string>
+    <string name="auth_error_unknown">Algo salió mal. Inténtalo de nuevo.</string>
     <string name="ui_google_sign_in">Acceder con Google</string>
     <string name="ui_hide_password">Ocultar contraseña</string>
     <string name="ui_navigate_back">Volver atrás</string>

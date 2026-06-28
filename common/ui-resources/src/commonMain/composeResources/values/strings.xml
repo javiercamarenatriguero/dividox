@@ -20,6 +20,16 @@
     <string name="auth_sign_up">Sign Up</string>
     <string name="auth_tagline">Track your dividends. Grow your wealth.</string>
     <string name="auth_terms_agreement">I agree to the Terms of Service and Privacy Policy</string>
+    <string name="auth_error_invalid_credentials">Invalid email or password. Please try again.</string>
+    <string name="auth_error_account_not_found">No account found with this email address.</string>
+    <string name="auth_error_email_in_use">An account with this email already exists.</string>
+    <string name="auth_error_weak_password">Password is too weak. Use at least 6 characters.</string>
+    <string name="auth_error_invalid_email">Please enter a valid email address.</string>
+    <string name="auth_error_network">Network error. Please check your connection and try again.</string>
+    <string name="auth_error_too_many_attempts">Too many attempts. Please try again later.</string>
+    <string name="auth_error_recent_login_required">Please sign in again to complete this action.</string>
+    <string name="auth_error_terms_required">You must accept the Terms of Service to continue.</string>
+    <string name="auth_error_unknown">Something went wrong. Please try again.</string>
     <string name="ui_google_sign_in">Sign in with Google</string>
     <string name="ui_hide_password">Hide password</string>
     <string name="ui_navigate_back">Navigate back</string>

@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.akole.dividox.component.auth.domain.usecase.ForgotPasswordUseCase
 import com.akole.dividox.common.mvi.viewmodel.MVI
 import com.akole.dividox.common.mvi.viewmodel.mvi
+import com.akole.dividox.component.auth.domain.model.AuthError
 import com.akole.dividox.feature.auth.forgotpassword.ForgotPasswordContract.ForgotPasswordSideEffect
 import com.akole.dividox.feature.auth.forgotpassword.ForgotPasswordContract.ForgotPasswordViewEvent
 import com.akole.dividox.feature.auth.forgotpassword.ForgotPasswordContract.ForgotPasswordViewEvent.OnBackClicked
@@ -32,7 +33,10 @@ class ForgotPasswordViewModel(
             updateViewState { copy(isLoading = true, error = null) }
             forgotPassword(viewState.value.email)
                 .onSuccess { updateViewState { copy(isLoading = false, isSuccess = true) } }
-                .onFailure { updateViewState { copy(isLoading = false, error = it.message) } }
+                .onFailure { updateViewState { copy(isLoading = false, error = it.toAuthError()) } }
         }
     }
+
+    private fun Throwable.toAuthError(): AuthError =
+        this as? AuthError ?: AuthError.Unknown(message ?: "Unknown error")
 }

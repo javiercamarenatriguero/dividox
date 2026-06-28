@@ -7,6 +7,7 @@ import com.akole.dividox.component.auth.domain.usecase.SignInWithEmailUseCase
 import com.akole.dividox.component.auth.domain.usecase.SignInWithGoogleUseCase
 import com.akole.dividox.common.mvi.viewmodel.MVI
 import com.akole.dividox.common.mvi.viewmodel.mvi
+import com.akole.dividox.component.auth.domain.model.AuthError
 import com.akole.dividox.feature.auth.login.LoginContract.LoginSideEffect
 import com.akole.dividox.feature.auth.login.LoginContract.LoginViewEvent
 import com.akole.dividox.feature.auth.login.LoginContract.LoginViewEvent.OnEmailChanged
@@ -46,7 +47,7 @@ class LoginViewModel(
         viewModelScope.launch {
             updateViewState { copy(isLoading = true, error = null) }
             signInWithEmail(viewState.value.email, viewState.value.password)
-                .onFailure { updateViewState { copy(isLoading = false, error = it.message) } }
+                .onFailure { updateViewState { copy(isLoading = false, error = it.toAuthError()) } }
         }
     }
 
@@ -57,12 +58,15 @@ class LoginViewModel(
                 .onSuccess { idToken ->
                     if (idToken != null) {
                         signInWithGoogle(idToken)
-                            .onFailure { updateViewState { copy(isLoading = false, error = it.message) } }
+                            .onFailure { updateViewState { copy(isLoading = false, error = it.toAuthError()) } }
                     } else {
                         updateViewState { copy(isLoading = false) }
                     }
                 }
-                .onFailure { updateViewState { copy(isLoading = false, error = it.message) } }
+                .onFailure { updateViewState { copy(isLoading = false, error = it.toAuthError()) } }
         }
     }
+
+    private fun Throwable.toAuthError(): AuthError =
+        this as? AuthError ?: AuthError.Unknown(message ?: "Unknown error")
 }
