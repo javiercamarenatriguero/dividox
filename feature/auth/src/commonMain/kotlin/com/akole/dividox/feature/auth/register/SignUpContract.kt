@@ -3,6 +3,7 @@ package com.akole.dividox.feature.auth.register
 import com.akole.dividox.common.mvi.SideEffect
 import com.akole.dividox.common.mvi.ViewEvent
 import com.akole.dividox.common.mvi.ViewState
+import com.akole.dividox.component.auth.domain.model.AuthError
 
 interface SignUpContract {
 
@@ -12,7 +13,7 @@ interface SignUpContract {
         val password: String = "",
         val termsAccepted: Boolean = false,
         val isLoading: Boolean = false,
-        val error: String? = null,
+        val error: AuthError? = null,
     ) : ViewState
 
     sealed interface SignUpViewEvent : ViewEvent {

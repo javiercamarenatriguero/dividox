@@ -23,6 +23,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.akole.dividox.common.mvi.CollectSideEffect
+import com.akole.dividox.feature.auth.messageRes
 import com.akole.dividox.common.ui.resources.components.AppTextField
 import com.akole.dividox.common.ui.resources.components.DividoxTopAppBar
 import com.akole.dividox.common.ui.resources.components.PrimaryButton
@@ -93,7 +94,7 @@ fun ForgotPasswordScreen(
 
             if (state.error != null) {
                 Text(
-                    text = state.error,
+                    text = stringResource(state.error.messageRes()),
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier

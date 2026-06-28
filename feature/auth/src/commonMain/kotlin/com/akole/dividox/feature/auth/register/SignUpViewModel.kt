@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.akole.dividox.component.auth.domain.usecase.SignUpWithEmailUseCase
 import com.akole.dividox.common.mvi.viewmodel.MVI
 import com.akole.dividox.common.mvi.viewmodel.mvi
+import com.akole.dividox.component.auth.domain.model.AuthError
 import com.akole.dividox.feature.auth.register.SignUpContract.SignUpSideEffect
 import com.akole.dividox.feature.auth.register.SignUpContract.SignUpViewEvent
 import com.akole.dividox.feature.auth.register.SignUpContract.SignUpViewEvent.OnCreateAccountClicked
@@ -37,15 +38,18 @@ class SignUpViewModel(
     private fun createAccount() {
         val current = viewState.value
         if (!current.termsAccepted) {
-            updateViewState { copy(error = "You must accept the Terms of Service to continue.") }
+            updateViewState { copy(error = AuthError.TermsNotAccepted) }
             return
         }
         viewModelScope.launch {
             updateViewState { copy(isLoading = true, error = null) }
             signUpWithEmail(current.email, current.password)
-                .onFailure { updateViewState { copy(isLoading = false, error = it.message) } }
+                .onFailure { updateViewState { copy(isLoading = false, error = it.toAuthError()) } }
             // On success: keep isLoading=true — ObserveSessionUseCase fires Authenticated
             // which triggers RootNavGraph to switch to the home graph.
         }
     }
+
+    private fun Throwable.toAuthError(): AuthError =
+        this as? AuthError ?: AuthError.Unknown(message ?: "Unknown error")
 }

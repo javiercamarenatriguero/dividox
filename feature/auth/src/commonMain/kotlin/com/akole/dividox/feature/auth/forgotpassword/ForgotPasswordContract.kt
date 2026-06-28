@@ -3,6 +3,7 @@ package com.akole.dividox.feature.auth.forgotpassword
 import com.akole.dividox.common.mvi.SideEffect
 import com.akole.dividox.common.mvi.ViewEvent
 import com.akole.dividox.common.mvi.ViewState
+import com.akole.dividox.component.auth.domain.model.AuthError
 
 interface ForgotPasswordContract {
 
@@ -10,7 +11,7 @@ interface ForgotPasswordContract {
         val email: String = "",
         val isLoading: Boolean = false,
         val isSuccess: Boolean = false,
-        val error: String? = null,
+        val error: AuthError? = null,
     ) : ViewState
 
     sealed interface ForgotPasswordViewEvent : ViewEvent {

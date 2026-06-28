@@ -1,6 +1,7 @@
 package com.akole.dividox.feature.auth.login
 
 import com.akole.dividox.component.auth.data.GoogleSignInLauncher
+import com.akole.dividox.component.auth.domain.model.AuthError
 import com.akole.dividox.component.auth.domain.usecase.SignInWithEmailUseCase
 import com.akole.dividox.component.auth.domain.usecase.SignInWithGoogleUseCase
 import com.akole.dividox.feature.auth.login.LoginContract.LoginSideEffect
@@ -90,7 +91,7 @@ class LoginViewModelTest {
     @Test
     fun `OnErrorDismissed clears error`() = runTest {
         // GIVEN
-        coEvery { signInWithEmail(any(), any()) } returns Result.failure(IllegalStateException("Sign in failed"))
+        coEvery { signInWithEmail(any(), any()) } returns Result.failure(AuthError.InvalidCredentials)
         val vm = viewModel()
         vm.onViewEvent(LoginViewEvent.OnSignInClicked)
         advanceUntilIdle()
@@ -119,7 +120,7 @@ class LoginViewModelTest {
     @Test
     fun `OnSignInClicked with failure sets error`() = runTest {
         // GIVEN
-        coEvery { signInWithEmail(any(), any()) } returns Result.failure(IllegalStateException("Sign in failed"))
+        coEvery { signInWithEmail(any(), any()) } returns Result.failure(AuthError.InvalidCredentials)
         val vm = viewModel()
 
         // WHEN
@@ -128,7 +129,7 @@ class LoginViewModelTest {
 
         // THEN
         assertEquals(false, vm.viewState.value.isLoading)
-        assertEquals("Sign in failed", vm.viewState.value.error)
+        assertEquals(AuthError.InvalidCredentials, vm.viewState.value.error)
     }
 
     @Test
@@ -205,6 +206,6 @@ class LoginViewModelTest {
 
         // THEN
         assertEquals(false, vm.viewState.value.isLoading)
-        assertEquals("Launcher error", vm.viewState.value.error)
+        assertIs<AuthError.Unknown>(vm.viewState.value.error)
     }
 }

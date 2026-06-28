@@ -30,7 +30,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.akole.dividox.common.mvi.CollectSideEffect
+import com.akole.dividox.component.auth.domain.model.AuthError
 import com.akole.dividox.feature.auth.isGoogleSignInSupported
+import com.akole.dividox.feature.auth.messageRes
 import dividox.common.ui_resources.generated.resources.Res as UiRes
 import dividox.common.ui_resources.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
@@ -130,7 +132,7 @@ fun LoginScreen(
 
             if (state.error != null) {
                 Text(
-                    text = state.error,
+                    text = stringResource(state.error.messageRes()),
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier
@@ -237,7 +239,7 @@ private fun LoginScreenErrorPreview() {
             state = LoginContract.LoginViewState(
                 email = "user@dividox.com",
                 password = "wrong",
-                error = "Invalid email or password. Please try again.",
+                error = AuthError.InvalidCredentials,
             ),
             onEvent = {},
             sideEffects = emptyFlow(),

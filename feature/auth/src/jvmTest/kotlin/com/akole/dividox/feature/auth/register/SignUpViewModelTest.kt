@@ -1,5 +1,6 @@
 package com.akole.dividox.feature.auth.register
 
+import com.akole.dividox.component.auth.domain.model.AuthError
 import com.akole.dividox.component.auth.domain.usecase.SignUpWithEmailUseCase
 import com.akole.dividox.feature.auth.register.SignUpContract.SignUpSideEffect
 import com.akole.dividox.feature.auth.register.SignUpContract.SignUpViewEvent
@@ -128,7 +129,7 @@ class SignUpViewModelTest {
         advanceUntilIdle()
 
         // THEN
-        assertNotNull(vm.viewState.value.error)
+        assertEquals(AuthError.TermsNotAccepted, vm.viewState.value.error)
         assertEquals(false, vm.viewState.value.isLoading)
     }
 
@@ -150,7 +151,7 @@ class SignUpViewModelTest {
     @Test
     fun `OnCreateAccountClicked with terms and failure sets error`() = runTest {
         // GIVEN
-        coEvery { signUpWithEmail(any(), any()) } returns Result.failure(IllegalStateException("Sign up failed"))
+        coEvery { signUpWithEmail(any(), any()) } returns Result.failure(AuthError.EmailAlreadyInUse)
         val vm = viewModel()
         vm.onViewEvent(SignUpViewEvent.OnTermsChanged(true))
 
@@ -160,7 +161,7 @@ class SignUpViewModelTest {
 
         // THEN
         assertEquals(false, vm.viewState.value.isLoading)
-        assertEquals("Sign up failed", vm.viewState.value.error)
+        assertEquals(AuthError.EmailAlreadyInUse, vm.viewState.value.error)
     }
 
     @Test

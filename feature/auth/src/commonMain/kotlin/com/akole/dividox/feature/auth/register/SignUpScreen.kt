@@ -29,6 +29,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.akole.dividox.common.mvi.CollectSideEffect
+import com.akole.dividox.component.auth.domain.model.AuthError
+import com.akole.dividox.feature.auth.messageRes
 import com.akole.dividox.common.ui.resources.components.AppTextField
 import com.akole.dividox.common.ui.resources.components.DividoxTopAppBar
 import com.akole.dividox.common.ui.resources.components.PrimaryButton
@@ -140,7 +142,7 @@ fun SignUpScreen(
 
             if (state.error != null) {
                 Text(
-                    text = state.error,
+                    text = stringResource(state.error.messageRes()),
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier
@@ -240,7 +242,7 @@ private fun SignUpScreenErrorPreview() {
                 email = "javier@dividox.com",
                 password = "pass",
                 termsAccepted = true,
-                error = "An account with this email already exists.",
+                error = AuthError.EmailAlreadyInUse,
             ),
             onEvent = {},
             sideEffects = emptyFlow(),

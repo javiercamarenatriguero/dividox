@@ -1,5 +1,6 @@
 package com.akole.dividox.feature.auth.forgotpassword
 
+import com.akole.dividox.component.auth.domain.model.AuthError
 import com.akole.dividox.component.auth.domain.usecase.ForgotPasswordUseCase
 import com.akole.dividox.feature.auth.forgotpassword.ForgotPasswordContract.ForgotPasswordSideEffect
 import com.akole.dividox.feature.auth.forgotpassword.ForgotPasswordContract.ForgotPasswordViewEvent
@@ -84,7 +85,7 @@ class ForgotPasswordViewModelTest {
     @Test
     fun `OnSendResetLinkClicked with failure sets error`() = runTest {
         // GIVEN
-        coEvery { forgotPassword(any()) } returns Result.failure(IllegalStateException("Reset failed"))
+        coEvery { forgotPassword(any()) } returns Result.failure(AuthError.AccountNotFound)
         val vm = viewModel()
         vm.onViewEvent(ForgotPasswordViewEvent.OnEmailChanged("user@test.com"))
 
@@ -95,7 +96,7 @@ class ForgotPasswordViewModelTest {
         // THEN
         assertEquals(false, vm.viewState.value.isLoading)
         assertEquals(false, vm.viewState.value.isSuccess)
-        assertEquals("Reset failed", vm.viewState.value.error)
+        assertEquals(AuthError.AccountNotFound, vm.viewState.value.error)
     }
 
     @Test
