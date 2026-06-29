@@ -213,6 +213,10 @@
     <string name="dashboard_market_indices_title">Market Indices</string>
     <string name="dashboard_market_indices_error">Unable to load market indices</string>
     <string name="news_section_title">News</string>
+    <string name="news_time_minutes_ago">%1$dm ago</string>
+    <string name="news_time_hours_ago">%1$dh ago</string>
+    <string name="news_time_days_ago">%1$dd ago</string>
+    <string name="news_cd_published_time">Published time</string>
 
     <string name="onboarding_skip">Saltar</string>
     <string name="onboarding_next">Siguiente</string>
