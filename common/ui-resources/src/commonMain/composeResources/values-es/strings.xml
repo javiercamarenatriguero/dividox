@@ -209,4 +209,8 @@
     <string name="dashboard_market_indices_title">Índices bursátiles</string>
     <string name="dashboard_market_indices_error">No se pudieron cargar los índices bursátiles</string>
     <string name="news_section_title">Noticias</string>
+    <string name="news_time_minutes_ago">hace %1$dm</string>
+    <string name="news_time_hours_ago">hace %1$dh</string>
+    <string name="news_time_days_ago">hace %1$dd</string>
+    <string name="news_cd_published_time">Hora de publicación</string>
 </resources>
