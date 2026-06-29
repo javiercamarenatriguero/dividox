@@ -8,14 +8,13 @@ import android.net.NetworkRequest
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Android implementation of [NetworkConnectivityManager].
  *
  * Uses [ConnectivityManager.registerNetworkCallback] to listen for network state changes.
- * Emits connectivity state as a Flow<Boolean> with 500ms debounce to prevent flapping.
+ * Emits connectivity state as a Flow<Boolean> with offline-only debounce (1s).
  *
  * **Platform Details:**
  * - API 24+ compatible (uses NetworkCallback)
@@ -58,8 +57,7 @@ actual class NetworkConnectivityManager(private val context: Context) {
                 connectivityManager.unregisterNetworkCallback(networkCallback)
             }
         }
-            .debounce(500)
-            .distinctUntilChanged()
+            .debounceOfflineOnly(1.seconds)
     }
 
     private fun isConnected(connectivityManager: ConnectivityManager): Boolean {

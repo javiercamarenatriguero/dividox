@@ -5,7 +5,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.withContext
 import java.net.InetSocketAddress
 import java.net.Socket
@@ -39,6 +39,6 @@ actual class NetworkConnectivityManager {
             @Suppress("UNREACHABLE_CODE")
             awaitClose { }
         }
-            .distinctUntilChanged()
+            .debounceOfflineOnly(1.seconds)
     }
 }

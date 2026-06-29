@@ -17,7 +17,8 @@ import kotlinx.coroutines.flow.Flow
  *
  * **Behavior:**
  * - Emits initial state immediately on subscription
- * - Debounced 500ms to prevent rapid flapping from weak signal fluctuations
+ * - Offline-only debounce (1s): online emissions pass through immediately,
+ *   offline emissions are delayed so transient disconnects (e.g. app resume) are suppressed
  * - Continues emitting state changes until Flow is canceled
  *
  * **Thread Safety:**
