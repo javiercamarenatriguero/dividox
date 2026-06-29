@@ -3,8 +3,7 @@ package com.akole.dividox.common.network.connectivity
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlin.time.Duration.Companion.seconds
 import platform.Network.nw_path_monitor_create
 import platform.Network.nw_path_monitor_set_queue
 import platform.Network.nw_path_monitor_set_update_handler
@@ -18,7 +17,7 @@ import platform.darwin.dispatch_get_main_queue
  * iOS implementation of [NetworkConnectivityManager].
  *
  * Uses Network.framework (NWPathMonitor) to monitor connectivity changes.
- * Available on iOS 12.0+. Emits connectivity state as Flow<Boolean> with 500ms debounce.
+ * Available on iOS 12.0+. Emits connectivity state as Flow<Boolean> with offline-only debounce (1s).
  *
  * **Platform Details:**
  * - Modern Network.framework approach (required for iOS 12+)
@@ -45,7 +44,6 @@ actual class NetworkConnectivityManager {
                 nw_path_monitor_cancel(monitor)
             }
         }
-            .debounce(500)
-            .distinctUntilChanged()
+            .debounceOfflineOnly(1.seconds)
     }
 }
