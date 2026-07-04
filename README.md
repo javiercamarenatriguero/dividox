@@ -98,7 +98,28 @@ The project follows a layered modular architecture with strict dependency rules 
 
 ## AI-Assisted Development
 
-DiviDox uses **Claude Code** as its AI development environment, powered by **Claude Opus 4** with a 1M-token context window. The setup spans agents, skills, MCP integrations, hooks, and plugins — orchestrating the full product lifecycle from requirements to code review.
+DiviDox supports both **Claude Code** and **GitHub Copilot** as AI development environments. All AI configuration (agents, skills, security instructions) lives in a shared `.ai-context/` directory, with symlinks into `.claude/` and `.github/` so both tools consume the same source of truth.
+
+The primary environment is **Claude Code**, powered by **Claude Opus 4** with a 1M-token context window. The setup spans agents, skills, MCP integrations, hooks, and plugins — orchestrating the full product lifecycle from requirements to code review.
+
+### Spec-Driven Development
+
+The entire development process follows a **Spec-Driven Development** approach, where every feature flows through a structured pipeline defined by agents and skills:
+
+1. **Product Requirements** — The PO agent generates PRDs and product descriptions (`generate-prd`, `product-description`)
+2. **User Stories** — Requirements are refined into INVEST-compliant stories with BDD acceptance criteria (`user-story-writer`, `story-map-generator`)
+3. **Sprint Tickets** — Stories are decomposed into atomic, estimable tasks (`ticket-writer`, `estimate-effort`, `task-planner`)
+4. **Implementation** — The Developer agent implements each ticket following the spec: domain → data → UI → navigation → tests (`implement-domain`, `implement-ui`, `implement-di`, `implement-navigation`)
+5. **Review & Verification** — The Code Reviewer agent validates architecture, performance, and security compliance against the original spec (`audit-compose-performance`, `owasp-security-review`)
+
+No code is written without a traceable spec. Each ticket links back to its user story, and each story links back to the product requirement — ensuring alignment from vision to implementation.
+
+### Supported AI Tools
+
+| Tool | Config directory | Mechanism |
+|------|-----------------|-----------|
+| **Claude Code** | `.claude/` → symlinks to `.ai-context/` | Agents, skills, hooks, MCP servers, `CLAUDE.md` |
+| **GitHub Copilot** | `.github/` → symlinks to `.ai-context/` | `copilot-instructions.md`, reusable prompts, agents, skills |
 
 ### Model
 
