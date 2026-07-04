@@ -96,6 +96,66 @@ The project follows a layered modular architecture with strict dependency rules 
 
 ---
 
+## AI-Assisted Development
+
+DiviDox uses **Claude Code** as its AI development environment, powered by **Claude Opus 4** with a 1M-token context window. The setup spans agents, skills, MCP integrations, hooks, and plugins — orchestrating the full product lifecycle from requirements to code review.
+
+### Model
+
+| Model | Context | Use |
+|-------|---------|-----|
+| Claude Opus 4 | 1M tokens | Primary model for all agents and orchestration |
+
+### Custom Agents
+
+Three role-based agents collaborate through a defined feature workflow: **PO → Developer → Code Reviewer**.
+
+| Agent | Role | Responsibilities |
+|-------|------|------------------|
+| **PO** | Product Owner | User stories, story maps, sprint tickets, effort estimation |
+| **Developer** | KMP Engineer | Domain logic, Compose UI, DI, navigation, tests — full feature lifecycle |
+| **Code Reviewer** | Senior Architect | PR reviews, architecture compliance, Compose performance, security audits |
+
+Agent definitions live in `.ai-context/agents/` and orchestration rules in `AGENTS.md`.
+
+### Skills (35+)
+
+Reusable, locally bundled workflows under `.ai-context/skills/` that encode domain-specific processes.
+
+| Category | Skills |
+|----------|--------|
+| **Product & Requirements** | `write-meta-prompt`, `generate-prd`, `product-description`, `product-roadmap`, `user-story-writer`, `story-map-generator`, `ticket-writer`, `estimate-effort`, `task-planner` |
+| **Architecture & Design** | `generate-adr`, `design-c4`, `design-data-model`, `design-md`, `design-system`, `stitch-design`, `module-organization` |
+| **Implementation** | `implement-domain`, `implement-ui`, `implement-di`, `implement-navigation`, `write-unit-test`, `audit-compose-performance` |
+| **Security (OWASP MASVS)** | `owasp-security-review`, `masvs-checklist`, `masvs-auth-assessment`, `masvs-secure-storage-audit`, `masvs-crypto-review`, `masvs-network-security-check`, `masvs-platform-interaction-review`, `masvs-code-quality-scan`, `masvs-privacy-audit`, `masvs-resilience-assessment`, `masvs-mobile-threat-model` |
+| **Operations** | `manage-git-flow`, `skill-creator`, `full-doc` |
+
+### MCP Servers
+
+| Server | Type | Purpose |
+|--------|------|---------|
+| **Stitch** (Google) | HTTP | UI design prototyping — screen generation and design system sync |
+| **lean-ctx** | Local | Context runtime — cached file reads, shell compression, code search, 10 read modes. Reduces token usage by up to 99% on re-reads |
+
+### Plugins
+
+| Plugin | Purpose |
+|--------|---------|
+| **lean-ctx** | Context engineering layer — replaces native Read/Shell/Grep with token-optimized equivalents |
+| **Caveman** | Communication mode that reduces output tokens ~75% while preserving technical substance |
+
+### Hooks
+
+| Hook | Trigger | Action |
+|------|---------|--------|
+| Pre-commit check | `PreToolUse` on Bash | Runs Detekt static analysis + JVM tests before commits |
+
+### Security Framework
+
+All security tooling follows **OWASP MASVS v2** mapped to NowSecure Tier 2 (fintech). Security instructions in `.ai-context/security-instructions.md` define mandatory skill triggers per code area (auth, storage, networking, crypto, platform, privacy). The `owasp-security-review` skill serves as a quick PR gate; deeper `masvs-*` skills provide full audit reports.
+
+---
+
 ## How to test the app
 
 DiviDox is available on **Android**, **iOS**, and **macOS/Desktop**. Android and Desktop builds are produced automatically by the **On Distribute** CI workflow. iOS requires building locally with Xcode.
