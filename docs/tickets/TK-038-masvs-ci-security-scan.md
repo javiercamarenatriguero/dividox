@@ -21,11 +21,11 @@ This job is a fast automated safety net; the skills are the comprehensive review
 
 ### Phase 1: Branch setup
 
-- [ ] Branch: `feature/DVX-TK-038-masvs-security-tooling` (already created)
+- [x] Branch: `feature/DVX-TK-038-masvs-security-tooling` (already created)
 
 ### Phase 2: Add security job to on-pull-request.yml
 
-- [ ] Add `security` job in `.github/workflows/on-pull-request.yml`:
+- [x] Add `security` job in `.github/workflows/on-pull-request.yml`:
   - Trigger: `pull_request` to `main` / `develop`
   - Permissions: `security-events: write`, `contents: read`
   - Steps: checkout → JDK 17 → Gradle setup
@@ -35,16 +35,16 @@ This job is a fast automated safety net; the skills are the comprehensive review
 
 ### Phase 3: Add gitleaks secret scanning step
 
-- [ ] Add `gitleaks/gitleaks-action@v2` step to the security job:
+- [x] Add `gitleaks/gitleaks-action@v2` step to the security job:
   - Fail job on any hardcoded secret or API key found
   - **Commit:** `DVX-TK-038 Add gitleaks secret scanning to security job`
 
 ### Phase 4: Verification
 
-- [ ] Push branch — verify security job appears on PR
-- [ ] SARIF report visible in GitHub Security → Code Scanning tab
-- [ ] `./gradlew detekt --config config/detekt/detekt-security.yml` passes locally
-- [ ] gitleaks finds no secrets in current codebase
+- [x] Push branch — verify security job appears on PR
+- [x] SARIF report visible in GitHub Security → Code Scanning tab
+- [x] `./gradlew detekt --config config/detekt/detekt-security.yml` passes locally
+- [x] gitleaks finds no secrets in current codebase
 
 ## Progress Tracking
 

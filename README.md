@@ -170,6 +170,7 @@ Reusable, locally bundled workflows under `.ai-context/skills/` that encode doma
 | Hook | Trigger | Action |
 |------|---------|--------|
 | Pre-commit check | `PreToolUse` on Bash | Runs Detekt static analysis + JVM tests before commits |
+| Pre-push security | `PostToolUse` on Bash | Advisory scan — runs `gitleaks` secret detection and reminds to invoke `owasp-security-review` for security-sensitive changes |
 
 ### Security Framework
 

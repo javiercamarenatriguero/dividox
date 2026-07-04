@@ -17,23 +17,23 @@ Scaffold `:feature:settings`, implement the full Settings screen MVI with all su
 ## Subtasks
 
 ### Phase 1: Architecture & Setup
-- [ ] **Create Git Branch** `feature/DVX-TK-029-feature-settings` — `skill: manage-git-flow`
+- [x] **Create Git Branch** `feature/DVX-TK-029-feature-settings` — `skill: manage-git-flow`
 
 ### Phase 2: Scaffold
-- [ ] **Scaffold `:feature:settings`**
+- [x] **Scaffold `:feature:settings`**
   - `feature/settings/build.gradle.kts` — `dividox.kmp.library` + `dividox.compose.multiplatform` + `dividox.kmp.ios` + `dividox.kmp.test`
   - `include(":feature:settings")` in `settings.gradle.kts`
   - **Verify:** `./gradlew :feature:settings:compileKotlinJvm`
   - **Commit:** `DVX-TK-029 Scaffold feature:settings module`
 
 ### Phase 3: MVI
-- [ ] **`SettingsContract`**
+- [x] **`SettingsContract`**
   - State: `settings: UserSettings?, appVersion: String, isLoading, error`
   - Event: `BiometricToggled, CurrencyChanged(currency), NotificationsClicked, FavoritesClicked, ExportClicked, DeleteAccountClicked, DeleteAccountConfirmed, SignOutClicked, SignOutConfirmed, HelpClicked, AboutClicked, TermsClicked, PrivacyClicked`
   - Effect: `NavigateToFavorites, NavigateToLogin, ShowDeleteConfirmDialog, ShowSignOutConfirmDialog, LaunchShareSheet(fileUri), OpenUrl(url), ShowError(message)`
   - **Commit:** `DVX-TK-029 Add SettingsContract`
 
-- [ ] **`SettingsViewModel`** + unit tests
+- [x] **`SettingsViewModel`** + unit tests
   - `GetSettingsUseCase` → observe reactively; `UpdateCurrencyUseCase`, `UpdateBiometricLockUseCase` on toggles
   - `SignOutUseCase` on confirmed sign out → `NavigateToLogin`
   - Delete account: sign out + Firestore delete (re-auth deferred to post-v1)
@@ -41,7 +41,7 @@ Scaffold `:feature:settings`, implement the full Settings screen MVI with all su
   - **Verify:** `./gradlew :feature:settings:jvmTest`
   - **Commit:** `DVX-TK-029 Add SettingsViewModel with unit tests`
 
-- [ ] **`SettingsScreen`**
+- [x] **`SettingsScreen`**
   - Header "Profile & Settings"
   - Security & Preferences: Biometric Lock toggle (hidden on Desktop) · Notifications row (hidden on Desktop) · Currency toggle [USD|EUR]
   - Portfolio: **Favorites row** → navigates to Favorites screen
@@ -54,23 +54,23 @@ Scaffold `:feature:settings`, implement the full Settings screen MVI with all su
   - **Commit:** `DVX-TK-029 Add SettingsScreen UI`
 
 ### Phase 4: Navigation + Koin
-- [ ] **Wire `SettingsRoute` in `mainGraph`** — `onFavoritesClicked` → `FavoritesRoute` · Sign Out/Delete → `LoginRoute` with `popUpTo(0) { inclusive = true }` · `onOpenUrl` → platform `UriHandler` · `onLaunchShareSheet` → platform share intent
-- [ ] **Register `:feature:settings` Koin module** in `App.kt` startKoin
+- [x] **Wire `SettingsRoute` in `mainGraph`** — `onFavoritesClicked` → `FavoritesRoute` · Sign Out/Delete → `LoginRoute` with `popUpTo(0) { inclusive = true }` · `onOpenUrl` → platform `UriHandler` · `onLaunchShareSheet` → platform share intent
+- [x] **Register `:feature:settings` Koin module** in `App.kt` startKoin
   - **Verify:** `./gradlew :composeApp:assembleDebug`
   - **Commit:** `DVX-TK-029 Wire SettingsRoute and register settings Koin module`
 
 ### Phase 5: Currency Propagation
-- [ ] **Inject `GetSettingsUseCase` into `DashboardViewModel`** — replace local currency state with `settings.map { it.baseCurrency }`; currency toggle calls `UpdateCurrencyUseCase` (persisted)
+- [x] **Inject `GetSettingsUseCase` into `DashboardViewModel`** — replace local currency state with `settings.map { it.baseCurrency }`; currency toggle calls `UpdateCurrencyUseCase` (persisted)
   - **Verify:** `./gradlew :feature:dashboard:jvmTest`
   - **Commit:** `DVX-TK-029 Wire currency setting to DashboardViewModel`
 
-- [ ] **Inject `GetSettingsUseCase` into `AddHoldingViewModel`** — replace hardcoded "USD" default with `settings.baseCurrency`
+- [x] **Inject `GetSettingsUseCase` into `AddHoldingViewModel`** — replace hardcoded "USD" default with `settings.baseCurrency`
   - **Verify:** `./gradlew :feature:portfolio:jvmTest`
   - **Commit:** `DVX-TK-029 Wire currency setting to AddHoldingViewModel`
 
 ### Phase 6: Testing & Quality
-- [ ] `./gradlew test` + `./gradlew detekt`
-- [ ] Create Pull Request — `skill: manage-git-flow`
+- [x] `./gradlew test` + `./gradlew detekt`
+- [x] Create Pull Request — `skill: manage-git-flow`
 
 ---
 

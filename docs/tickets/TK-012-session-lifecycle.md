@@ -16,10 +16,10 @@ Implement the full session lifecycle: Desktop token refresh logic in `jvmMain` A
 ## Subtasks
 
 ### Phase 1: Architecture & Setup
-- [ ] **Create Git Branch** `feature/DVX-TK-012-session-lifecycle` — `skill: manage-git-flow`
+- [x] **Create Git Branch** `feature/DVX-TK-012-session-lifecycle` — `skill: manage-git-flow`
 
 ### Phase 2: Desktop Token Refresh
-- [ ] **Implement proactive refresh** in `jvmMain` `AuthDataSource`
+- [x] **Implement proactive refresh** in `jvmMain` `AuthDataSource`
   - Decode JWT `exp` claim (base64url, no external lib)
   - If expiring within 5 min: `POST securetoken.googleapis.com/v1/token` with refresh token
   - Success → save new tokens, continue; `TOKEN_EXPIRED` / `USER_DISABLED` → `clearToken()` → `Unauthenticated`; network error → best-effort with old token
@@ -27,15 +27,15 @@ Implement the full session lifecycle: Desktop token refresh logic in `jvmMain` A
   - **Commit:** `DVX-TK-012 Implement Desktop proactive token refresh`
 
 ### Phase 3: Wire into RootNavGraph
-- [ ] **Replace stub** with real `ObserveSessionUseCase` in `RootNavGraph`
+- [x] **Replace stub** with real `ObserveSessionUseCase` in `RootNavGraph`
   - Inject via Koin; collect as `StateFlow` with `Loading` initial value
   - `Loading → SplashScreen` | `Unauthenticated → authGraph` | `Authenticated → mainGraph`
   - **Verify:** `./gradlew :composeApp:jvmTest`
   - **Commit:** `DVX-TK-012 Wire ObserveSessionUseCase into RootNavGraph`
 
 ### Phase 4: Testing & Quality
-- [ ] `./gradlew test` + `./gradlew detekt`
-- [ ] Create Pull Request — `skill: manage-git-flow`
+- [x] `./gradlew test` + `./gradlew detekt`
+- [x] Create Pull Request — `skill: manage-git-flow`
 
 ---
 

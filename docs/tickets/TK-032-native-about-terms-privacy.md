@@ -16,25 +16,25 @@ Replace the old `OpenUrl` side effects for About DiviDox, Terms & Conditions, an
 - [x] **Create Git Branch** `feature/DVX-TK-032-native-about-terms-privacy`
 
 ### Phase 2: Strings
-- [ ] **Add content strings** to `strings.xml` for all three screens
+- [x] **Add content strings** to `strings.xml` for all three screens
   - **Commit:** `DVX-TK-032 Add About/Terms/Privacy screen strings`
 
 ### Phase 3: Static screens
-- [ ] **`AboutScreen.kt`** — top bar + app info (version passed as param)
-- [ ] **`TermsScreen.kt`** — top bar + scrollable terms content
-- [ ] **`PrivacyScreen.kt`** — top bar + scrollable privacy content
+- [x] **`AboutScreen.kt`** — top bar + app info (version passed as param)
+- [x] **`TermsScreen.kt`** — top bar + scrollable terms content
+- [x] **`PrivacyScreen.kt`** — top bar + scrollable privacy content
   - **Commit:** `DVX-TK-032 Add AboutScreen, TermsScreen, PrivacyScreen`
 
 ### Phase 4: Routes & navigation
-- [ ] **Routes** `AboutRoute`, `TermsRoute`, `PrivacyRoute` in `MainNavigation.kt`
-- [ ] **Nav nodes** `aboutScreenNode`, `termsScreenNode`, `privacyScreenNode`
-- [ ] **Register** in `RootNavGraph.kt` (root level — full-screen, no bottom bar)
-- [ ] **Wire side effects** in `settingsScreenNode` via `rootNavController`
+- [x] **Routes** `AboutRoute`, `TermsRoute`, `PrivacyRoute` in `MainNavigation.kt`
+- [x] **Nav nodes** `aboutScreenNode`, `termsScreenNode`, `privacyScreenNode`
+- [x] **Register** in `RootNavGraph.kt` (root level — full-screen, no bottom bar)
+- [x] **Wire side effects** in `settingsScreenNode` via `rootNavController`
   - **Commit:** `DVX-TK-032 Wire About/Terms/Privacy navigation`
 
 ### Phase 5: Quality & PR
-- [ ] `./gradlew :feature:settings:jvmTest :feature:settings:detekt`
-- [ ] Create Pull Request
+- [x] `./gradlew :feature:settings:jvmTest :feature:settings:detekt`
+- [x] Create Pull Request
 
 ## Progress Tracking
 

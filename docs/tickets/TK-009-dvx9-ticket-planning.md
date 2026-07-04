@@ -22,7 +22,7 @@ Split all user stories into layered implementation task tickets following the mo
 - [x] Renumber tickets to include DVX-1–DVX-9 history (TK-001 to TK-009 done)
 
 ### Phase 2: Quality
-- [ ] Create Pull Request — `skill: manage-git-flow`
+- [x] Create Pull Request — `skill: manage-git-flow`
 
 ---
 

@@ -12,6 +12,19 @@
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/scripts/pre-push-security.sh",
+            "timeout": 60,
+            "statusMessage": "Running security advisory scan..."
+          }
+        ]
+      }
     ]
   }
 }

@@ -16,7 +16,7 @@ Add Firebase Auth and Google Sign-In dependencies to `:component:auth` (module s
 ## Subtasks
 
 ### Phase 1: Architecture & Setup
-- [ ] **Create Git Branch** `feature/DVX-TK-011-component-auth` — `skill: manage-git-flow`
+- [x] **Create Git Branch** `feature/DVX-TK-011-component-auth` — `skill: manage-git-flow`
 
 ### Phase 2: Dependencies + Scaffold feature:auth
 - [x] **Scaffold `:feature:auth`**
@@ -62,7 +62,7 @@ Add Firebase Auth and Google Sign-In dependencies to `:component:auth` (module s
 
 ### Phase 5: Testing & Quality
 - [x] `./gradlew test` + `./gradlew detekt` ✅
-- [ ] Create Pull Request — `skill: manage-git-flow`
+- [x] Create Pull Request — `skill: manage-git-flow`
 
 ---
 

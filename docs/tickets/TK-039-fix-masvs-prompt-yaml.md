@@ -62,13 +62,13 @@ Inline examples and evaluator checks are orphaned scalars, not valid YAML mappin
 
 ## Acceptance Criteria
 
-- [ ] `temperature: 0.2` lives under `modelParameters:` at root level.
-- [ ] System prompt wrapped in `messages[0]` with `role: system`.
-- [ ] User message examples in `messages[1]` with correct `role: user` + `content:`.
-- [ ] `testData` entries use proper YAML list/map structure.
-- [ ] `evaluators` entries use proper YAML list/map structure.
-- [ ] `yamllint .github/masvs-audit.prompt.yml` passes with no errors.
-- [ ] Prompt loads in GitHub Copilot without parse errors.
+- [x] `temperature: 0.2` lives under `modelParameters:` at root level.
+- [x] System prompt wrapped in `messages[0]` with `role: system`.
+- [x] User message examples in `messages[1]` with correct `role: user` + `content:`.
+- [x] `testData` entries use proper YAML list/map structure.
+- [x] `evaluators` entries use proper YAML list/map structure.
+- [x] `yamllint .github/masvs-audit.prompt.yml` passes with no errors.
+- [x] Prompt loads in GitHub Copilot without parse errors.
 
 ---
 

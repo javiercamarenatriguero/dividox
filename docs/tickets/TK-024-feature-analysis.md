@@ -17,25 +17,25 @@ Scaffold `:feature:analysis`, implement the Security Analysis screen MVI, and wi
 ## Subtasks
 
 ### Phase 1: Architecture & Setup
-- [ ] **Create Git Branch** `feature/DVX-TK-024-feature-analysis` — `skill: manage-git-flow`
+- [x] **Create Git Branch** `feature/DVX-TK-024-feature-analysis` — `skill: manage-git-flow`
 
 ### Phase 2: Scaffold
-- [ ] **Scaffold `:feature:analysis`**
+- [x] **Scaffold `:feature:analysis`**
   - `feature/analysis/build.gradle.kts` — `dividox.kmp.library` + `dividox.compose.multiplatform` + `dividox.kmp.ios` + `dividox.kmp.test`
   - `include(":feature:analysis")` in `settings.gradle.kts`
   - **Verify:** `./gradlew :feature:analysis:compileKotlinJvm`
   - **Commit:** `DVX-TK-024 Scaffold feature:analysis module`
 
 ### Phase 3: MVI
-- [ ] **`SecurityDetailContract`** — State: `ticker, detail: SecurityDetail?, selectedPeriod: ChartPeriod, isLoading, error` · Event: `PeriodSelected, FavouriteToggled, AddToPortfolioClicked, EditHoldingClicked, BackClicked, Refresh` · Effect: `NavigateBack, NavigateToAddHolding(ticker), NavigateToEditHolding(holdingId)`
-- [ ] **`SecurityDetailViewModel`** + unit tests
+- [x] **`SecurityDetailContract`** — State: `ticker, detail: SecurityDetail?, selectedPeriod: ChartPeriod, isLoading, error` · Event: `PeriodSelected, FavouriteToggled, AddToPortfolioClicked, EditHoldingClicked, BackClicked, Refresh` · Effect: `NavigateBack, NavigateToAddHolding(ticker), NavigateToEditHolding(holdingId)`
+- [x] **`SecurityDetailViewModel`** + unit tests
   - `GetSecurityDetailUseCase` on init with `ticker`; `AddToWatchlistUseCase`/`RemoveFromWatchlistUseCase` on toggle
   - CTA: "Add Security" when `!isInPortfolio`, "Edit Holding" when `isInPortfolio`
   - `PeriodSelected` → re-fetch price history only
   - **Verify:** `./gradlew :feature:analysis:jvmTest`
   - **Commit:** `DVX-TK-024 Add SecurityDetailViewModel with unit tests`
 
-- [ ] **`SecurityDetailScreen`**
+- [x] **`SecurityDetailScreen`**
   - Header: back arrow + ticker (centred) + heart icon (solid/outlined)
   - Price + % change with direction icon + "Refreshed X min ago" + pull-to-refresh
   - Price line chart + period selector `[1D|1W|1M|YTD|1Y|ALL]`
@@ -47,14 +47,14 @@ Scaffold `:feature:analysis`, implement the Security Analysis screen MVI, and wi
   - **Commit:** `DVX-TK-024 Add SecurityDetailScreen UI`
 
 ### Phase 4: Navigation + Koin
-- [ ] **Wire `SecurityDetailRoute` in `mainGraph`** — `ticker` from `toRoute<SecurityDetailRoute>().ticker` · callbacks for AddHolding, EditHolding, Back
-- [ ] **Register `:feature:analysis` Koin module** in `App.kt` startKoin
+- [x] **Wire `SecurityDetailRoute` in `mainGraph`** — `ticker` from `toRoute<SecurityDetailRoute>().ticker` · callbacks for AddHolding, EditHolding, Back
+- [x] **Register `:feature:analysis` Koin module** in `App.kt` startKoin
   - **Verify:** `./gradlew :composeApp:assembleDebug`
   - **Commit:** `DVX-TK-024 Wire SecurityDetailRoute and register analysis Koin module`
 
 ### Phase 5: Testing & Quality
-- [ ] `./gradlew test` + `./gradlew detekt`
-- [ ] Create Pull Request — `skill: manage-git-flow`
+- [x] `./gradlew test` + `./gradlew detekt`
+- [x] Create Pull Request — `skill: manage-git-flow`
 
 ---
 

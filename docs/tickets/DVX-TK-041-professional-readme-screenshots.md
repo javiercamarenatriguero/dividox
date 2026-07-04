@@ -22,17 +22,17 @@ screenshots across all three supported platforms: **Android**, **iOS**, and **De
 
 ### Phase 1: Screenshot Capture
 
-- [ ] **Run app on Android emulator and capture screenshots**
+- [x] **Run app on Android emulator and capture screenshots**
   - Screens: Dashboard, Market Indices, News Feed, Onboarding Carousel, Security watchlist
   - Output: `docs/screenshots/android/`
   - **Commit:** `DVX-TK-041 Add Android screenshots`
 
-- [ ] **Run app on iOS Simulator and capture screenshots**
+- [x] **Run app on iOS Simulator and capture screenshots**
   - Same screens as Android
   - Output: `docs/screenshots/ios/`
   - **Commit:** `DVX-TK-041 Add iOS screenshots`
 
-- [ ] **Run app on Desktop (JVM) and capture screenshots**
+- [x] **Run app on Desktop (JVM) and capture screenshots**
   - Command: `./gradlew :composeApp:run`
   - Same screens as Android
   - Output: `docs/screenshots/desktop/`
@@ -42,7 +42,7 @@ screenshots across all three supported platforms: **Android**, **iOS**, and **De
 
 ### Phase 2: Hero Image Composition
 
-- [ ] **Compose multi-platform hero image**
+- [x] **Compose multi-platform hero image**
   - Combine Android phone frame + iOS phone frame + Desktop window frame side-by-side
   - Tools: Figma / Sketch / GIMP / Canva — whichever is available
   - Output: `docs/screenshots/hero.png`
@@ -53,7 +53,7 @@ screenshots across all three supported platforms: **Android**, **iOS**, and **De
 
 ### Phase 3: README Rewrite
 
-- [ ] **Rewrite README structure**
+- [x] **Rewrite README structure**
 
   Target structure:
   ```
@@ -72,7 +72,7 @@ screenshots across all three supported platforms: **Android**, **iOS**, and **De
   - Link to `CLAUDE.md` for contributor architecture details
   - **Commit:** `DVX-TK-041 Rewrite README with structure and content`
 
-- [ ] **Embed screenshots into README**
+- [x] **Embed screenshots into README**
   - Use relative paths: `docs/screenshots/android/dashboard.png` etc.
   - Hero image as first element after title
   - Feature screenshots as HTML `<img>` tags with `width="300"` for consistent sizing
@@ -82,7 +82,7 @@ screenshots across all three supported platforms: **Android**, **iOS**, and **De
 
 ### Phase 4: Badges & CI
 
-- [ ] **Add badges**
+- [x] **Add badges**
   - GitHub Actions build status badge (from `.github/workflows/` workflow file)
   - Kotlin version badge (shields.io static)
   - Compose Multiplatform version badge (shields.io static)
@@ -93,13 +93,13 @@ screenshots across all three supported platforms: **Android**, **iOS**, and **De
 
 ### Phase 5: Verification
 
-- [ ] **Verify rendering on GitHub**
+- [x] **Verify rendering on GitHub**
   - Push branch and open PR
   - Check all images load correctly in the GitHub preview
   - Check all links resolve (no 404s)
   - Check badges render
 
-- [ ] **Create Pull Request**
+- [x] **Create Pull Request**
   - Title: `DVX-TK-041 · Docs — Professional README with multi-platform screenshots`
   - Skill: `skill: manage-git-flow`
 

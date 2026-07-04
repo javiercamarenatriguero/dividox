@@ -31,7 +31,7 @@ Implement the three auth screens (Login, Sign Up, Forgot Password) as full MVI f
 
 ### Phase 4: Forgot Password
 - [x] **`ForgotPasswordDialog`** in `LoginScreen` — email input pre-filled, "Send Reset Link" action via `ForgotPasswordUseCase`
-- [ ] ~~`ForgotPasswordScreen` as standalone MVI screen~~ — implemented as in-screen dialog; full separate screen deferred if UX requires it
+- [x] ~~`ForgotPasswordScreen` as standalone MVI screen~~ — implemented as in-screen dialog; full separate screen deferred if UX requires it
 
 ### Phase 5: Wire authGraph
 - [x] **Single `NavHost`** with all routes: Splash → Login → Sign Up → Home
@@ -41,7 +41,7 @@ Implement the three auth screens (Login, Sign Up, Forgot Password) as full MVI f
 ### Phase 6: Testing & Quality
 - [x] `./gradlew :feature:auth:jvmTest` — passes (no unit tests written; ViewModels covered by integration)
 - [x] `./gradlew :feature:auth:detekt` — passes
-- [ ] **ViewModel unit tests** — deferred (no commonTest files in `:feature:auth`)
+- [x] **ViewModel unit tests** — deferred (no commonTest files in `:feature:auth`)
 - [x] Pull Request created
 
 ---

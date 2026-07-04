@@ -53,20 +53,20 @@ This ticket also owns the **`mainGraph`** — the `Scaffold` + `NavigationBar` c
   - **Commit:** `DVX-TK-018 Add DashboardScreen UI`
 
 ### Phase 4: MainGraph — BottomNavBar Scaffold
-- [ ] **`MainNavTab` sealed class** in `composeApp/navigation/`
+- [x] **`MainNavTab` sealed class** in `composeApp/navigation/`
   - `Dashboard`, `Portfolio`, `Search` (FAB), `Dividends`, `Settings`
   - Each entry carries: `icon: ImageVector`, `selectedIcon: ImageVector`, `labelRes: StringResource`
   - `Search` tab is the central FAB — no label, distinctive icon
   - List `mainNavTabs` excludes Search (rendered separately as FAB)
 
-- [ ] **`DividoxBottomBar` composable** in `common:ui-resources`
+- [x] **`DividoxBottomBar` composable** in `common:ui-resources`
   - M3 `NavigationBar` with items for Dashboard · Portfolio · [Search FAB] · Dividends · Settings
   - Search rendered as a `FloatingActionButton` raised above the bar (use `Scaffold`'s `floatingActionButton` + `floatingActionButtonPosition = FabPosition.Center` and `isFloatingActionButtonDocked = false` if using legacy, or overlay approach with M3)
   - Active tab uses `NavigationBarItem(selected = true)`
   - Strings: `section_dashboard`, `section_portfolio`, `section_dividends`, `section_settings` (add to `strings.xml`)
   - Icons: use `Icons.Outlined.*` for inactive, `Icons.Filled.*` for active
 
-- [ ] **`MainGraphRoute`** in `composeApp/navigation/MainNavigation.kt`
+- [x] **`MainGraphRoute`** in `composeApp/navigation/MainNavigation.kt`
   - `@Serializable data object MainGraphRoute`
   - `fun NavController.navigateToMain(navOptions)`
   - `fun NavGraphBuilder.mainGraphNode(navController)` — `composable<MainGraphRoute>` containing:
@@ -81,7 +81,7 @@ This ticket also owns the **`mainGraph`** — the `Scaffold` + `NavigationBar` c
   - `SecurityDetailRoute` and `FavoritesRoute` remain in the **outer** `RootNavGraph` (full-screen, no bottom bar)
   - FAB (`SearchRoute`) navigates via **outer** `navController` to a future full-screen search
 
-- [ ] **Update `RootNavGraph`**
+- [x] **Update `RootNavGraph`**
   - Replace `homeScreenNode(navController)` + `dashboardScreenNode(navController)` with `mainGraphNode(navController)`
   - Auth guard navigates to `MainGraphRoute` on `Authenticated`
   - **Verify:** `./gradlew :composeApp:assembleDebug`
@@ -89,11 +89,11 @@ This ticket also owns the **`mainGraph`** — the `Scaffold` + `NavigationBar` c
 
 ### Phase 5: Navigation + Koin
 - [x] **Register `:feature:dashboard` Koin module** in `KoinInitializer`
-- [ ] Add stub Koin modules (empty for now) for Portfolio, Dividends, Settings so the tab NavHost compiles
+- [x] Add stub Koin modules (empty for now) for Portfolio, Dividends, Settings so the tab NavHost compiles
 
 ### Phase 6: Testing & Quality
-- [ ] `./gradlew test` + `./gradlew detekt`
-- [ ] Create Pull Request — `skill: manage-git-flow`
+- [x] `./gradlew test` + `./gradlew detekt`
+- [x] Create Pull Request — `skill: manage-git-flow`
 
 ---
 

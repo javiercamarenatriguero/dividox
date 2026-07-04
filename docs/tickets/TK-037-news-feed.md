@@ -45,40 +45,40 @@ GET https://query1.finance.yahoo.com/v1/finance/search
 ## Subtasks
 
 ### Phase 1: Domain & Data — `component/market`
-- [ ] Add `NewsItem` domain model: `uuid`, `title`, `publisher`, `link`, `publishedAt: Long`, `thumbnailUrl: String?`, `relatedTickers: List<String>`
-- [ ] Add `NewsItemDto` + mapper from search response `news` array
-- [ ] Extend `SearchResponseDto` to parse `news` field
-- [ ] Add `GetStockNewsUseCase(ticker: String, count: Int = 10): Flow<List<NewsItem>>`
-- [ ] Add `GetMarketNewsUseCase(indexTicker: String = "^GSPC", count: Int = 10): Flow<List<NewsItem>>`
-- [ ] **Commit:** `DVX-TK-037 Add NewsItem domain model and GetNews use cases`
+- [x] Add `NewsItem` domain model: `uuid`, `title`, `publisher`, `link`, `publishedAt: Long`, `thumbnailUrl: String?`, `relatedTickers: List<String>`
+- [x] Add `NewsItemDto` + mapper from search response `news` array
+- [x] Extend `SearchResponseDto` to parse `news` field
+- [x] Add `GetStockNewsUseCase(ticker: String, count: Int = 10): Flow<List<NewsItem>>`
+- [x] Add `GetMarketNewsUseCase(indexTicker: String = "^GSPC", count: Int = 10): Flow<List<NewsItem>>`
+- [x] **Commit:** `DVX-TK-037 Add NewsItem domain model and GetNews use cases`
 
 ### Phase 2: Shared UI — `common/ui-resources`
-- [ ] Add `NewsCard` composable: thumbnail (optional, rounded), title (2 lines max), publisher + relative date on one line, tap → `LocalUriHandler.openUri(link)`
-- [ ] Add `NewsSection` composable: title row + vertical list of `NewsCard`, with a "Ver más" link
-- [ ] Add strings: `news_section_title`, `news_view_more`, `news_no_results`
-- [ ] **Commit:** `DVX-TK-037 Add NewsCard and NewsSection composables`
+- [x] Add `NewsCard` composable: thumbnail (optional, rounded), title (2 lines max), publisher + relative date on one line, tap → `LocalUriHandler.openUri(link)`
+- [x] Add `NewsSection` composable: title row + vertical list of `NewsCard`, with a "Ver más" link
+- [x] Add strings: `news_section_title`, `news_view_more`, `news_no_results`
+- [x] **Commit:** `DVX-TK-037 Add NewsCard and NewsSection composables`
 
 ### Phase 3: Dashboard — `feature/dashboard`
-- [ ] **Reorder sections**: move *Tus Favoritos* above *Índices Bursátiles*
-- [ ] Add `GetMarketNewsUseCase` to `DashboardViewModel`, load on init with `^GSPC` or user's `defaultMarket` index
-- [ ] Add `newsList: List<NewsItem>` to `DashboardState`
-- [ ] Render `NewsSection` below Índices Bursátiles in `DashboardScreen`
-- [ ] News loads independently (does not block portfolio/watchlist rendering)
-- [ ] **Commit:** `DVX-TK-037 Add market news section to Dashboard and reorder sections`
+- [x] **Reorder sections**: move *Tus Favoritos* above *Índices Bursátiles*
+- [x] Add `GetMarketNewsUseCase` to `DashboardViewModel`, load on init with `^GSPC` or user's `defaultMarket` index
+- [x] Add `newsList: List<NewsItem>` to `DashboardState`
+- [x] Render `NewsSection` below Índices Bursátiles in `DashboardScreen`
+- [x] News loads independently (does not block portfolio/watchlist rendering)
+- [x] **Commit:** `DVX-TK-037 Add market news section to Dashboard and reorder sections`
 
 ### Phase 4: Quote Analysis — `feature/analysis`
-- [ ] Add `GetStockNewsUseCase` to `SecurityDetailViewModel`, load on ticker init, max 3 items
-- [ ] Add `newsList: List<NewsItem>` to `SecurityDetailState`
-- [ ] Render compact `NewsSection` (max 3 cards, no "Ver más" needed) below Fundamentales in `SecurityDetailScreen`
-- [ ] Keep cards compact: no thumbnail, title (1 line ellipsis), publisher + date inline
-- [ ] **Commit:** `DVX-TK-037 Add compact news section to quote analysis screen`
+- [x] Add `GetStockNewsUseCase` to `SecurityDetailViewModel`, load on ticker init, max 3 items
+- [x] Add `newsList: List<NewsItem>` to `SecurityDetailState`
+- [x] Render compact `NewsSection` (max 3 cards, no "Ver más" needed) below Fundamentales in `SecurityDetailScreen`
+- [x] Keep cards compact: no thumbnail, title (1 line ellipsis), publisher + date inline
+- [x] **Commit:** `DVX-TK-037 Add compact news section to quote analysis screen`
 
 ### Phase 5: Tests & Quality
-- [ ] Unit test `GetStockNewsUseCase`: happy path, empty list, network error
-- [ ] Unit test `GetMarketNewsUseCase`
-- [ ] `./gradlew :component:market:jvmTest`
-- [ ] `./gradlew detekt`
-- [ ] **Commit:** `DVX-TK-037 Add news use case unit tests`
+- [x] Unit test `GetStockNewsUseCase`: happy path, empty list, network error
+- [x] Unit test `GetMarketNewsUseCase`
+- [x] `./gradlew :component:market:jvmTest`
+- [x] `./gradlew detekt`
+- [x] **Commit:** `DVX-TK-037 Add news use case unit tests`
 
 ---
 
