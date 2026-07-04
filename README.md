@@ -71,37 +71,20 @@ Kotlin Multiplatform · Compose Multiplatform · Firebase Auth · Firestore · Y
 
 The project follows a layered modular architecture with strict dependency rules — each layer can only depend on layers below it.
 
-```mermaid
-graph TD
-    App(["app\nEntry point · DI · Navigation"])
 
-    subgraph INT["integration"]
-        direction LR
-        I1(["module"]) ~~~ I2(["module"])
-    end
+<p align="center">
+  <img src="docs/images/img_modular_architecture.png" alt="DiviDox Modular Architecture" width="100%">
+</p>
 
-    subgraph FEAT["feature"]
-        direction LR
-        F1(["module"]) ~~~ F2(["module"]) ~~~ F3(["module"]) ~~~ F4(["module"])
-    end
+### Modules
 
-    subgraph COMP["component"]
-        direction LR
-        C1(["module"]) ~~~ C2(["module"]) ~~~ C3(["module"])
-    end
-
-    subgraph COM["common"]
-        direction LR
-        CM1(["module"]) ~~~ CM2(["module"])
-    end
-
-    App --> INT
-    App --> FEAT
-    INT --> FEAT
-    FEAT --> COMP
-    COMP --> COM
-    FEAT --> COM
-```
+| Layer | Description |
+|-------|-------------|
+| **`app`** | Top-level orchestration layer. Wires navigation and dependency injection for the entire application. |
+| **`feature`** | Presentation layer. Each module owns one or more screens and may consume domain logic from multiple `component` modules. |
+| **`component`** | Domain and data layers. Each module encapsulates business rules, repository contracts, and their implementations. |
+| **`integration`** | Bridge layer that prevents horizontal dependencies between modules in the same layer. |
+| **`common`** | Shared utilities and UI resources available to any `component` or `feature` module. |
 
 ### Rules
 
@@ -110,6 +93,87 @@ graph TD
 - `component` modules can be used by multiple `feature` modules.
 - `common` modules have no internal dependencies.
 - All modules target Android, iOS, and Desktop via Kotlin Multiplatform.
+
+---
+
+## AI-Assisted Development
+
+DiviDox supports both **Claude Code** and **GitHub Copilot** as AI development environments. All AI configuration (agents, skills, security instructions) lives in a shared `.ai-context/` directory, with symlinks into `.claude/` and `.github/` so both tools consume the same source of truth.
+
+The primary environment is **Claude Code**, powered by **Claude Opus 4** with a 1M-token context window. The setup spans agents, skills, MCP integrations, hooks, and plugins — orchestrating the full product lifecycle from requirements to code review.
+
+### Spec-Driven Development
+
+The entire development process follows a **Spec-Driven Development** approach, where every feature flows through a structured pipeline defined by agents and skills:
+
+1. **Product Requirements** — The PO agent generates PRDs and product descriptions (`generate-prd`, `product-description`)
+2. **User Stories** — Requirements are refined into INVEST-compliant stories with BDD acceptance criteria (`user-story-writer`, `story-map-generator`)
+3. **Sprint Tickets** — Stories are decomposed into atomic, estimable tasks (`ticket-writer`, `estimate-effort`, `task-planner`)
+4. **Implementation** — The Developer agent implements each ticket following the spec: domain → data → UI → navigation → tests (`implement-domain`, `implement-ui`, `implement-di`, `implement-navigation`)
+5. **Review & Verification** — The Code Reviewer agent validates architecture, performance, and security compliance against the original spec (`audit-compose-performance`, `owasp-security-review`)
+
+No code is written without a traceable spec. Each ticket links back to its user story, and each story links back to the product requirement — ensuring alignment from vision to implementation.
+
+### Supported AI Tools
+
+| Tool | Config directory | Mechanism |
+|------|-----------------|-----------|
+| **Claude Code** | `.claude/` → symlinks to `.ai-context/` | Agents, skills, hooks, MCP servers, `CLAUDE.md` |
+| **GitHub Copilot** | `.github/` → symlinks to `.ai-context/` | `copilot-instructions.md`, reusable prompts, agents, skills |
+
+### Model
+
+| Model | Context | Use |
+|-------|---------|-----|
+| Claude Opus 4 | 1M tokens | Primary model for all agents and orchestration |
+
+### Custom Agents
+
+Three role-based agents collaborate through a defined feature workflow: **PO → Developer → Code Reviewer**.
+
+| Agent | Role | Responsibilities |
+|-------|------|------------------|
+| **PO** | Product Owner | User stories, story maps, sprint tickets, effort estimation |
+| **Developer** | KMP Engineer | Domain logic, Compose UI, DI, navigation, tests — full feature lifecycle |
+| **Code Reviewer** | Senior Architect | PR reviews, architecture compliance, Compose performance, security audits |
+
+Agent definitions live in `.ai-context/agents/` and orchestration rules in `AGENTS.md`.
+
+### Skills (35+)
+
+Reusable, locally bundled workflows under `.ai-context/skills/` that encode domain-specific processes.
+
+| Category | Skills |
+|----------|--------|
+| **Product & Requirements** | `write-meta-prompt`, `generate-prd`, `product-description`, `product-roadmap`, `user-story-writer`, `story-map-generator`, `ticket-writer`, `estimate-effort`, `task-planner` |
+| **Architecture & Design** | `generate-adr`, `design-c4`, `design-data-model`, `design-md`, `design-system`, `stitch-design`, `module-organization` |
+| **Implementation** | `implement-domain`, `implement-ui`, `implement-di`, `implement-navigation`, `write-unit-test`, `audit-compose-performance` |
+| **Security (OWASP MASVS)** | `owasp-security-review`, `masvs-checklist`, `masvs-auth-assessment`, `masvs-secure-storage-audit`, `masvs-crypto-review`, `masvs-network-security-check`, `masvs-platform-interaction-review`, `masvs-code-quality-scan`, `masvs-privacy-audit`, `masvs-resilience-assessment`, `masvs-mobile-threat-model` |
+| **Operations** | `manage-git-flow`, `skill-creator`, `full-doc` |
+
+### MCP Servers
+
+| Server | Type | Purpose |
+|--------|------|---------|
+| **Stitch** (Google) | HTTP | UI design prototyping — screen generation and design system sync |
+| **lean-ctx** | Local | Context runtime — cached file reads, shell compression, code search, 10 read modes. Reduces token usage by up to 99% on re-reads |
+
+### Plugins
+
+| Plugin | Purpose |
+|--------|---------|
+| **lean-ctx** | Context engineering layer — replaces native Read/Shell/Grep with token-optimized equivalents |
+| **Caveman** | Communication mode that reduces output tokens ~75% while preserving technical substance |
+
+### Hooks
+
+| Hook | Trigger | Action |
+|------|---------|--------|
+| Pre-commit check | `PreToolUse` on Bash | Runs Detekt static analysis + JVM tests before commits |
+
+### Security Framework
+
+All security tooling follows **OWASP MASVS v2** mapped to NowSecure Tier 2 (fintech). Security instructions in `.ai-context/security-instructions.md` define mandatory skill triggers per code area (auth, storage, networking, crypto, platform, privacy). The `owasp-security-review` skill serves as a quick PR gate; deeper `masvs-*` skills provide full audit reports.
 
 ---
 
