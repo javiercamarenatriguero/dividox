@@ -76,6 +76,16 @@ The project follows a layered modular architecture with strict dependency rules 
   <img src="docs/images/img_modular_architecture.png" alt="DiviDox Modular Architecture" width="100%">
 </p>
 
+### Modules
+
+| Layer | Description |
+|-------|-------------|
+| **`app`** | Top-level orchestration layer. Wires navigation and dependency injection for the entire application. |
+| **`feature`** | Presentation layer. Each module owns one or more screens and may consume domain logic from multiple `component` modules. |
+| **`component`** | Domain and data layers. Each module encapsulates business rules, repository contracts, and their implementations. |
+| **`integration`** | Bridge layer that prevents horizontal dependencies between modules in the same layer. |
+| **`common`** | Shared utilities and UI resources available to any `component` or `feature` module. |
+
 ### Rules
 
 - `app` depends on everything.
