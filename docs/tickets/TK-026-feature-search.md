@@ -17,23 +17,23 @@ Scaffold `:feature:search`, implement the Search screen MVI with 250ms debounce,
 ## Subtasks
 
 ### Phase 1: Architecture & Setup
-- [ ] **Create Git Branch** `feature/DVX-TK-026-feature-search` — `skill: manage-git-flow`
+- [x] **Create Git Branch** `feature/DVX-TK-026-feature-search` — `skill: manage-git-flow`
 
 ### Phase 2: Scaffold
-- [ ] **Scaffold `:feature:search`**
+- [x] **Scaffold `:feature:search`**
   - `feature/search/build.gradle.kts` — `dividox.kmp.library` + `dividox.compose.multiplatform` + `dividox.kmp.ios` + `dividox.kmp.test`
   - `include(":feature:search")` in `settings.gradle.kts`
   - **Verify:** `./gradlew :feature:search:compileKotlinJvm`
   - **Commit:** `DVX-TK-026 Scaffold feature:search module`
 
 ### Phase 3: MVI
-- [ ] **`SearchContract`** — State: `query, results: List<EnrichedWatchlistEntry>, isLoading, isEmpty, error` · Event: `QueryChanged, FavouriteToggled(ticker), SecurityClicked(ticker), BackClicked` · Effect: `NavigateToSecurity, NavigateBack`
-- [ ] **`SearchViewModel`** + unit tests
+- [x] **`SearchContract`** — State: `query, results: List<EnrichedWatchlistEntry>, isLoading, isEmpty, error` · Event: `QueryChanged, FavouriteToggled(ticker), SecurityClicked(ticker), BackClicked` · Effect: `NavigateToSecurity, NavigateBack`
+- [x] **`SearchViewModel`** + unit tests
   - `SearchSecuritiesUseCase` with 250ms debounce; `IsInWatchlistUseCase` for initial heart state; `AddToWatchlistUseCase`/`RemoveFromWatchlistUseCase` on toggle
   - **Verify:** `./gradlew :feature:search:jvmTest`
   - **Commit:** `DVX-TK-026 Add SearchViewModel with unit tests`
 
-- [ ] **`SearchScreen`**
+- [x] **`SearchScreen`**
   - Auto-focus search bar · back + "Search" title
   - Placeholder state (before first char) · loading skeleton · `SecurityCard` results
   - No-results: "No results for '{query}'." · offline: "Search requires an internet connection."
@@ -41,14 +41,14 @@ Scaffold `:feature:search`, implement the Search screen MVI with 250ms debounce,
   - **Commit:** `DVX-TK-026 Add SearchScreen UI`
 
 ### Phase 4: Navigation + Koin
-- [ ] **Wire `SearchRoute` in `mainGraph`** — opens from central FAB in `BottomNavBar` · `onSecurityClick` → `SecurityDetailRoute` · `onBack` → `popBackStack`
-- [ ] **Register `:feature:search` Koin module** in `App.kt` startKoin
+- [x] **Wire `SearchRoute` in `mainGraph`** — opens from central FAB in `BottomNavBar` · `onSecurityClick` → `SecurityDetailRoute` · `onBack` → `popBackStack`
+- [x] **Register `:feature:search` Koin module** in `App.kt` startKoin
   - **Verify:** `./gradlew :composeApp:assembleDebug`
   - **Commit:** `DVX-TK-026 Wire SearchRoute and register search Koin module`
 
 ### Phase 5: Testing & Quality
-- [ ] `./gradlew test` + `./gradlew detekt`
-- [ ] Create Pull Request — `skill: manage-git-flow`
+- [x] `./gradlew test` + `./gradlew detekt`
+- [x] Create Pull Request — `skill: manage-git-flow`
 
 ---
 

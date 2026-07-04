@@ -22,18 +22,18 @@ iOS and JVM/Desktop still use default placeholders:
 ## Scope
 
 ### iOS
-- [ ] Generate the branded Dividox icon at 1024×1024 for the App Store.
-- [ ] Replace `iosApp/iosApp/Assets.xcassets/AppIcon.appiconset/app-icon-1024.png`.
-- [ ] Update `Contents.json` if additional sizes are needed for Spotlight, Settings, etc.
-- [ ] Verify icon renders correctly in Xcode preview and on simulator.
+- [x] Generate the branded Dividox icon at 1024×1024 for the App Store.
+- [x] Replace `iosApp/iosApp/Assets.xcassets/AppIcon.appiconset/app-icon-1024.png`.
+- [x] Update `Contents.json` if additional sizes are needed for Spotlight, Settings, etc.
+- [x] Verify icon renders correctly in Xcode preview and on simulator.
 
 ### JVM / Desktop
-- [ ] Export branded icon in required formats:
+- [x] Export branded icon in required formats:
   - macOS: `.icns` (512×512 @2x minimum)
   - Windows: `.ico` (256×256, 48×48, 32×32, 16×16)
   - Linux: `.png` (512×512)
-- [ ] Place icon files under `composeApp/src/jvmMain/resources/` (or similar).
-- [ ] Configure `nativeDistributions` in `composeApp/build.gradle.kts`:
+- [x] Place icon files under `composeApp/src/jvmMain/resources/` (or similar).
+- [x] Configure `nativeDistributions` in `composeApp/build.gradle.kts`:
   ```kotlin
   nativeDistributions {
       targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
@@ -51,14 +51,14 @@ iOS and JVM/Desktop still use default placeholders:
       }
   }
   ```
-- [ ] Verify icon shows in macOS Dock, Windows taskbar, and Linux launcher.
+- [x] Verify icon shows in macOS Dock, Windows taskbar, and Linux launcher.
 
 ## Acceptance Criteria
 
-- [ ] iOS app displays the branded Dividox icon (not default) on home screen and App Store.
-- [ ] Desktop app displays the branded Dividox icon in Dock/taskbar/launcher.
-- [ ] All icon files are committed to source control (no build-time generation).
-- [ ] No regressions on Android icon.
+- [x] iOS app displays the branded Dividox icon (not default) on home screen and App Store.
+- [x] Desktop app displays the branded Dividox icon in Dock/taskbar/launcher.
+- [x] All icon files are committed to source control (no build-time generation).
+- [x] No regressions on Android icon.
 
 ## References
 

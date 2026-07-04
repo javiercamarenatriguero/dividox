@@ -48,7 +48,7 @@ Scaffold `:component:market`, add Ktor dependencies and configure `YahooFinanceC
 ### Phase 5: Testing & Quality
 - [x] 32 tests passing: use case tests (`FakeMarketRepository`) + `MarketRepositoryImplTest` (`MockEngine`)
 - [x] `./gradlew detekt` — clean
-- [ ] Commit refactoring changes + Create Pull Request
+- [x] Commit refactoring changes + Create Pull Request
 
 ---
 

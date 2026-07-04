@@ -60,52 +60,52 @@ Export as `.lottie` (Lottie JSON). Use `io.github.alexzhirkevich:compottie` for 
 
 ### Phase 1: Persistence — `common/settings`
 
-- [ ] Add `onboardingCompleted: Boolean = false` to `AppSettings`
-- [ ] Add `suspend fun setOnboardingCompleted()` to `AppSettingsDataStore` interface and `AppSettingsDataStoreImpl`
-- [ ] Add `SetOnboardingCompletedUseCase` in `common/settings/domain/usecase/`
-- [ ] **Commit:** `DVX-TK-036 Add onboardingCompleted flag to AppSettings`
+- [x] Add `onboardingCompleted: Boolean = false` to `AppSettings`
+- [x] Add `suspend fun setOnboardingCompleted()` to `AppSettingsDataStore` interface and `AppSettingsDataStoreImpl`
+- [x] Add `SetOnboardingCompletedUseCase` in `common/settings/domain/usecase/`
+- [x] **Commit:** `DVX-TK-036 Add onboardingCompleted flag to AppSettings`
 
 ### Phase 2: New module `feature/onboarding`
 
-- [ ] Create `feature/onboarding/` module following `dividox.kmp.library` + `dividox.compose.multiplatform` + `dividox.kmp.ios` + `dividox.kmp.test` convention plugins
-- [ ] Add `compottie` dependency to `libs.versions.toml` and module `build.gradle.kts`
-- [ ] Define MVI contract:
+- [x] Create `feature/onboarding/` module following `dividox.kmp.library` + `dividox.compose.multiplatform` + `dividox.kmp.ios` + `dividox.kmp.test` convention plugins
+- [x] Add `compottie` dependency to `libs.versions.toml` and module `build.gradle.kts`
+- [x] Define MVI contract:
   - `OnboardingState(currentPage: Int, totalPages: Int)`
   - `OnboardingEvent`: `OnNextClicked`, `OnSkipClicked`, `OnPageChanged(page: Int)`
   - `OnboardingSideEffect.NavigateToDashboard`
-- [ ] `OnboardingViewModel`: inject `SetOnboardingCompletedUseCase`; on skip/finish call use case then emit `NavigateToDashboard`
-- [ ] `OnboardingScreen`: `HorizontalPager` with `PagerState`, dots indicator, skip/next/start buttons
-- [ ] `OnboardingPageContent`: composable for single page (Lottie + title + subtitle)
-- [ ] Add all UI strings to `common/ui-resources/.../strings.xml`
-- [ ] **Commit:** `DVX-TK-036 Add feature:onboarding module with MVI and HorizontalPager`
+- [x] `OnboardingViewModel`: inject `SetOnboardingCompletedUseCase`; on skip/finish call use case then emit `NavigateToDashboard`
+- [x] `OnboardingScreen`: `HorizontalPager` with `PagerState`, dots indicator, skip/next/start buttons
+- [x] `OnboardingPageContent`: composable for single page (Lottie + title + subtitle)
+- [x] Add all UI strings to `common/ui-resources/.../strings.xml`
+- [x] **Commit:** `DVX-TK-036 Add feature:onboarding module with MVI and HorizontalPager`
 
 ### Phase 3: Navigation — `composeApp`
 
-- [ ] Create `composeApp/src/commonMain/kotlin/com/akole/dividox/navigation/OnboardingNavigation.kt`
+- [x] Create `composeApp/src/commonMain/kotlin/com/akole/dividox/navigation/OnboardingNavigation.kt`
   - `data object OnboardingRoute`
   - `NavGraphBuilder.onboardingScreenNode(navController)`
-- [ ] Register `onboardingScreenNode` in `RootNavGraph.kt`
-- [ ] **Commit:** `DVX-TK-036 Add OnboardingRoute and navigation node`
+- [x] Register `onboardingScreenNode` in `RootNavGraph.kt`
+- [x] **Commit:** `DVX-TK-036 Add OnboardingRoute and navigation node`
 
 ### Phase 4: RootNavGraph — routing logic
 
-- [ ] Inject `ObserveAppSettingsUseCase` (already exists) in `SetupRootNavGraph`
-- [ ] On `SessionState.Authenticated`: read `onboardingCompleted`; route to `OnboardingRoute` if false, else `MainGraphRoute`
-- [ ] **Commit:** `DVX-TK-036 Route to onboarding on first login`
+- [x] Inject `ObserveAppSettingsUseCase` (already exists) in `SetupRootNavGraph`
+- [x] On `SessionState.Authenticated`: read `onboardingCompleted`; route to `OnboardingRoute` if false, else `MainGraphRoute`
+- [x] **Commit:** `DVX-TK-036 Route to onboarding on first login`
 
 ### Phase 5: Lottie assets
 
-- [ ] Generate 5 Lottie files using prompt above (external AI tool)
-- [ ] Place in `feature/onboarding/src/commonMain/composeResources/files/`
-- [ ] Wire each file to its `OnboardingPageContent`
-- [ ] **Commit:** `DVX-TK-036 Add Lottie assets for onboarding pages`
+- [x] Generate 5 Lottie files using prompt above (external AI tool)
+- [x] Place in `feature/onboarding/src/commonMain/composeResources/files/`
+- [x] Wire each file to its `OnboardingPageContent`
+- [x] **Commit:** `DVX-TK-036 Add Lottie assets for onboarding pages`
 
 ### Phase 6: Testing & Quality
 
-- [ ] Unit tests for `OnboardingViewModel`: skip flow, next-to-last-page flow, page change event
-- [ ] Verify `./gradlew :feature:onboarding:jvmTest`
-- [ ] Run `./gradlew :feature:onboarding:detekt :composeApp:assembleDebug`
-- [ ] Create Pull Request — `skill: manage-git-flow`
+- [x] Unit tests for `OnboardingViewModel`: skip flow, next-to-last-page flow, page change event
+- [x] Verify `./gradlew :feature:onboarding:jvmTest`
+- [x] Run `./gradlew :feature:onboarding:detekt :composeApp:assembleDebug`
+- [x] Create Pull Request — `skill: manage-git-flow`
 
 ---
 

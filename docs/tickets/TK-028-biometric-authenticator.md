@@ -15,26 +15,26 @@ Implement the `BiometricAuthenticator` expect/actual class in `:component:settin
 ## Subtasks
 
 ### Phase 1: Architecture & Setup
-- [ ] **Create Git Branch** `feature/DVX-TK-028-biometric-authenticator` — `skill: manage-git-flow`
+- [x] **Create Git Branch** `feature/DVX-TK-028-biometric-authenticator` — `skill: manage-git-flow`
 
 ### Phase 2: BiometricAuthenticator expect/actual
-- [ ] **`BiometricResult` sealed class (commonMain)** — `Success | Failure(reason: String) | NotAvailable`
-- [ ] **`expect class BiometricAuthenticator` (commonMain)** — `suspend fun authenticate(): BiometricResult`
+- [x] **`BiometricResult` sealed class (commonMain)** — `Success | Failure(reason: String) | NotAvailable`
+- [x] **`expect class BiometricAuthenticator` (commonMain)** — `suspend fun authenticate(): BiometricResult`
   - Location: `component/settings/src/commonMain/kotlin/.../data/biometric/BiometricAuthenticator.kt`
   - **Commit:** `DVX-TK-028 Add BiometricAuthenticator expect class and BiometricResult`
 
-- [ ] **`androidMain` actual** — `BiometricPrompt` API (AndroidX Biometric); title "Unlock DiviDox"
+- [x] **`androidMain` actual** — `BiometricPrompt` API (AndroidX Biometric); title "Unlock DiviDox"
   - **Commit:** `DVX-TK-028 Implement BiometricAuthenticator androidMain actual`
 
-- [ ] **`iosMain` actual** — `LAContext.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, ...)`
+- [x] **`iosMain` actual** — `LAContext.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, ...)`
   - **Commit:** `DVX-TK-028 Implement BiometricAuthenticator iosMain actual`
 
-- [ ] **`jvmMain` actual** — always returns `BiometricResult.NotAvailable`
+- [x] **`jvmMain` actual** — always returns `BiometricResult.NotAvailable`
   - **Commit:** `DVX-TK-028 Implement BiometricAuthenticator jvmMain no-op`
 
 ### Phase 3: Testing & Quality
-- [ ] `./gradlew test` + `./gradlew detekt`
-- [ ] Create Pull Request — `skill: manage-git-flow`
+- [x] `./gradlew test` + `./gradlew detekt`
+- [x] Create Pull Request — `skill: manage-git-flow`
 
 ---
 

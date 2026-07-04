@@ -28,16 +28,16 @@ The indices carousel must not delay the initial Dashboard response: portfolio su
 ## Subtasks
 
 ### Phase 1: Architecture & Setup
-- [ ] **Create Git Branch** `feature/DVX-TK-035-market-indices-carousel` — `skill: manage-git-flow`
+- [x] **Create Git Branch** `feature/DVX-TK-035-market-indices-carousel` — `skill: manage-git-flow`
 
 ### Phase 2: Market index domain
-- [ ] **Add market index catalog/model in `:component:market`**
+- [x] **Add market index catalog/model in `:component:market`**
   - Define the six supported indices with display name, Yahoo ticker, and market key (`US`, `EU`, `ES`, `DE`, `JP`, `UK`)
   - Add a domain model for index cards, e.g. `MarketIndexQuote(name, ticker, marketKey, points, changePoints, changePercent, lastUpdated)`
   - Keep Yahoo DTOs internal; map from existing `StockQuote` fields only
   - **Commit:** `DVX-TK-035 Add market index domain model and catalog`
 
-- [ ] **Add `GetMajorMarketIndicesUseCase`**
+- [x] **Add `GetMajorMarketIndicesUseCase`**
   - Fetch all six symbols through existing `MarketRepository.getMultipleQuotes`
   - Reuse the current Yahoo `v8/finance/chart/{ticker}` path; do not introduce `v7/quote`
   - Sort selected `defaultMarket` first, then keep the default global order
@@ -47,7 +47,7 @@ The indices carousel must not delay the initial Dashboard response: portfolio su
   - **Commit:** `DVX-TK-035 Add major market indices use case`
 
 ### Phase 3: Dashboard MVI
-- [ ] **Extend `DashboardContract` and `DashboardViewModel`**
+- [x] **Extend `DashboardContract` and `DashboardViewModel`**
   - State: `marketIndices`, `marketIndicesLoading`, `marketIndicesError`
   - Inject `GetMajorMarketIndicesUseCase`
   - Observe `AppSettings.defaultMarket` and reload/reorder indices when it changes
@@ -57,7 +57,7 @@ The indices carousel must not delay the initial Dashboard response: portfolio su
   - **Commit:** `DVX-TK-035 Wire market indices into Dashboard MVI`
 
 ### Phase 4: Dashboard UI
-- [ ] **Add the market indices carousel section to `DashboardScreen`**
+- [x] **Add the market indices carousel section to `DashboardScreen`**
   - Place the section after the main summary cards and before portfolio/watchlist lists
   - Use a horizontal `LazyRow` with stable keys by Yahoo ticker
   - Card fields: name, signed percent, points, signed point delta
@@ -68,7 +68,7 @@ The indices carousel must not delay the initial Dashboard response: portfolio su
   - **Commit:** `DVX-TK-035 Add market indices carousel UI`
 
 ### Phase 5: Performance & resilience
-- [ ] **Ensure indices never slow Dashboard first render**
+- [x] **Ensure indices never slow Dashboard first render**
   - Do not combine index loading into the main portfolio/watchlist flow
   - Show skeleton cards or a lightweight section-level loading state while indices load
   - Use existing quote cache TTL and request semaphore from `MarketRepositoryImpl`
@@ -76,13 +76,13 @@ The indices carousel must not delay the initial Dashboard response: portfolio su
   - **Commit:** `DVX-TK-035 Make index loading non-blocking`
 
 ### Phase 6: Testing & Quality
-- [ ] **Coverage**
+- [x] **Coverage**
   - Unit tests for use case ordering and Dashboard state updates
   - UI-level test or preview coverage for positive, negative, loading, and error card states
   - Regression check that Dashboard `isLoading` becomes false without waiting for indices
-- [ ] **Run quality gates**
+- [x] **Run quality gates**
   - `./gradlew :component:market:jvmTest :feature:dashboard:jvmTest :feature:dashboard:detekt :composeApp:assembleDebug`
-- [ ] Create Pull Request — `skill: manage-git-flow`
+- [x] Create Pull Request — `skill: manage-git-flow`
 
 ---
 
