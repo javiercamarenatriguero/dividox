@@ -1,0 +1,1 @@
+../../.ai-context/scripts/pre-push-security.sh
