@@ -71,37 +71,10 @@ Kotlin Multiplatform · Compose Multiplatform · Firebase Auth · Firestore · Y
 
 The project follows a layered modular architecture with strict dependency rules — each layer can only depend on layers below it.
 
-```mermaid
-graph TD
-    App(["app\nEntry point · DI · Navigation"])
 
-    subgraph INT["integration"]
-        direction LR
-        I1(["module"]) ~~~ I2(["module"])
-    end
-
-    subgraph FEAT["feature"]
-        direction LR
-        F1(["module"]) ~~~ F2(["module"]) ~~~ F3(["module"]) ~~~ F4(["module"])
-    end
-
-    subgraph COMP["component"]
-        direction LR
-        C1(["module"]) ~~~ C2(["module"]) ~~~ C3(["module"])
-    end
-
-    subgraph COM["common"]
-        direction LR
-        CM1(["module"]) ~~~ CM2(["module"])
-    end
-
-    App --> INT
-    App --> FEAT
-    INT --> FEAT
-    FEAT --> COMP
-    COMP --> COM
-    FEAT --> COM
-```
+<p align="center">
+  <img src="docs/images/img_modular_architecture.png" alt="DiviDox Modular Architecture" width="100%">
+</p>
 
 ### Rules
 
