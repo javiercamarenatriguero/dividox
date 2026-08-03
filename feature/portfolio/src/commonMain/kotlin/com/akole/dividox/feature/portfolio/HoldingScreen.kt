@@ -86,7 +86,7 @@ import dividox.common.ui_resources.generated.resources.security_type_all
 import dividox.common.ui_resources.generated.resources.security_type_equity
 import dividox.common.ui_resources.generated.resources.security_type_etf
 import dividox.common.ui_resources.generated.resources.security_type_fund
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.stringResource
@@ -662,8 +662,8 @@ private fun PurchaseDateField(
 
 private fun Long.toFormattedDate(): String {
     val date = Instant.fromEpochMilliseconds(this).toLocalDateTime(TimeZone.UTC).date
-    val day = date.dayOfMonth.toString().padStart(2, '0')
-    val month = date.monthNumber.toString().padStart(2, '0')
+    val day = date.day.toString().padStart(2, '0')
+    val month = (date.month.ordinal + 1).toString().padStart(2, '0')
     return "$day/$month/${date.year}"
 }
 
