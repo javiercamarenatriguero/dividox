@@ -6,7 +6,7 @@ import com.akole.dividox.component.market.data.datasource.StockQuoteLocalDataSou
 import com.akole.dividox.component.market.data.datasource.StockQuoteLocalDataSource.CachedQuote
 import com.akole.dividox.component.market.domain.model.StockQuote
 import kotlin.time.Clock
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 
 class RoomStockQuoteLocalDataSource(
     private val dao: StockQuoteDao,
