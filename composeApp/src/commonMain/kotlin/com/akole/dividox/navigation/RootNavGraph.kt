@@ -14,9 +14,15 @@ import androidx.navigation.compose.NavHost
 import com.akole.dividox.component.auth.domain.model.SessionState
 import com.akole.dividox.common.settings.domain.usecase.ObserveAppSettingsUseCase
 import com.akole.dividox.component.auth.domain.usecase.ObserveSessionUseCase
+import com.akole.dividox.component.market.domain.usecase.GetMajorMarketIndicesUseCase
+import com.akole.dividox.component.market.domain.usecase.GetMarketNewsUseCase
+import com.akole.dividox.integration.security.domain.usecase.GetEnrichedWatchlistUseCase
 import com.akole.dividox.integration.security.domain.usecase.GetPortfolioWithQuotesUseCase
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.take
 import org.koin.compose.koinInject
 
@@ -27,6 +33,9 @@ fun SetupRootNavGraph(navController: NavHostController) {
     val observeSession: ObserveSessionUseCase = koinInject()
     val observeAppSettings: ObserveAppSettingsUseCase = koinInject()
     val getPortfolioWithQuotes: GetPortfolioWithQuotesUseCase = koinInject()
+    val getEnrichedWatchlist: GetEnrichedWatchlistUseCase = koinInject()
+    val getMajorMarketIndices: GetMajorMarketIndicesUseCase = koinInject()
+    val getMarketNews: GetMarketNewsUseCase = koinInject()
     val sessionState by retain { observeSession() }.collectAsState(initial = SessionState.Loading)
     val appSettings by retain { observeAppSettings() }.collectAsState(initial = null)
     var splashReady by retain { mutableStateOf(false) }
@@ -36,13 +45,33 @@ fun SetupRootNavGraph(navController: NavHostController) {
         splashReady = true
     }
 
-    // Warm up the quote cache while the splash is visible — only when authenticated.
+    // Warm up dashboard caches in parallel while the splash is visible — only when
+    // authenticated. Every branch is best-effort: failures are swallowed so the splash
+    // never blocks on a slow API.
     LaunchedEffect(sessionState) {
-        if (sessionState is SessionState.Authenticated) {
-            getPortfolioWithQuotes()
-                .take(1)
-                .catch { }
-                .collect { }
+        if (sessionState !is SessionState.Authenticated) return@LaunchedEffect
+        val defaultMarket = runCatching { observeAppSettings().first().defaultMarket }
+            .getOrNull()
+        coroutineScope {
+            async {
+                // take(1) only: pre-warm quote cache (Phase 1). Do NOT wait for Phase 2
+                // (dividend enrichment) — its N parallel calls would saturate the shared
+                // apiSemaphore (max 8) and block the dashboard's own quote fetches. Phase 2
+                // runs later inside the dashboard's own subscription and populates the
+                // DividendInfo Room cache for subsequent cold starts.
+                runCatching {
+                    getPortfolioWithQuotes().take(1).catch { }.collect { }
+                }
+            }
+            async {
+                runCatching {
+                    getEnrichedWatchlist().take(1).catch { }.collect { }
+                }
+            }
+            if (defaultMarket != null) {
+                async { runCatching { getMajorMarketIndices(defaultMarket) } }
+                async { runCatching { getMarketNews(defaultMarket) } }
+            }
         }
     }
 

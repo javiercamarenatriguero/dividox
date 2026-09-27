@@ -5,6 +5,7 @@ import com.akole.dividox.common.settings.AppRefreshTracker
 import com.akole.dividox.common.settings.domain.model.AppSettings
 import com.akole.dividox.common.settings.domain.usecase.ObserveAppSettingsUseCase
 import com.akole.dividox.component.market.domain.usecase.GetMajorMarketIndicesUseCase
+import com.akole.dividox.component.market.domain.usecase.GetMarketNewsUseCase
 import com.akole.dividox.common.currency.CurrencyConverter
 import com.akole.dividox.common.currency.domain.model.Currency
 import com.akole.dividox.common.settings.domain.usecase.SetCurrencyUseCase
@@ -67,12 +68,14 @@ class DashboardViewModelTest {
     private val observePortfolioChanges: ObservePortfolioChangesUseCase = mockk()
     private val syncDividendHistory: SyncDividendHistoryFromHoldingsUseCase = mockk()
     private val getMajorMarketIndices: GetMajorMarketIndicesUseCase = mockk()
+    private val getMarketNews: GetMarketNewsUseCase = mockk()
 
     @BeforeTest
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         every { getPortfolioWithQuotes() } returns emptyFlow()
         every { getPortfolioSummary() } returns emptyFlow()
+        every { getPortfolioSummary(any<kotlinx.coroutines.flow.Flow<List<com.akole.dividox.integration.security.domain.model.SecurityHolding>>>()) } returns emptyFlow()
         coEvery { getPortfolioPeriodGain(any(), any()) } returns (0.0 to 0.0)
         every { getPeriodDividends(null) } returns emptyFlow()
         every { getPeriodDividends(any()) } returns emptyFlow()
@@ -83,7 +86,9 @@ class DashboardViewModelTest {
         coEvery { syncDividendHistory(any()) } returns Result.success(Unit)
         coEvery { setCurrency(any()) } just Runs
         coEvery { currencyConverter.convert(any(), any(), any()) } answers { Result.success(firstArg()) }
+        coEvery { currencyConverter.getRate(any(), any()) } returns Result.success(1.0)
         coEvery { getMajorMarketIndices(any()) } returns Result.success(emptyList())
+        coEvery { getMarketNews(any(), any()) } returns Result.success(emptyList())
     }
 
     @AfterTest
@@ -106,6 +111,7 @@ class DashboardViewModelTest {
         observePortfolioChanges = observePortfolioChanges,
         syncDividendHistory = syncDividendHistory,
         getMajorMarketIndices = getMajorMarketIndices,
+        getMarketNews = getMarketNews,
     )
 
     // ─── Initial state ────────────────────────────────────────────────────────
@@ -113,7 +119,7 @@ class DashboardViewModelTest {
     @Test
     fun `SHOULD set isLoading false WHEN data emits GIVEN initial load with holdings`() = runTest {
         // GIVEN
-        every { getPortfolioSummary() } returns flowOf(aSummary)
+        every { getPortfolioSummary(any<kotlinx.coroutines.flow.Flow<List<com.akole.dividox.integration.security.domain.model.SecurityHolding>>>()) } returns flowOf(aSummary)
         every { getEnrichedWatchlist() } returns flowOf(emptyList())
 
         // WHEN
@@ -121,13 +127,13 @@ class DashboardViewModelTest {
         advanceUntilIdle()
 
         // THEN
-        assertFalse(vm.viewState.value.isLoading)
+        assertFalse(vm.viewState.value.summaryLoading)
     }
 
     @Test
     fun `SHOULD set isLoading false WHEN data emits GIVEN empty portfolio`() = runTest {
         // GIVEN
-        every { getPortfolioSummary() } returns flowOf(emptySummary)
+        every { getPortfolioSummary(any<kotlinx.coroutines.flow.Flow<List<com.akole.dividox.integration.security.domain.model.SecurityHolding>>>()) } returns flowOf(emptySummary)
         every { getEnrichedWatchlist() } returns flowOf(emptyList())
 
         // WHEN
@@ -135,13 +141,13 @@ class DashboardViewModelTest {
         advanceUntilIdle()
 
         // THEN
-        assertFalse(vm.viewState.value.isLoading)
+        assertFalse(vm.viewState.value.summaryLoading)
     }
 
     @Test
     fun `SHOULD populate summary WHEN portfolio has holdings GIVEN initial load`() = runTest {
         // GIVEN
-        every { getPortfolioSummary() } returns flowOf(aSummary)
+        every { getPortfolioSummary(any<kotlinx.coroutines.flow.Flow<List<com.akole.dividox.integration.security.domain.model.SecurityHolding>>>()) } returns flowOf(aSummary)
         every { getEnrichedWatchlist() } returns flowOf(emptyList())
 
         // WHEN
@@ -157,7 +163,7 @@ class DashboardViewModelTest {
     fun `SHOULD populate watchlist WHEN watchlist has entries GIVEN initial load`() = runTest {
         // GIVEN
         val entry = anEntry("MSFT")
-        every { getPortfolioSummary() } returns flowOf(emptySummary)
+        every { getPortfolioSummary(any<kotlinx.coroutines.flow.Flow<List<com.akole.dividox.integration.security.domain.model.SecurityHolding>>>()) } returns flowOf(emptySummary)
         every { getEnrichedWatchlist() } returns flowOf(listOf(entry))
 
         // WHEN
@@ -174,7 +180,7 @@ class DashboardViewModelTest {
     @Test
     fun `SHOULD reflect EUR currency WHEN settings emit EUR GIVEN initial state`() = runTest {
         // GIVEN
-        every { getPortfolioSummary() } returns flowOf(emptySummary)
+        every { getPortfolioSummary(any<kotlinx.coroutines.flow.Flow<List<com.akole.dividox.integration.security.domain.model.SecurityHolding>>>()) } returns flowOf(emptySummary)
         every { getEnrichedWatchlist() } returns flowOf(emptyList())
         every { observeAppSettings() } returns flowOf(AppSettings(currency = Currency.EUR))
 
@@ -189,7 +195,7 @@ class DashboardViewModelTest {
     @Test
     fun `SHOULD reflect USD currency WHEN settings emit USD GIVEN persisted preference`() = runTest {
         // GIVEN
-        every { getPortfolioSummary() } returns flowOf(emptySummary)
+        every { getPortfolioSummary(any<kotlinx.coroutines.flow.Flow<List<com.akole.dividox.integration.security.domain.model.SecurityHolding>>>()) } returns flowOf(emptySummary)
         every { getEnrichedWatchlist() } returns flowOf(emptyList())
         every { observeAppSettings() } returns flowOf(AppSettings(currency = Currency.USD))
 
@@ -204,12 +210,12 @@ class DashboardViewModelTest {
     // ─── PeriodSelected ───────────────────────────────────────────────────────
 
     @Test
-    fun `SHOULD default to ONE_MONTH WHEN created GIVEN no events`() {
+    fun `SHOULD default to ONE_DAY WHEN created GIVEN no events`() {
         // GIVEN / WHEN
         val vm = viewModel()
 
         // THEN
-        assertEquals(ChartPeriod.ONE_MONTH, vm.viewState.value.selectedPeriod)
+        assertEquals(ChartPeriod.ONE_DAY, vm.viewState.value.selectedPeriod)
     }
 
     @Test

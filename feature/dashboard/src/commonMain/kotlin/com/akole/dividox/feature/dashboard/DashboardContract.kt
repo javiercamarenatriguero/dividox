@@ -13,7 +13,6 @@ import kotlin.time.Instant
 interface DashboardContract {
 
     data class DashboardViewState(
-        val isLoading: Boolean = true,
         val isRefreshing: Boolean = false,
         val lastUpdated: Instant? = null,
         val summary: PortfolioSummary? = null,
@@ -36,6 +35,15 @@ interface DashboardContract {
         val marketIndicesError: Boolean = false,
         val marketNews: List<NewsItemUi> = emptyList(),
         val marketNewsLoading: Boolean = false,
+        // Per-section loading flags. Each section flips its own flag as its data lands,
+        // so the UI paints incrementally instead of gating on a single global loader.
+        val summaryLoading: Boolean = true,
+        val yieldLoading: Boolean = true,
+        val periodGainLoading: Boolean = true,
+        val periodDividendsLoading: Boolean = true,
+        val lifetimeDividendsLoading: Boolean = true,
+        val portfolioTodayLoading: Boolean = true,
+        val watchlistLoading: Boolean = true,
     ) : ViewState
 
     sealed interface DashboardViewEvent : ViewEvent {

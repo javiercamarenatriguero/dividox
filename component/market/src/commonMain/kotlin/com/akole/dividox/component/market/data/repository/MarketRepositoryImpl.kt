@@ -1,6 +1,9 @@
 package com.akole.dividox.component.market.data.repository
 
 import com.akole.dividox.component.market.data.api.YahooFinanceApi
+import com.akole.dividox.component.market.data.datasource.CompanyInfoLocalDataSource
+import com.akole.dividox.component.market.data.datasource.DividendInfoLocalDataSource
+import com.akole.dividox.component.market.data.datasource.NewsLocalDataSource
 import com.akole.dividox.component.market.data.datasource.StockQuoteLocalDataSource
 import io.ktor.client.HttpClient
 import com.akole.dividox.component.market.data.mapper.toCompanyInfo
@@ -35,6 +38,9 @@ class MarketRepositoryImpl(
     httpClient: HttpClient,
     private val ioDispatcher: CoroutineDispatcher,
     private val localDataSource: StockQuoteLocalDataSource? = null,
+    private val companyInfoLocalDataSource: CompanyInfoLocalDataSource? = null,
+    private val newsLocalDataSource: NewsLocalDataSource? = null,
+    private val dividendInfoLocalDataSource: DividendInfoLocalDataSource? = null,
 ) : MarketRepository {
 
     private val api = YahooFinanceApi(httpClient)
@@ -131,26 +137,56 @@ class MarketRepositoryImpl(
         }
 
     override suspend fun getDividendInfo(ticker: String): Result<DividendInfo> = withContext(ioDispatcher) {
+        val now = Clock.System.now().toEpochMilliseconds()
+        // 1. In-memory cache (fastest)
         val cached = dividendCache[ticker]
-        if (cached != null && !isExpired(cached.second, DIVIDEND_TTL_MS)) return@withContext Result.success(cached.first)
+        if (cached != null && !isExpired(cached.second, DIVIDEND_TTL_MS)) {
+            return@withContext Result.success(cached.first)
+        }
+        // 2. Persistent Room cache (survives restart — yield never shows 0.00% on cold start)
+        dividendInfoLocalDataSource?.get(ticker)?.let { persisted ->
+            if (!isExpired(persisted.cachedAt, DIVIDEND_INFO_PERSISTED_TTL_MS)) {
+                dividendCache[ticker] = persisted.info to persisted.cachedAt
+                return@withContext Result.success(persisted.info)
+            }
+        }
+        // 3. Network
         apiSemaphore.withPermit {
             runCatching {
                 val dto = api.getChartWithEvents(ticker)
                 val result = dto.chart.result?.firstOrNull()
                     ?: throw MarketError.NotFound(ticker)
-                result.toDividendInfo(ticker).also { dividendCache[ticker] = it to Clock.System.now().toEpochMilliseconds() }
+                result.toDividendInfo(ticker).also { info ->
+                    dividendCache[ticker] = info to now
+                    dividendInfoLocalDataSource?.save(ticker, info, now)
+                }
             }.mapError()
         }
     }
 
     override suspend fun getCompanyInfo(ticker: String): Result<CompanyInfo> = withContext(ioDispatcher) {
+        val now = Clock.System.now().toEpochMilliseconds()
+        // 1. In-memory cache (fastest)
         val cached = companyCache[ticker]
-        if (cached != null && !isExpired(cached.second, DIVIDEND_TTL_MS)) return@withContext Result.success(cached.first)
+        if (cached != null && !isExpired(cached.second, COMPANY_INFO_TTL_MS)) {
+            return@withContext Result.success(cached.first)
+        }
+        // 2. Persistent Room cache (survives restart)
+        companyInfoLocalDataSource?.get(ticker)?.let { persisted ->
+            if (!isExpired(persisted.cachedAt, COMPANY_INFO_PERSISTED_TTL_MS)) {
+                companyCache[ticker] = persisted.info to persisted.cachedAt
+                return@withContext Result.success(persisted.info)
+            }
+        }
+        // 3. Network
         runCatching {
             val dto = api.getChartWithEvents(ticker)
             val result = dto.chart.result?.firstOrNull()
                 ?: throw MarketError.NotFound(ticker)
-            result.toCompanyInfo(ticker).also { companyCache[ticker] = it to Clock.System.now().toEpochMilliseconds() }
+            result.toCompanyInfo(ticker).also { info ->
+                companyCache[ticker] = info to now
+                companyInfoLocalDataSource?.save(ticker, info, now)
+            }
         }.mapError()
     }
 
@@ -219,13 +255,27 @@ class MarketRepositoryImpl(
 
     override suspend fun getNews(query: String, count: Int, lang: String, region: String): Result<List<NewsItem>> = withContext(ioDispatcher) {
         val cacheKey = "$query:$count:$lang:$region"
+        val now = Clock.System.now().toEpochMilliseconds()
+        // 1. In-memory cache (fastest)
         val cached = newsCache[cacheKey]
-        if (cached != null && !isExpired(cached.second, NEWS_TTL_MS)) return@withContext Result.success(cached.first)
+        if (cached != null && !isExpired(cached.second, NEWS_TTL_MS)) {
+            return@withContext Result.success(cached.first)
+        }
+        // 2. Persistent Room cache (survives restart)
+        newsLocalDataSource?.get(cacheKey)?.let { persisted ->
+            if (!isExpired(persisted.cachedAt, NEWS_PERSISTED_TTL_MS)) {
+                newsCache[cacheKey] = persisted.items to persisted.cachedAt
+                return@withContext Result.success(persisted.items)
+            }
+        }
+        // 3. Network
         apiSemaphore.withPermit {
             runCatching {
                 val rss = api.getRssNews(query, lang, region)
-                RssParser.parseNewsItems(rss, maxCount = count)
-                    .also { newsCache[cacheKey] = it to Clock.System.now().toEpochMilliseconds() }
+                RssParser.parseNewsItems(rss, maxCount = count).also { items ->
+                    newsCache[cacheKey] = items to now
+                    newsLocalDataSource?.save(cacheKey, items, now)
+                }
             }.mapError()
         }
     }
@@ -249,9 +299,13 @@ class MarketRepositoryImpl(
 
     companion object {
         private const val QUOTE_TTL_MS = 300_000L              // 5 minutes
-        private const val DIVIDEND_TTL_MS = 3_600_000L         // 1 hour
+        private const val DIVIDEND_TTL_MS = 3_600_000L         // 1 hour (in-memory)
+        private const val DIVIDEND_INFO_PERSISTED_TTL_MS = 86_400_000L // 24 hours (persisted)
+        private const val COMPANY_INFO_TTL_MS = 3_600_000L     // 1 hour (in-memory)
+        private const val COMPANY_INFO_PERSISTED_TTL_MS = 604_800_000L // 7 days (persisted)
         private const val HISTORICAL_DIVIDEND_TTL_MS = 86_400_000L  // 24 hours
-        private const val NEWS_TTL_MS = 600_000L                    // 10 minutes
+        private const val NEWS_TTL_MS = 600_000L                    // 10 minutes (in-memory)
+        private const val NEWS_PERSISTED_TTL_MS = 3_600_000L        // 1 hour (persisted, freshness matters)
         private const val MAX_CONCURRENT_REQUESTS = 8
 
         /**

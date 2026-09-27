@@ -3,9 +3,15 @@ package com.akole.dividox.di
 import com.akole.dividox.common.network.HttpClientConfig
 import com.akole.dividox.common.network.HttpClientFactory
 import com.akole.dividox.component.dividend.data.db.DividendDatabase
+import com.akole.dividox.component.market.data.datasource.CompanyInfoLocalDataSource
+import com.akole.dividox.component.market.data.datasource.DividendInfoLocalDataSource
+import com.akole.dividox.component.market.data.datasource.NewsLocalDataSource
 import com.akole.dividox.component.market.data.datasource.StockQuoteLocalDataSource
 import com.akole.dividox.component.market.data.repository.MarketRepositoryImpl
 import com.akole.dividox.component.market.domain.repository.MarketRepository
+import com.akole.dividox.market.RoomCompanyInfoLocalDataSource
+import com.akole.dividox.market.RoomDividendInfoLocalDataSource
+import com.akole.dividox.market.RoomNewsLocalDataSource
 import com.akole.dividox.market.RoomStockQuoteLocalDataSource
 import com.akole.dividox.component.market.domain.usecase.GetCompanyInfoUseCase
 import com.akole.dividox.component.market.domain.usecase.GetDividendHistoryUseCase
@@ -35,11 +41,23 @@ val marketModule: Module = module {
     single<StockQuoteLocalDataSource> {
         RoomStockQuoteLocalDataSource(get<DividendDatabase>().stockQuoteDao())
     }
+    single<CompanyInfoLocalDataSource> {
+        RoomCompanyInfoLocalDataSource(get<DividendDatabase>().companyInfoDao())
+    }
+    single<NewsLocalDataSource> {
+        RoomNewsLocalDataSource(get<DividendDatabase>().newsDao())
+    }
+    single<DividendInfoLocalDataSource> {
+        RoomDividendInfoLocalDataSource(get<DividendDatabase>().dividendInfoDao())
+    }
     single<MarketRepository> {
         MarketRepositoryImpl(
             httpClient = get(),
             ioDispatcher = Dispatchers.Default,
             localDataSource = get(),
+            companyInfoLocalDataSource = get(),
+            newsLocalDataSource = get(),
+            dividendInfoLocalDataSource = get(),
         )
     }
     factoryOf(::GetStockQuoteUseCase)
