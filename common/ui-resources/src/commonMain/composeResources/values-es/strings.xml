@@ -223,4 +223,36 @@
     <string name="news_time_hours_ago">hace %1$dh</string>
     <string name="news_time_days_ago">hace %1$dd</string>
     <string name="news_cd_published_time">Hora de publicación</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_skip">Saltar</string>
+    <string name="onboarding_next">Siguiente</string>
+    <string name="onboarding_start">Empezar</string>
+    <string name="onboarding_page1_title">Todo tu portfolio en un solo lugar</string>
+    <string name="onboarding_page1_subtitle">Añade tus posiciones y sigue su valor, rentabilidad y evolución en tiempo real.</string>
+    <string name="onboarding_page1_feature1">Precios en vivo</string>
+    <string name="onboarding_page1_feature2">Rentabilidad total</string>
+    <string name="onboarding_page1_feature3">Ganancia por periodo</string>
+    <string name="onboarding_page2_title">No te pierdas ningún dividendo</string>
+    <string name="onboarding_page2_subtitle">Consulta los próximos cobros, lo que ya has cobrado y la proyección anual de tus ingresos.</string>
+    <string name="onboarding_page2_feature1">Próximos cobros</string>
+    <string name="onboarding_page2_feature2">Proyección anual</string>
+    <string name="onboarding_page2_feature3">Yield on cost</string>
+    <string name="onboarding_page3_title">El mercado de un vistazo</string>
+    <string name="onboarding_page3_subtitle">Índices mundiales, las mayores subidas y bajadas del día y las últimas noticias de tus valores.</string>
+    <string name="onboarding_page3_feature1">Índices</string>
+    <string name="onboarding_page3_feature2">Top movers</string>
+    <string name="onboarding_page3_feature3">Noticias</string>
+    <string name="onboarding_page4_title">Descubre y sigue valores</string>
+    <string name="onboarding_page4_subtitle">Busca por ticker o empresa y guarda favoritos para vigilarlos sin necesidad de comprar.</string>
+    <string name="onboarding_page4_feature1">Búsqueda global</string>
+    <string name="onboarding_page4_feature2">Favoritos</string>
+    <string name="onboarding_page4_feature3">Métricas clave</string>
+    <string name="onboarding_page5_title">Tu moneda, cualquier mercado</string>
+    <string name="onboarding_page5_subtitle">Todo convertido a tu divisa con tipos oficiales del BCE. Tus datos, siempre privados.</string>
+    <string name="onboarding_page5_feature1">+20 divisas</string>
+    <string name="onboarding_page5_feature2">Tipos del BCE</string>
+    <string name="onboarding_page5_feature3">Datos privados</string>
+    <string name="onboarding_sample_search_query">Coca</string>
+    <string name="onboarding_cd_illustration">Ilustración de la funcionalidad</string>
 </resources>
