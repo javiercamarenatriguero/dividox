@@ -18,6 +18,7 @@ import com.akole.dividox.integration.dividend.domain.usecase.ObservePortfolioCha
 import com.akole.dividox.integration.dividend.domain.usecase.SyncDividendHistoryFromHoldingsUseCase
 import com.akole.dividox.integration.security.domain.model.EnrichedWatchlistEntry
 import com.akole.dividox.integration.security.domain.model.PortfolioSummary
+import com.akole.dividox.integration.security.domain.model.SecurityHolding
 import com.akole.dividox.integration.security.domain.usecase.GetEnrichedWatchlistUseCase
 import com.akole.dividox.integration.security.domain.usecase.GetPortfolioPeriodGainUseCase
 import com.akole.dividox.integration.security.domain.usecase.GetPortfolioSummaryUseCase
@@ -36,11 +37,13 @@ import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import kotlin.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -73,10 +76,10 @@ class DashboardViewModelTest {
     @BeforeTest
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-        every { getPortfolioWithQuotes() } returns emptyFlow()
+        every { getPortfolioWithQuotes() } returns flowOf(emptyList())
         every { getPortfolioSummary() } returns emptyFlow()
-        every { getPortfolioSummary(any<kotlinx.coroutines.flow.Flow<List<com.akole.dividox.integration.security.domain.model.SecurityHolding>>>()) } returns emptyFlow()
-        coEvery { getPortfolioPeriodGain(any(), any()) } returns (0.0 to 0.0)
+        coEvery { getPortfolioSummary.summarize(any(), any()) } returns null
+        coEvery { getPortfolioPeriodGain(any(), any(), any()) } returns (0.0 to 0.0)
         every { getPeriodDividends(null) } returns emptyFlow()
         every { getPeriodDividends(any()) } returns emptyFlow()
         every { getEnrichedWatchlist() } returns emptyFlow()
@@ -119,7 +122,7 @@ class DashboardViewModelTest {
     @Test
     fun `SHOULD set isLoading false WHEN data emits GIVEN initial load with holdings`() = runTest {
         // GIVEN
-        every { getPortfolioSummary(any<kotlinx.coroutines.flow.Flow<List<com.akole.dividox.integration.security.domain.model.SecurityHolding>>>()) } returns flowOf(aSummary)
+        coEvery { getPortfolioSummary.summarize(any(), any()) } returns aSummary
         every { getEnrichedWatchlist() } returns flowOf(emptyList())
 
         // WHEN
@@ -133,7 +136,7 @@ class DashboardViewModelTest {
     @Test
     fun `SHOULD set isLoading false WHEN data emits GIVEN empty portfolio`() = runTest {
         // GIVEN
-        every { getPortfolioSummary(any<kotlinx.coroutines.flow.Flow<List<com.akole.dividox.integration.security.domain.model.SecurityHolding>>>()) } returns flowOf(emptySummary)
+        coEvery { getPortfolioSummary.summarize(any(), any()) } returns emptySummary
         every { getEnrichedWatchlist() } returns flowOf(emptyList())
 
         // WHEN
@@ -147,7 +150,7 @@ class DashboardViewModelTest {
     @Test
     fun `SHOULD populate summary WHEN portfolio has holdings GIVEN initial load`() = runTest {
         // GIVEN
-        every { getPortfolioSummary(any<kotlinx.coroutines.flow.Flow<List<com.akole.dividox.integration.security.domain.model.SecurityHolding>>>()) } returns flowOf(aSummary)
+        coEvery { getPortfolioSummary.summarize(any(), any()) } returns aSummary
         every { getEnrichedWatchlist() } returns flowOf(emptyList())
 
         // WHEN
@@ -163,7 +166,7 @@ class DashboardViewModelTest {
     fun `SHOULD populate watchlist WHEN watchlist has entries GIVEN initial load`() = runTest {
         // GIVEN
         val entry = anEntry("MSFT")
-        every { getPortfolioSummary(any<kotlinx.coroutines.flow.Flow<List<com.akole.dividox.integration.security.domain.model.SecurityHolding>>>()) } returns flowOf(emptySummary)
+        coEvery { getPortfolioSummary.summarize(any(), any()) } returns emptySummary
         every { getEnrichedWatchlist() } returns flowOf(listOf(entry))
 
         // WHEN
@@ -180,7 +183,7 @@ class DashboardViewModelTest {
     @Test
     fun `SHOULD reflect EUR currency WHEN settings emit EUR GIVEN initial state`() = runTest {
         // GIVEN
-        every { getPortfolioSummary(any<kotlinx.coroutines.flow.Flow<List<com.akole.dividox.integration.security.domain.model.SecurityHolding>>>()) } returns flowOf(emptySummary)
+        coEvery { getPortfolioSummary.summarize(any(), any()) } returns emptySummary
         every { getEnrichedWatchlist() } returns flowOf(emptyList())
         every { observeAppSettings() } returns flowOf(AppSettings(currency = Currency.EUR))
 
@@ -195,7 +198,7 @@ class DashboardViewModelTest {
     @Test
     fun `SHOULD reflect USD currency WHEN settings emit USD GIVEN persisted preference`() = runTest {
         // GIVEN
-        every { getPortfolioSummary(any<kotlinx.coroutines.flow.Flow<List<com.akole.dividox.integration.security.domain.model.SecurityHolding>>>()) } returns flowOf(emptySummary)
+        coEvery { getPortfolioSummary.summarize(any(), any()) } returns emptySummary
         every { getEnrichedWatchlist() } returns flowOf(emptyList())
         every { observeAppSettings() } returns flowOf(AppSettings(currency = Currency.USD))
 
@@ -323,6 +326,45 @@ class DashboardViewModelTest {
 
         // THEN
         assertIs<DashboardSideEffect.Navigation.NavigateToFavorites>(effects.first())
+    }
+
+    // ─── Yield readiness ──────────────────────────────────────────────────────
+
+    @Test
+    fun `SHOULD keep yield loading WHEN summary emits GIVEN dividend data not resolved`() = runTest {
+        // GIVEN
+        coEvery { getPortfolioSummary.summarize(any(), any()) } returns aSummary.copy(totalYield = 0.0, isDividendDataResolved = false)
+
+        // WHEN
+        val vm = viewModel()
+        advanceUntilIdle()
+
+        // THEN
+        assertFalse(vm.viewState.value.summaryLoading)
+        assertTrue(vm.viewState.value.yieldLoading)
+    }
+
+    @Test
+    fun `SHOULD keep last resolved yield WHEN unresolved summary re-emits GIVEN yield already shown`() = runTest {
+        // GIVEN
+        val portfolio = MutableSharedFlow<List<SecurityHolding>>(replay = 1)
+        every { getPortfolioWithQuotes() } returns portfolio
+        coEvery { getPortfolioSummary.summarize(any(), any()) } returnsMany listOf(
+            aSummary,
+            aSummary.copy(totalValue = 1600.0, totalYield = 0.0, isDividendDataResolved = false),
+        )
+        val vm = viewModel()
+        portfolio.emit(emptyList())
+        advanceUntilIdle()
+
+        // WHEN — a new portfolio snapshot re-emits before dividend info is resolved
+        portfolio.emit(emptyList())
+        advanceUntilIdle()
+
+        // THEN
+        assertFalse(vm.viewState.value.yieldLoading)
+        assertEquals(1600.0, vm.viewState.value.summary?.totalValue)
+        assertEquals(2.5, vm.viewState.value.summary?.totalYield)
     }
 
     // ─── Test fixtures ────────────────────────────────────────────────────────

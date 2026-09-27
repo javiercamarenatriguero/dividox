@@ -206,6 +206,13 @@
     <string name="currency_name_mxn">Peso Mexicano</string>
     <string name="currency_name_brl">Real Brasileño</string>
     <string name="currency_name_zar">Rand Sudafricano</string>
+    <string name="currency_name_sek">Corona Sueca</string>
+    <string name="currency_name_nok">Corona Noruega</string>
+    <string name="currency_name_dkk">Corona Danesa</string>
+    <string name="currency_name_pln">Esloti Polaco</string>
+    <string name="currency_name_hkd">Dólar de Hong Kong</string>
+    <string name="currency_name_sgd">Dólar de Singapur</string>
+    <string name="currency_name_krw">Won Surcoreano</string>
     <string name="dashboard_market_indices_title">Índices bursátiles</string>
     <string name="dashboard_market_indices_error">No se pudieron cargar los índices bursátiles</string>
     <string name="news_section_title">Noticias</string>

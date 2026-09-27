@@ -12,10 +12,14 @@ import com.akole.dividox.integration.security.FakeMarketRepository
 import com.akole.dividox.integration.security.FakePortfolioRepository
 import com.akole.dividox.integration.security.domain.usecase.GetPortfolioWithQuotesUseCase
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -154,5 +158,62 @@ class GetPortfolioWithQuotesUseCaseTest {
         val tickers = result.map { it.holding.tickerId }
         assertTrue("AAPL" in tickers)
         assertTrue("MSFT" in tickers)
+    }
+
+    @Test
+    fun `SHOULD emit stale then fresh then enriched WHEN cache has expired quotes GIVEN holding`() = runTest {
+        // GIVEN
+        val holding = FakePortfolioRepository.holding(tickerId = "AAPL", shares = 10.0, purchasePrice = 100.0)
+        portfolioRepo.setHoldings(listOf(holding))
+        marketRepo.setCachedQuote("AAPL", FakeMarketRepository.quote(ticker = "AAPL", price = 120.0))
+        marketRepo.setQuote("AAPL", FakeMarketRepository.quote(ticker = "AAPL", price = 150.0))
+        marketRepo.setDividendInfo("AAPL", FakeMarketRepository.dividendInfo())
+
+        // WHEN
+        val emissions = sut().take(3).toList()
+
+        // THEN
+        assertEquals(120.0, emissions[0].first().quote.price)
+        assertFalse(emissions[0].first().isDividendInfoResolved)
+        assertEquals(150.0, emissions[1].first().quote.price)
+        assertFalse(emissions[1].first().isDividendInfoResolved)
+        assertTrue(emissions[2].first().isDividendInfoResolved)
+        assertTrue(emissions[2].first().dividendInfo != null)
+    }
+
+    @Test
+    fun `SHOULD keep dividend info resolved WHEN portfolio re-emits GIVEN dividends already fetched`() = runTest {
+        // GIVEN
+        val holding = FakePortfolioRepository.holding(tickerId = "AAPL", shares = 10.0, purchasePrice = 100.0)
+        portfolioRepo.setHoldings(listOf(holding))
+        marketRepo.setQuote("AAPL", FakeMarketRepository.quote(ticker = "AAPL", price = 150.0))
+        marketRepo.setDividendInfo("AAPL", FakeMarketRepository.dividendInfo())
+
+        // WHEN — enriched emission, then a new Firestore snapshot (e.g. cache → server)
+        val emissions = sut()
+            .onEach { if (it.firstOrNull()?.isDividendInfoResolved == true) portfolioRepo.setHoldings(listOf(holding.copy(shares = 11.0))) }
+            .take(3).toList()
+
+        // THEN — the re-emission carries the dividend info instead of dropping back to pending
+        assertEquals(11.0, emissions[2].first().holding.shares)
+        assertTrue(emissions[2].first().isDividendInfoResolved)
+        assertTrue(emissions[2].first().dividendInfo != null)
+    }
+
+    @Test
+    fun `SHOULD emit fresh then enriched WHEN cache is empty GIVEN holding`() = runTest {
+        // GIVEN
+        val holding = FakePortfolioRepository.holding(tickerId = "AAPL", shares = 10.0, purchasePrice = 100.0)
+        portfolioRepo.setHoldings(listOf(holding))
+        marketRepo.setQuote("AAPL", FakeMarketRepository.quote(ticker = "AAPL", price = 150.0))
+        marketRepo.setDividendInfo("AAPL", FakeMarketRepository.dividendInfo())
+
+        // WHEN
+        val emissions = sut().take(2).toList()
+
+        // THEN
+        assertEquals(150.0, emissions[0].first().quote.price)
+        assertNull(emissions[0].first().dividendInfo)
+        assertTrue(emissions[1].first().dividendInfo != null)
     }
 }

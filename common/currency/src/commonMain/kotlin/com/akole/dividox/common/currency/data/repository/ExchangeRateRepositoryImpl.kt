@@ -35,6 +35,7 @@ class ExchangeRateRepositoryImpl(
 
     private val cache = mutableMapOf<Currency, ExchangeRates>()
     private val mutex = Mutex()
+    private val baseLocks = mutableMapOf<Currency, Mutex>()
 
     /**
      * Returns today's exchange rates for [base], resolving through the 3-tier cache.
@@ -52,25 +53,48 @@ class ExchangeRateRepositoryImpl(
         withContext(ioDispatcher) {
             val today = todayProvider()
 
-            // L1: in-memory cache
+            // L1 fast path: no per-base lock needed.
             mutex.withLock {
                 val cached = cache[base]
-                if (cached != null && cached.date == today) return@withContext Result.success(cached)
+                if (cached != null && cached.isUsable(today)) return@withContext Result.success(cached)
             }
 
-            // L2: persistent DataStore cache
-            val local = localDataSource.get(base)
-            if (local != null && local.date == today) {
-                mutex.withLock { cache[base] = local }
-                return@withContext Result.success(local)
-            }
+            // Per-base lock collapses concurrent misses (e.g. every dashboard section asking for
+            // USD rates at cold start) into a single DataStore read / network call.
+            lockFor(base).withLock {
+                mutex.withLock {
+                    val cached = cache[base]
+                    if (cached != null && cached.isUsable(today)) return@withContext Result.success(cached)
+                }
 
-            // L3: network
-            remoteDataSource.getExchangeRates(base).also { result ->
-                result.onSuccess { rates ->
-                    localDataSource.save(rates)
-                    mutex.withLock { cache[base] = rates }
+                // L2: persistent DataStore cache
+                val local = localDataSource.get(base)
+                if (local != null && local.isUsable(today)) {
+                    mutex.withLock { cache[base] = local }
+                    return@withContext Result.success(local)
+                }
+
+                // L3: network
+                remoteDataSource.getExchangeRates(base).also { result ->
+                    result.onSuccess { rates ->
+                        localDataSource.save(rates)
+                        mutex.withLock { cache[base] = rates }
+                    }
+                }.recoverCatching { error ->
+                    // Network failed: previous-day rates are far better than no conversion at all
+                    // (callers would otherwise sum amounts in mixed currencies).
+                    mutex.withLock { cache[base] } ?: local ?: throw error
                 }
             }
         }
+
+    /**
+     * Fresh (today) and complete. Rates cached before a new [Currency] was added lack that entry,
+     * which would make conversions fail for the rest of the day — treat them as stale.
+     */
+    private fun ExchangeRates.isUsable(today: LocalDate): Boolean =
+        date == today && Currency.entries.all { it == base || it == Currency.GBX || it in rates }
+
+    private suspend fun lockFor(base: Currency): Mutex =
+        mutex.withLock { baseLocks.getOrPut(base) { Mutex() } }
 }

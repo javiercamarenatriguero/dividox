@@ -25,11 +25,14 @@ import com.akole.dividox.component.market.domain.model.StockQuote
 import com.akole.dividox.component.market.domain.repository.MarketRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import kotlin.time.Clock
@@ -49,19 +52,22 @@ class MarketRepositoryImpl(
     private val apiSemaphore = Semaphore(MAX_CONCURRENT_REQUESTS)
 
     private val quoteCache = mutableMapOf<String, Pair<StockQuote, Long>>()
+
+    // Guards quoteCache + quoteLocks: accessed concurrently from multiple IO threads.
+    private val quoteCacheMutex = Mutex()
+    private val quoteLocks = mutableMapOf<String, Mutex>()
     private val dividendCache = mutableMapOf<String, Pair<DividendInfo, Long>>()
     private val companyCache = mutableMapOf<String, Pair<CompanyInfo, Long>>()
     private val historicalDividendCache = mutableMapOf<String, Pair<List<MarketDividendEvent>, Long>>()
     private val newsCache = mutableMapOf<String, Pair<List<NewsItem>, Long>>()
 
     override suspend fun getStockQuote(ticker: String): Result<StockQuote> = withContext(ioDispatcher) {
-        val cached = quoteCache[ticker]
-        if (cached != null && !isExpired(cached.second, QUOTE_TTL_MS)) return@withContext Result.success(cached.first)
+        freshCachedQuote(ticker)?.let { return@withContext Result.success(it) }
         runCatching {
             val dto = api.getChart(ticker)
             val meta = dto.chart.result?.firstOrNull()?.meta
                 ?: throw MarketError.NotFound(ticker)
-            meta.toStockQuote().also { quoteCache[ticker] = it to Clock.System.now().toEpochMilliseconds() }
+            meta.toStockQuote().also { putCachedQuote(ticker, it, Clock.System.now().toEpochMilliseconds()) }
         }.mapError()
     }
 
@@ -75,12 +81,8 @@ class MarketRepositoryImpl(
 
                     // 1. Check in-memory cache first (fastest)
                     tickers.forEach { ticker ->
-                        val cached = quoteCache[ticker]
-                        if (cached != null && !isExpired(cached.second, QUOTE_TTL_MS)) {
-                            fromCache += cached.first
-                        } else {
-                            toFetch += ticker
-                        }
+                        val fresh = freshCachedQuote(ticker)
+                        if (fresh != null) fromCache += fresh else toFetch += ticker
                     }
 
                     // 2. Check persistent Room cache for remaining tickers (fast, survives app restart)
@@ -91,7 +93,7 @@ class MarketRepositoryImpl(
                             val cached = persisted[ticker]
                             if (cached != null && !isExpired(cached.cachedAt, QUOTE_TTL_MS)) {
                                 fromCache += cached.quote
-                                quoteCache[ticker] = cached.quote to cached.cachedAt
+                                putCachedQuote(ticker, cached.quote, cached.cachedAt)
                             } else {
                                 stillMissing += ticker
                             }
@@ -101,28 +103,31 @@ class MarketRepositoryImpl(
                     }
 
                     // 3. Fetch remaining from network
+                    // Per-ticker lock de-duplicates concurrent fetches of the same ticker (e.g.
+                    // portfolio + watchlist on dashboard cold start): the second caller waits and
+                    // reuses the first caller's result instead of issuing a duplicate request.
                     // Semaphore caps concurrent requests to avoid Yahoo Finance rate-limiting.
                     // Per-ticker runCatching means one failed ticker doesn't kill the whole batch.
-                    val freshQuotes = mutableMapOf<String, StockQuote>()
-                    val fromApi = toFetch
+                    val fetched = toFetch
                         .map { ticker ->
                             async {
-                                apiSemaphore.withPermit {
-                                    runCatching { api.getChart(ticker) to ticker }.getOrNull()
+                                quoteLockFor(ticker).withLock {
+                                    freshCachedQuote(ticker)?.let { return@withLock ticker to (it to false) }
+                                    val quote = apiSemaphore.withPermit {
+                                        runCatching { api.getChart(ticker) }.getOrNull()
+                                    }?.chart?.result?.firstOrNull()?.meta?.toStockQuote()
+                                        ?: return@withLock null
+                                    putCachedQuote(ticker, quote, now)
+                                    ticker to (quote to true)
                                 }
                             }
                         }
-                        .mapNotNull { deferred ->
-                            val (dto, ticker) = deferred.await() ?: return@mapNotNull null
-                            dto.chart.result?.firstOrNull()?.meta
-                                ?.toStockQuote()
-                                ?.also { quote ->
-                                    quoteCache[ticker] = quote to now
-                                    freshQuotes[ticker] = quote
-                                }
-                        }
+                        .awaitAll()
+                        .filterNotNull()
 
                     // Persist fresh quotes to Room for next session
+                    val freshQuotes = fetched.filter { (_, value) -> value.second }
+                        .associate { (ticker, value) -> ticker to value.first }
                     if (freshQuotes.isNotEmpty()) {
                         localDataSource?.saveQuotes(
                             freshQuotes.mapValues { (_, quote) ->
@@ -131,10 +136,36 @@ class MarketRepositoryImpl(
                         )
                     }
 
-                    fromCache + fromApi
+                    fromCache + fetched.map { (_, value) -> value.first }
                 }
             }.mapError()
         }
+
+    override suspend fun getCachedQuotes(tickers: List<String>): List<StockQuote> =
+        withContext(ioDispatcher) {
+            val inMemory = quoteCacheMutex.withLock {
+                tickers.mapNotNull { ticker -> quoteCache[ticker]?.let { ticker to it.first } }.toMap()
+            }
+            val missing = tickers.filterNot { it in inMemory }
+            val persisted = if (missing.isNotEmpty() && localDataSource != null) {
+                runCatching { localDataSource.getQuotes(missing) }.getOrDefault(emptyMap())
+                    .mapValues { (_, cached) -> cached.quote }
+            } else {
+                emptyMap()
+            }
+            tickers.mapNotNull { inMemory[it] ?: persisted[it] }
+        }
+
+    private suspend fun freshCachedQuote(ticker: String): StockQuote? = quoteCacheMutex.withLock {
+        quoteCache[ticker]?.takeIf { !isExpired(it.second, QUOTE_TTL_MS) }?.first
+    }
+
+    private suspend fun putCachedQuote(ticker: String, quote: StockQuote, cachedAt: Long) {
+        quoteCacheMutex.withLock { quoteCache[ticker] = quote to cachedAt }
+    }
+
+    private suspend fun quoteLockFor(ticker: String): Mutex =
+        quoteCacheMutex.withLock { quoteLocks.getOrPut(ticker) { Mutex() } }
 
     override suspend fun getDividendInfo(ticker: String): Result<DividendInfo> = withContext(ioDispatcher) {
         val now = Clock.System.now().toEpochMilliseconds()
@@ -207,13 +238,17 @@ class MarketRepositoryImpl(
         if (cached != null && !isExpired(cached.second, HISTORICAL_DIVIDEND_TTL_MS)) {
             return@withContext Result.success(cached.first)
         }
-        runCatching {
-            val dto = api.getChartWithEvents(ticker, range = range.apiValue)
-            val result = dto.chart.result?.firstOrNull() ?: return@runCatching emptyList()
-            result.toMarketDividendEvents(ticker).also { events ->
-                historicalDividendCache[cacheKey] = events to Clock.System.now().toEpochMilliseconds()
-            }
-        }.mapError()
+        // Heavy "max" range call — share the semaphore so background dividend sync
+        // can't starve dashboard quote requests.
+        apiSemaphore.withPermit {
+            runCatching {
+                val dto = api.getChartWithEvents(ticker, range = range.apiValue)
+                val result = dto.chart.result?.firstOrNull() ?: return@runCatching emptyList()
+                result.toMarketDividendEvents(ticker).also { events ->
+                    historicalDividendCache[cacheKey] = events to Clock.System.now().toEpochMilliseconds()
+                }
+            }.mapError()
+        }
     }
 
     override fun getPriceHistory(ticker: String, period: ChartPeriod): Flow<List<PricePoint>> =

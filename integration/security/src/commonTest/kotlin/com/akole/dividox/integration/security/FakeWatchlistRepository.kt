@@ -29,4 +29,6 @@ class FakeWatchlistRepository : WatchlistRepository {
 
     override fun isInWatchlist(tickerId: String): Flow<Boolean> =
         entries.map { list -> list.any { it.tickerId == tickerId } }
+
+    override suspend fun clearAll(): Result<Unit> = Result.success(Unit)
 }

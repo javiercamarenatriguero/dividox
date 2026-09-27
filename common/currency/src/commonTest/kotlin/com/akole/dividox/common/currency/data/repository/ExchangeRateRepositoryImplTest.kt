@@ -13,18 +13,22 @@ import kotlin.test.assertTrue
 
 class ExchangeRateRepositoryImplTest {
 
+    // Complete EUR-based table (the repository treats tables missing a supported currency as stale).
+    private fun allRates(override: Pair<Currency, Double>): Map<Currency, Double> =
+        Currency.entries.filter { it != Currency.EUR && it != Currency.GBX }.associateWith { 1.0 } + override
+
     private val today = LocalDate(2025, 1, 15)
     private val yesterday = LocalDate(2025, 1, 14)
 
     private val ratesForToday = ExchangeRates(
         base = Currency.EUR,
         date = today,
-        rates = mapOf(Currency.USD to 1.05),
+        rates = allRates(Currency.USD to 1.05),
     )
     private val ratesForYesterday = ExchangeRates(
         base = Currency.EUR,
         date = yesterday,
-        rates = mapOf(Currency.USD to 1.03),
+        rates = allRates(Currency.USD to 1.03),
     )
 
     private fun emptyLocalDataSource() = object : LocalExchangeRateDataSource {
@@ -121,6 +125,23 @@ class ExchangeRateRepositoryImplTest {
     }
 
     @Test
+    fun `GIVEN remote error and stale local rates WHEN getExchangeRates THEN returns stale rates`() = runTest {
+        // GIVEN
+        val remote = object : ExchangeRateDataSource {
+            override suspend fun getExchangeRates(base: Currency) =
+                Result.failure<ExchangeRates>(RuntimeException("API error"))
+        }
+        val local = object : LocalExchangeRateDataSource {
+            override suspend fun get(base: Currency) = ratesForYesterday
+            override suspend fun save(rates: ExchangeRates) = Unit
+        }
+        // WHEN
+        val result = buildRepo(remote, local).getExchangeRates(Currency.EUR)
+        // THEN
+        assertEquals(ratesForYesterday, result.getOrThrow())
+    }
+
+    @Test
     fun `GIVEN remote error and no cache WHEN getExchangeRates THEN returns failure`() = runTest {
         // GIVEN
         val error = RuntimeException("API error")
@@ -149,5 +170,26 @@ class ExchangeRateRepositoryImplTest {
         buildRepo(remote, local).getExchangeRates(Currency.EUR)
         // THEN
         assertEquals(ratesForToday, savedRates)
+    }
+
+    @Test
+    fun `GIVEN today local rates missing a supported currency WHEN getExchangeRates THEN re-fetches from remote`() = runTest {
+        // GIVEN — cached before a new currency (e.g. SEK) was added
+        var remoteCallCount = 0
+        val remote = object : ExchangeRateDataSource {
+            override suspend fun getExchangeRates(base: Currency): Result<ExchangeRates> {
+                remoteCallCount++
+                return Result.success(ratesForToday)
+            }
+        }
+        val local = object : LocalExchangeRateDataSource {
+            override suspend fun get(base: Currency) = ratesForToday.copy(rates = mapOf(Currency.USD to 1.05))
+            override suspend fun save(rates: ExchangeRates) = Unit
+        }
+        // WHEN
+        val result = buildRepo(remote, local).getExchangeRates(Currency.EUR)
+        // THEN
+        assertEquals(1, remoteCallCount)
+        assertEquals(ratesForToday, result.getOrThrow())
     }
 }

@@ -16,6 +16,11 @@ class FakeMarketRepository : MarketRepository {
     private val dividends = mutableMapOf<String, Result<DividendInfo>>()
     private val companies = mutableMapOf<String, Result<CompanyInfo>>()
     private val priceHistories = mutableMapOf<String, List<PricePoint>>()
+    private val cachedQuotes = mutableMapOf<String, StockQuote>()
+
+    fun setCachedQuote(ticker: String, quote: StockQuote) {
+        cachedQuotes[ticker] = quote
+    }
 
     fun setQuote(ticker: String, quote: StockQuote) {
         quotes[ticker] = Result.success(quote)
@@ -71,8 +76,18 @@ class FakeMarketRepository : MarketRepository {
     ): Result<List<com.akole.dividox.component.market.domain.model.MarketDividendEvent>> =
         Result.success(emptyList())
 
-    override suspend fun searchSecurities(query: String): Result<List<StockQuote>> =
+    override suspend fun searchSecurities(query: String, region: String?): Result<List<StockQuote>> =
         Result.success(emptyList())
+
+    override suspend fun getNews(
+        query: String,
+        count: Int,
+        lang: String,
+        region: String,
+    ): Result<List<com.akole.dividox.component.market.domain.model.NewsItem>> = Result.success(emptyList())
+
+    override suspend fun getCachedQuotes(tickers: List<String>): List<StockQuote> =
+        tickers.mapNotNull { cachedQuotes[it] }
 
     companion object {
 

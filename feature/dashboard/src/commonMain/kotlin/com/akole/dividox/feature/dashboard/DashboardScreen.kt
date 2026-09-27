@@ -45,7 +45,9 @@ import androidx.compose.runtime.retain.retain
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -100,14 +102,34 @@ fun DashboardScreen(
     )
 }
 
+/**
+ * Very subtle vertical gradient from theme tones: a faint `primaryContainer` tint at the top that
+ * fades into the plain (light) `surface` at the bottom. Adapts to light/dark.
+ */
+@Composable
+private fun dashboardBackgroundBrush(): Brush {
+    val colors = MaterialTheme.colorScheme
+    return remember(colors) {
+        Brush.verticalGradient(
+            listOf(
+                colors.primaryContainer.copy(alpha = GRADIENT_PRIMARY_ALPHA).compositeOver(colors.surface),
+                colors.surface,
+            ),
+        )
+    }
+}
+
 @Composable
 private fun DashboardContent(
     state: DashboardViewState,
     onEvent: (DashboardViewEvent) -> Unit,
 ) {
     val connectivityManager = LocalNetworkConnectivityManager.current
+    val backgroundBrush = dashboardBackgroundBrush()
 
     Scaffold(
+        modifier = Modifier.background(backgroundBrush),
+        containerColor = Color.Transparent,
         topBar = {
             DividoxTopAppBar(
                 title = stringResource(Res.string.section_dashboard),
@@ -214,7 +236,7 @@ private fun DashboardContent(
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.large))
+                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
 
                     MarketIndicesSection(
                         indices = state.marketIndices,
@@ -672,27 +694,12 @@ private fun PortfolioTodaySection(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = stringResource(Res.string.dashboard_portfolio_today),
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold,
-            )
-            TextButton(onClick = onViewAllClicked) {
-                Text(
-                    text = stringResource(Res.string.action_view_all),
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.primary,
-                )
-            }
-        }
+        DashboardSectionHeader(
+            title = stringResource(Res.string.dashboard_portfolio_today),
+            onViewAllClicked = onViewAllClicked,
+        )
 
-        Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
+        Spacer(modifier = Modifier.height(MaterialTheme.spacing.xSmall))
 
         Row(
             modifier = Modifier
@@ -819,29 +826,12 @@ private fun FavouritesSection(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = stringResource(Res.string.section_favourites),
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.SemiBold,
-            )
-            if (watchlist.isNotEmpty()) {
-                TextButton(onClick = onViewAllClicked) {
-                    Text(
-                        text = stringResource(Res.string.action_view_all),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                }
-            }
-        }
+        DashboardSectionHeader(
+            title = stringResource(Res.string.section_favourites),
+            onViewAllClicked = onViewAllClicked.takeIf { watchlist.isNotEmpty() },
+        )
 
-        Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
+        Spacer(modifier = Modifier.height(MaterialTheme.spacing.xSmall))
 
         if (watchlist.isEmpty()) {
             Text(
@@ -921,6 +911,7 @@ private const val SKELETON_ALPHA_MIN = 0.15f
 private const val SKELETON_ALPHA_MAX = 0.40f
 private const val SKELETON_ANIM_MS = 800
 private const val SKELETON_CORNER_DP = 16
+private const val GRADIENT_PRIMARY_ALPHA = 0.06f
 
 private const val PLACEHOLDER_TEXT = "—"
 private const val PLACEHOLDER_PERCENT = "--%"

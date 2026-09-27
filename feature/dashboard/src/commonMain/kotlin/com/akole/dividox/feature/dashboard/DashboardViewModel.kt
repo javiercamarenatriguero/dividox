@@ -37,7 +37,8 @@ import com.akole.dividox.integration.security.domain.usecase.GetPortfolioWithQuo
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlin.time.Clock
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -47,6 +48,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -91,9 +93,11 @@ class DashboardViewModel(
     }
 
     private fun observePortfolioAndSync() {
-        // Off critical path: let the dashboard paint first, then sync dividend history.
+        // Off critical path: the sync fires heavy "max range" requests per ticker that share the
+        // market API semaphore, so wait until summary + yield are painted (bounded by a timeout)
+        // to avoid starving the dividend-info requests the yield depends on.
         viewModelScope.launch {
-            delay(SYNC_DELAY_MS)
+            withTimeoutOrNull(SYNC_MAX_WAIT_MS) { viewState.first { !it.summaryLoading && !it.yieldLoading } }
             observePortfolioChanges().collect { holdings ->
                 syncDividendHistory(holdings)
             }
@@ -148,27 +152,7 @@ class DashboardViewModel(
                 launch { observeSummary(portfolioShared, currencyFlow) }
                 launch { observePeriodGain(portfolioShared, currencyFlow) }
                 launch { observePortfolioToday(portfolioShared, currencyFlow) }
-                launch { observeYieldReadiness(portfolioShared) }
             }
-        }
-    }
-
-    /**
-     * Yield is derived from dividendInfo enrichment (Phase 2 of `GetPortfolioWithQuotesUseCase`).
-     * The first emission of `portfolioShared` has `dividendInfo == null` for every holding, which
-     * makes `totalYield == 0.0` — meaningless as a UI value. Keep the yield field showing "--%"
-     * until we see enrichment or reach the fallback emission count (covers all-zero-yield portfolios).
-     */
-    private suspend fun observeYieldReadiness(
-        portfolioShared: kotlinx.coroutines.flow.Flow<List<SecurityHolding>>,
-    ) {
-        var emissionCount = 0
-        portfolioShared.collect { holdings ->
-            emissionCount++
-            val ready = holdings.isEmpty() ||
-                holdings.any { it.dividendInfo != null } ||
-                emissionCount >= YIELD_READY_MIN_EMISSIONS
-            if (ready) updateViewState { copy(yieldLoading = false) }
         }
     }
 
@@ -211,20 +195,36 @@ class DashboardViewModel(
             }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private suspend fun observeSummary(
         portfolioShared: kotlinx.coroutines.flow.Flow<List<SecurityHolding>>,
         currencyFlow: kotlinx.coroutines.flow.Flow<Currency>,
     ) {
-        getPortfolioSummary(portfolioShared)
-            .combine(currencyFlow) { summary, currency -> summary to currency }
-            .collect { (summary, currency) ->
-                val converted = currencyConverter.convertSummary(summary, currency)
+        // Summary is computed directly in the display currency. A null result (exchange rate
+        // unavailable) is skipped so the UI keeps the last correct value instead of a mixed-currency sum.
+        combine(portfolioShared, currencyFlow) { holdings, currency -> holdings to currency }
+            .mapLatest { (holdings, currency) ->
+                getPortfolioSummary.summarize(holdings, currency)?.let { it to currency }
+            }
+            .filterNotNull()
+            .collect { (converted, currency) ->
                 val now = Clock.System.now()
                 refreshTracker.notifyRefreshed(now)
                 updateViewState {
+                    // Yield/dividends are only meaningful once dividend info is resolved. Until then
+                    // keep "--%" (first load) or the last resolved yield (later re-emissions), so the
+                    // UI never flashes 0.00%. Decided from the same emission → no cross-coroutine race.
+                    val resolved = converted.isDividendDataResolved
+                    val previous = this.summary?.takeIf { !yieldLoading }
+                    val shown = if (!resolved && previous != null) {
+                        converted.copy(totalYield = previous.totalYield)
+                    } else {
+                        converted
+                    }
                     copy(
-                        summary = converted,
-                        convertedSummary = converted,
+                        summary = shown,
+                        convertedSummary = shown,
+                        yieldLoading = yieldLoading && !resolved,
                         currency = currency,
                         totalGainPercent = converted.totalGainPercent,
                         totalGainAbsolute = converted.totalGain,
@@ -244,11 +244,12 @@ class DashboardViewModel(
         combine(portfolioShared, periodFlow, currencyFlow) { holdings, period, currency ->
             Triple(holdings, period, currency)
         }.collectLatest { (holdings, period, currency) ->
-            val (abs, pct) = getPortfolioPeriodGain(holdings, period.toMarketPeriod())
-            val convertedAbs = currencyConverter.convertAmount(abs, currency)
+            // Computed directly in the display currency; null = rate unavailable → keep last value.
+            val (abs, pct) = getPortfolioPeriodGain(holdings, period.toMarketPeriod(), currency)
+                ?: return@collectLatest
             updateViewState {
                 copy(
-                    periodGainAbsolute = convertedAbs,
+                    periodGainAbsolute = abs,
                     periodGainPercent = pct,
                     periodGainLoading = false,
                 )
@@ -281,7 +282,9 @@ class DashboardViewModel(
     }
 
     private suspend fun SecurityHolding.toItem(currency: Currency): PortfolioTodayItem {
-        val price = currencyConverter.convertAmount(quote.price, currency)
+        // quote.price is in the security's own currency, not USD.
+        val quoteCurrency = Currency.entries.firstOrNull { it.code == quote.currency } ?: Currency.USD
+        val price = currencyConverter.convert(quote.price, quoteCurrency, currency).getOrElse { quote.price }
         return PortfolioTodayItem(
             ticker = holding.tickerId,
             name = quote.name,
@@ -379,9 +382,8 @@ class DashboardViewModel(
     }
 
     private companion object {
-        const val SYNC_DELAY_MS = 1_000L
+        const val SYNC_MAX_WAIT_MS = 5_000L
         const val TOP_MOVERS_COUNT = 3
         const val NEWS_COUNT = 5
-        const val YIELD_READY_MIN_EMISSIONS = 2
     }
 }
