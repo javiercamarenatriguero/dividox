@@ -1,5 +1,14 @@
 package com.akole.dividox.feature.dashboard
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.material.icons.outlined.AccountBalanceWallet
+import androidx.compose.material.icons.outlined.Percent
+import androidx.compose.material.icons.outlined.Payments
+import androidx.compose.material.icons.automirrored.outlined.TrendingUp
+import androidx.compose.material.icons.automirrored.outlined.TrendingDown
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -34,7 +43,6 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -145,7 +153,8 @@ private fun DashboardContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues),
+                // Only the top bar inset: the parent scaffold's bottom navigation bar already handles the bottom.
+                .padding(top = paddingValues.calculateTopPadding()),
         ) {
             ConnectivityBannerHost(connectivityFlow = connectivityManager.observeConnectivity())
             LastUpdatedBar(
@@ -171,37 +180,9 @@ private fun DashboardContent(
                     if (state.summaryLoading && state.summary == null) {
                         SectionSkeleton(heightDp = SKELETON_METRICS_HEIGHT)
                     } else {
-                        MetricsBlock(
-                            summary = state.convertedSummary ?: state.summary,
-                            summaryLoading = state.summaryLoading,
-                            yieldLoading = state.yieldLoading,
-                            currency = state.currency,
-                            totalGainPercent = state.totalGainPercent,
-                            totalGainAbsolute = state.totalGainAbsolute,
-                            lifetimeDividends = state.lifetimeDividends,
-                            lifetimeDividendsLoading = state.lifetimeDividendsLoading,
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
-
-                    PeriodSelectorRow(
-                        selectedPeriod = state.selectedPeriod,
-                        onPeriodSelected = { onEvent(DashboardViewEvent.PeriodSelected(it)) },
-                    )
-
-                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
-
-                    if (state.periodGainLoading) {
-                        SectionSkeleton(heightDp = SKELETON_PERIOD_HEIGHT)
-                    } else {
-                        PeriodDetailRow(
-                            selectedPeriod = state.selectedPeriod,
-                            periodGainPercent = state.periodGainPercent,
-                            periodGainAbsolute = state.periodGainAbsolute,
-                            periodDividends = state.periodDividends,
-                            periodDividendsLoading = state.periodDividendsLoading,
-                            currency = state.currency,
+                        PortfolioOverviewCard(
+                            state = state,
+                            onPeriodSelected = { onEvent(DashboardViewEvent.PeriodSelected(it)) },
                         )
                     }
 
@@ -346,342 +327,254 @@ private fun PeriodSelectorRow(
     modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = SEGMENT_TRACK_ALPHA))
+            .padding(MaterialTheme.spacing.xSmall),
     ) {
         ChartPeriod.entries.forEach { period ->
             val isSelected = period == selectedPeriod
-            Surface(
-                shape = RoundedCornerShape(6.dp),
-                color = if (isSelected) {
-                    MaterialTheme.colorScheme.primaryContainer
-                } else {
-                    MaterialTheme.colorScheme.surfaceContainerHigh
-                },
+            val background by animateColorAsState(
+                if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
+            )
+            val content by animateColorAsState(
+                if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                text = stringResource(period.labelRes()),
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
+                color = content,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                softWrap = false,
+                overflow = TextOverflow.Clip,
                 modifier = Modifier
                     .weight(1f)
-                    .clickable { onPeriodSelected(period) },
-            ) {
-                Text(
-                    text = stringResource(period.labelRes()),
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                    color = if (isSelected) {
-                        MaterialTheme.colorScheme.onPrimaryContainer
-                    } else {
-                        MaterialTheme.colorScheme.onSurface
-                    },
-                    textAlign = TextAlign.Center,
-                    maxLines = 1,
-                    softWrap = false,
-                    overflow = TextOverflow.Clip,
-                    modifier = Modifier
-                        .padding(vertical = MaterialTheme.spacing.xSmall)
-                        .fillMaxWidth(),
-                )
-            }
-        }
-    }
-}
-
-// ─── Metric cards ─────────────────────────────────────────────────────────────
-
-@Composable
-private fun MetricsBlock(
-    summary: PortfolioSummary?,
-    summaryLoading: Boolean,
-    yieldLoading: Boolean,
-    currency: Currency,
-    totalGainPercent: Double,
-    totalGainAbsolute: Double,
-    lifetimeDividends: Double,
-    lifetimeDividendsLoading: Boolean,
-    modifier: Modifier = Modifier,
-) {
-    // Show real values only when the source has actually emitted at least once.
-    // While loading we render "—" / "--%" so an empty portfolio never looks like a zero.
-    val loadedSummary: PortfolioSummary? = summary?.takeUnless { summaryLoading }
-    val isEmpty = loadedSummary == null || loadedSummary.totalValue == 0.0
-    val gainColor = when {
-        loadedSummary == null -> MaterialTheme.colorScheme.onSurfaceVariant
-        isEmpty -> MaterialTheme.colorScheme.onSurfaceVariant
-        totalGainAbsolute >= 0 -> MaterialTheme.extendedColors.profit
-        else -> MaterialTheme.colorScheme.error
-    }
-    val totalValue = loadedSummary?.totalValue?.formatPrice(currency) ?: PLACEHOLDER_TEXT
-    val invested = loadedSummary
-        ?.let { (it.totalValue - it.totalGain).formatPrice(currency) }
-        ?: PLACEHOLDER_TEXT
-    val gainAbsolute = if (loadedSummary != null) totalGainAbsolute.formatPriceSigned(currency) else PLACEHOLDER_TEXT
-    val gainPercent = if (loadedSummary != null) totalGainPercent.formatPercentSigned() else PLACEHOLDER_PERCENT
-    val yieldText = if (yieldLoading || loadedSummary == null) {
-        PLACEHOLDER_PERCENT
-    } else {
-        loadedSummary.totalYield.formatPercent()
-    }
-    val lifetimeText = if (lifetimeDividendsLoading) {
-        PLACEHOLDER_TEXT
-    } else {
-        lifetimeDividends.formatPrice(currency)
-    }
-
-    Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small)) {
-        PortfolioHeroCard(
-            totalValue = totalValue,
-            invested = invested,
-            gainAbsolute = gainAbsolute,
-            gainPercent = gainPercent,
-            gainColor = gainColor,
-        )
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(IntrinsicSize.Max),
-            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
-        ) {
-            YieldChip(
-                yield = yieldText,
-                modifier = Modifier.weight(1f),
-            )
-            DividendsChip(
-                lifetimeDividends = lifetimeText,
-                modifier = Modifier.weight(1f),
+                    .clip(CircleShape)
+                    .background(background)
+                    .clickable { onPeriodSelected(period) }
+                    .padding(vertical = MaterialTheme.spacing.small),
             )
         }
     }
 }
 
+// ─── Portfolio overview ───────────────────────────────────────────────────────
+
+/**
+ * Portfolio overview: one hero number (Total value) with the selected-period performance as a
+ * coloured pill, a segmented period selector, and a 2×2 grid of labelled all-time stat tiles.
+ */
 @Composable
-private fun PortfolioHeroCard(
-    totalValue: String,
-    invested: String,
-    gainAbsolute: String,
-    gainPercent: String,
-    gainColor: Color,
+private fun PortfolioOverviewCard(
+    state: DashboardViewState,
+    onPeriodSelected: (ChartPeriod) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val currency = state.currency
+    // Real values only once the source has emitted; while loading show "—" so empty never looks like zero.
+    val summary: PortfolioSummary? = (state.convertedSummary ?: state.summary)?.takeUnless { state.summaryLoading }
+    val isEmpty = summary == null || summary.totalValue == 0.0
+    val periodReady = summary != null && !state.periodGainLoading
+
+    val cardBrush = Brush.linearGradient(
+        listOf(
+            MaterialTheme.colorScheme.primaryContainer.copy(alpha = OVERVIEW_GRADIENT_ALPHA),
+            MaterialTheme.colorScheme.surfaceContainerLow,
+        ),
+    )
+
     Card(
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer,
-        ),
-        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+        shape = RoundedCornerShape(OVERVIEW_CORNER_DP.dp),
     ) {
-        Column {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = MaterialTheme.spacing.medium, vertical = MaterialTheme.spacing.large),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = stringResource(Res.string.metric_total_value),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    AnimatedValueText(
-                        value = totalValue,
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        autoShrink = true,
-                    )
-                }
-                Box(
-                    modifier = Modifier
-                        .padding(horizontal = MaterialTheme.spacing.small)
-                        .width(1.dp)
-                        .height(48.dp)
-                        .background(MaterialTheme.colorScheme.outlineVariant),
+        Column(
+            modifier = Modifier
+                .background(cardBrush)
+                .padding(MaterialTheme.spacing.medium),
+        ) {
+            Text(
+                text = stringResource(Res.string.metric_total_value),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            AnimatedValueText(
+                value = summary?.totalValue?.formatPrice(currency) ?: PLACEHOLDER_TEXT,
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.Bold,
+                autoShrink = true,
+            )
+            Spacer(modifier = Modifier.height(MaterialTheme.spacing.xSmall))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                GainPill(
+                    amount = state.periodGainAbsolute,
+                    text = if (periodReady) {
+                        "${state.periodGainAbsolute.formatPriceSigned(currency)}  ${state.periodGainPercent.formatPercentSigned()}"
+                    } else {
+                        PLACEHOLDER_TEXT
+                    },
+                    neutral = isEmpty || !periodReady,
                 )
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = stringResource(Res.string.metric_invested),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    AnimatedValueText(
-                        value = invested,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        autoShrink = true,
-                    )
-                }
+                Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
+                Text(
+                    text = stringResource(state.selectedPeriod.labelRes()),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                )
             }
+
+            Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
+            PeriodSelectorRow(selectedPeriod = state.selectedPeriod, onPeriodSelected = onPeriodSelected)
+            Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
 
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(gainColor.copy(alpha = 0.10f))
-                    .padding(horizontal = MaterialTheme.spacing.medium, vertical = 10.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
+                modifier = Modifier.height(IntrinsicSize.Min),
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xSmall),
-                ) {
-                    AnimatedValueText(
-                        value = gainAbsolute,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = gainColor,
-                        autoShrink = true,
-                    )
-                    AnimatedValueText(
-                        value = "($gainPercent)",
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Normal,
-                        color = gainColor,
-                    )
-                }
+                OverviewStatTile(
+                    icon = Icons.Outlined.AccountBalanceWallet,
+                    label = stringResource(Res.string.metric_invested),
+                    value = summary?.let { (it.totalValue - it.totalGain).formatPrice(currency) } ?: PLACEHOLDER_TEXT,
+                    modifier = Modifier.weight(1f).fillMaxHeight(),
+                )
+                OverviewStatTile(
+                    icon = if (state.totalGainAbsolute < 0) Icons.AutoMirrored.Outlined.TrendingDown else Icons.AutoMirrored.Outlined.TrendingUp,
+                    label = stringResource(Res.string.metric_total_return),
+                    value = if (summary != null) state.totalGainAbsolute.formatPriceSigned(currency) else PLACEHOLDER_TEXT,
+                    caption = if (summary != null) state.totalGainPercent.formatPercentSigned() else null,
+                    accent = gainColor(state.totalGainAbsolute, neutral = isEmpty),
+                    modifier = Modifier.weight(1f).fillMaxHeight(),
+                )
+            }
+            Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
+                modifier = Modifier.height(IntrinsicSize.Min),
+            ) {
+                OverviewStatTile(
+                    icon = Icons.Outlined.Percent,
+                    label = stringResource(Res.string.metric_yield),
+                    value = if (state.yieldLoading || summary == null) PLACEHOLDER_PERCENT else summary.totalYield.formatPercent(),
+                    modifier = Modifier.weight(1f).fillMaxHeight(),
+                )
+                OverviewStatTile(
+                    icon = Icons.Outlined.Payments,
+                    label = stringResource(Res.string.metric_dividends_received),
+                    value = if (state.lifetimeDividendsLoading) PLACEHOLDER_TEXT else state.lifetimeDividends.formatPrice(currency),
+                    caption = if (state.periodDividendsLoading) {
+                        null
+                    } else {
+                        stringResource(
+                            Res.string.dashboard_period_dividends,
+                            state.periodDividends.formatPrice(currency),
+                            stringResource(state.selectedPeriod.labelRes()),
+                        )
+                    },
+                    modifier = Modifier.weight(1f).fillMaxHeight(),
+                )
             }
         }
     }
 }
 
 @Composable
-private fun YieldChip(
-    yield: String,
-    modifier: Modifier = Modifier,
-) {
-    Card(
-        modifier = modifier.fillMaxHeight(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer,
-        ),
-        shape = RoundedCornerShape(12.dp),
-    ) {
-        Column(modifier = Modifier.padding(MaterialTheme.spacing.medium)) {
-            Text(
-                text = stringResource(Res.string.metric_yield),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            AnimatedValueText(
-                value = yield,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                autoShrink = true,
-            )
-        }
-    }
-}
-
-@Composable
-private fun DividendsChip(
-    lifetimeDividends: String,
-    modifier: Modifier = Modifier,
-) {
-    Card(
-        modifier = modifier.fillMaxHeight(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer,
-        ),
-        shape = RoundedCornerShape(12.dp),
-    ) {
-        Column(modifier = Modifier.padding(MaterialTheme.spacing.medium)) {
-            Text(
-                text = stringResource(Res.string.metric_dividends),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            AnimatedValueText(
-                value = lifetimeDividends,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                autoShrink = true,
-            )
-        }
-    }
-}
-
-// ─── Period detail ────────────────────────────────────────────────────────────
-
-@Composable
-private fun PeriodDetailRow(
-    selectedPeriod: ChartPeriod,
-    periodGainPercent: Double,
-    periodGainAbsolute: Double,
-    periodDividends: Double,
-    periodDividendsLoading: Boolean,
-    currency: Currency,
-    modifier: Modifier = Modifier,
-) {
-    val gainColor = when {
-        periodGainAbsolute > 0 -> MaterialTheme.extendedColors.profit
-        periodGainAbsolute < 0 -> MaterialTheme.colorScheme.error
-        else -> MaterialTheme.colorScheme.onSurfaceVariant
-    }
-    val periodDividendsText = if (periodDividendsLoading) {
-        PLACEHOLDER_TEXT
-    } else {
-        periodDividends.formatPrice(currency)
-    }
+private fun GainPill(amount: Double, text: String, neutral: Boolean) {
+    val color = gainColor(amount, neutral)
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(IntrinsicSize.Max),
-        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .clip(CircleShape)
+            .background(color.copy(alpha = PILL_BG_ALPHA))
+            .padding(horizontal = MaterialTheme.spacing.small, vertical = MaterialTheme.spacing.xSmall),
     ) {
-        Card(
-            modifier = Modifier.weight(1f).fillMaxHeight(),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainer,
-            ),
-            shape = RoundedCornerShape(12.dp),
-        ) {
-            Column(modifier = Modifier.padding(MaterialTheme.spacing.medium)) {
-                Text(
-                    text = "${stringResource(Res.string.metric_period_gain)} (${stringResource(selectedPeriod.labelRes())})",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                AnimatedValueText(
-                    value = periodGainPercent.formatPercentSigned(),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = gainColor,
-                    autoShrink = true,
-                )
-                AnimatedValueText(
-                    value = periodGainAbsolute.formatPriceSigned(currency),
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.Normal,
-                    color = gainColor,
-                    autoShrink = true,
-                )
-            }
+        if (!neutral) {
+            Icon(
+                imageVector = if (amount < 0) Icons.AutoMirrored.Outlined.TrendingDown else Icons.AutoMirrored.Outlined.TrendingUp,
+                contentDescription = null,
+                tint = color,
+                modifier = Modifier.size(MaterialTheme.spacing.iconSmall),
+            )
+            Spacer(modifier = Modifier.width(MaterialTheme.spacing.xSmall))
         }
-        Card(
-            modifier = Modifier.weight(1f).fillMaxHeight(),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainer,
-            ),
-            shape = RoundedCornerShape(12.dp),
-        ) {
-            Column(modifier = Modifier.padding(MaterialTheme.spacing.medium)) {
-                Text(
-                    text = "${stringResource(Res.string.metric_dividends)} (${stringResource(selectedPeriod.labelRes())})",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                AnimatedValueText(
-                    value = periodDividendsText,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    autoShrink = true,
+        AnimatedValueText(
+            value = text,
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.SemiBold,
+            color = color,
+            autoShrink = true,
+        )
+    }
+}
+
+@Composable
+private fun OverviewStatTile(
+    icon: ImageVector,
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier,
+    caption: String? = null,
+    accent: Color = MaterialTheme.colorScheme.onSurface,
+) {
+    val iconTint = if (accent == MaterialTheme.colorScheme.onSurface) MaterialTheme.colorScheme.primary else accent
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(TILE_CORNER_DP.dp))
+            .background(MaterialTheme.colorScheme.surface.copy(alpha = TILE_BG_ALPHA))
+            .padding(horizontal = MaterialTheme.spacing.medium, vertical = MaterialTheme.spacing.small),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(MaterialTheme.spacing.iconMedium)
+                    .clip(CircleShape)
+                    .background(iconTint.copy(alpha = PILL_BG_ALPHA)),
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = iconTint,
+                    modifier = Modifier.size(TILE_ICON_DP.dp),
                 )
             }
+            Spacer(modifier = Modifier.width(MaterialTheme.spacing.small))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        Spacer(modifier = Modifier.height(MaterialTheme.spacing.xSmall))
+        AnimatedValueText(
+            value = value,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = accent,
+            autoShrink = true,
+        )
+        if (caption != null) {
+            Text(
+                text = caption,
+                style = MaterialTheme.typography.labelSmall,
+                color = if (accent == MaterialTheme.colorScheme.onSurface) MaterialTheme.colorScheme.onSurfaceVariant else accent,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
     }
+}
+
+@Composable
+private fun gainColor(amount: Double, neutral: Boolean): Color = when {
+    neutral || amount == 0.0 -> MaterialTheme.colorScheme.onSurfaceVariant
+    amount > 0 -> MaterialTheme.extendedColors.profit
+    else -> MaterialTheme.colorScheme.error
 }
 
 // ─── Portfolio Today section ──────────────────────────────────────────────────
@@ -901,8 +794,14 @@ private fun SectionSkeleton(heightDp: Int, modifier: Modifier = Modifier) {
     )
 }
 
-private const val SKELETON_METRICS_HEIGHT = 148
-private const val SKELETON_PERIOD_HEIGHT = 96
+private const val SKELETON_METRICS_HEIGHT = 290
+private const val OVERVIEW_CORNER_DP = 24
+private const val TILE_CORNER_DP = 16
+private const val TILE_ICON_DP = 14
+private const val OVERVIEW_GRADIENT_ALPHA = 0.14f
+private const val TILE_BG_ALPHA = 0.7f
+private const val PILL_BG_ALPHA = 0.14f
+private const val SEGMENT_TRACK_ALPHA = 0.6f
 private const val SKELETON_TODAY_HEIGHT = 140
 private const val SKELETON_FAVOURITES_HEIGHT = 200
 

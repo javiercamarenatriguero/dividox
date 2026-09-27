@@ -121,7 +121,8 @@ private fun PortfolioContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues),
+                // Only the top bar inset: the parent scaffold's bottom navigation bar already handles the bottom.
+                .padding(top = paddingValues.calculateTopPadding()),
         ) {
             // Banner positioned right below TopAppBar
             ConnectivityBannerHost(connectivityFlow = connectivityManager.observeConnectivity())

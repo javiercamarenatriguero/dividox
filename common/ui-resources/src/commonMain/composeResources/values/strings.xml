@@ -51,6 +51,9 @@
     <string name="dashboard_losers">Losers</string>
     <string name="metric_dividends">Dividends</string>
     <string name="metric_dividends_lifetime">total</string>
+    <string name="metric_total_return">Total return</string>
+    <string name="metric_dividends_received">Dividends received</string>
+    <string name="dashboard_period_dividends">+%1$s · %2$s</string>
     <string name="section_favourites">Favourites</string>
     <string name="action_view_all">VIEW ALL</string>
     <string name="favourites_empty_hint">No favourites yet. Search for a security to add one.</string>

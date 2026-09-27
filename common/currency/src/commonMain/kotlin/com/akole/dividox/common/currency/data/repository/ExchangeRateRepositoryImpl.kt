@@ -18,7 +18,7 @@ import kotlinx.datetime.LocalDate
  * - **L2 — DataStore** ([localDataSource]): survives app restarts; avoids unnecessary API calls.
  * - **L3 — Network** ([remoteDataSource]): called only when neither L1 nor L2 has today's rates.
  *
- * Rates are considered fresh when [ExchangeRates.date] equals today's date from [todayProvider].
+ * Rates are considered fresh when published or downloaded today (see [isUsable]).
  * On a successful network fetch, results are written to both L2 (DataStore) and L1 (memory).
  *
  * @param remoteDataSource Network data source (Frankfurter API).
@@ -75,7 +75,7 @@ class ExchangeRateRepositoryImpl(
                 }
 
                 // L3: network
-                remoteDataSource.getExchangeRates(base).also { result ->
+                remoteDataSource.getExchangeRates(base).map { it.copy(fetchedOn = today) }.also { result ->
                     result.onSuccess { rates ->
                         localDataSource.save(rates)
                         mutex.withLock { cache[base] = rates }
@@ -89,11 +89,15 @@ class ExchangeRateRepositoryImpl(
         }
 
     /**
-     * Fresh (today) and complete. Rates cached before a new [Currency] was added lack that entry,
+     * Fresh and complete. Fresh = published today OR downloaded today: the ECB publishes only on
+     * working days (~16:00 CET), so on weekends/mornings [ExchangeRates.date] is never today and
+     * requiring it would send every single conversion to the network.
+     *
+     * Complete: Rates cached before a new [Currency] was added lack that entry,
      * which would make conversions fail for the rest of the day — treat them as stale.
      */
     private fun ExchangeRates.isUsable(today: LocalDate): Boolean =
-        date == today && Currency.entries.all { it == base || it == Currency.GBX || it in rates }
+        (date == today || fetchedOn == today) && Currency.entries.all { it == base || it == Currency.GBX || it in rates }
 
     private suspend fun lockFor(base: Currency): Mutex =
         mutex.withLock { baseLocks.getOrPut(base) { Mutex() } }

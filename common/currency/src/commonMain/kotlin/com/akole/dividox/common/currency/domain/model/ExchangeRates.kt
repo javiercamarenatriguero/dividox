@@ -13,4 +13,6 @@ data class ExchangeRates(
     val base: Currency,
     val date: LocalDate,
     val rates: Map<Currency, Double>,
+    /** Local day the table was downloaded; [date] is the ECB publication day (lags on weekends/holidays). */
+    val fetchedOn: LocalDate? = null,
 )

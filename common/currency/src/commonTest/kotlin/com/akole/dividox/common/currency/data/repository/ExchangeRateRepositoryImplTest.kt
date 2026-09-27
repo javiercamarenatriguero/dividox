@@ -61,7 +61,7 @@ class ExchangeRateRepositoryImplTest {
         val result = buildRepo(remote).getExchangeRates(Currency.EUR)
         // THEN
         assertEquals(1, callCount)
-        assertEquals(ratesForToday, result.getOrThrow())
+        assertEquals(ratesForToday.copy(fetchedOn = today), result.getOrThrow())
     }
 
     @Test
@@ -121,7 +121,7 @@ class ExchangeRateRepositoryImplTest {
         val result = buildRepo(remote, local).getExchangeRates(Currency.EUR)
         // THEN
         assertEquals(1, remoteCallCount)
-        assertEquals(ratesForToday, result.getOrThrow())
+        assertEquals(ratesForToday.copy(fetchedOn = today), result.getOrThrow())
     }
 
     @Test
@@ -169,7 +169,7 @@ class ExchangeRateRepositoryImplTest {
         // WHEN
         buildRepo(remote, local).getExchangeRates(Currency.EUR)
         // THEN
-        assertEquals(ratesForToday, savedRates)
+        assertEquals(ratesForToday.copy(fetchedOn = today), savedRates)
     }
 
     @Test
@@ -190,6 +190,46 @@ class ExchangeRateRepositoryImplTest {
         val result = buildRepo(remote, local).getExchangeRates(Currency.EUR)
         // THEN
         assertEquals(1, remoteCallCount)
-        assertEquals(ratesForToday, result.getOrThrow())
+        assertEquals(ratesForToday.copy(fetchedOn = today), result.getOrThrow())
+    }
+
+    @Test
+    fun `GIVEN weekend and rates downloaded today with last ECB date WHEN getExchangeRates twice THEN remote called once`() = runTest {
+        // GIVEN — ECB does not publish on weekends: the table date lags behind today
+        var callCount = 0
+        val remote = object : ExchangeRateDataSource {
+            override suspend fun getExchangeRates(base: Currency): Result<ExchangeRates> {
+                callCount++
+                return Result.success(ratesForYesterday)
+            }
+        }
+        val repo = buildRepo(remote)
+        // WHEN
+        repo.getExchangeRates(Currency.EUR)
+        val second = repo.getExchangeRates(Currency.EUR)
+        // THEN
+        assertEquals(1, callCount)
+        assertEquals(today, second.getOrThrow().fetchedOn)
+    }
+
+    @Test
+    fun `GIVEN local cache downloaded today with lagging ECB date WHEN getExchangeRates THEN remote not called`() = runTest {
+        // GIVEN
+        var remoteCallCount = 0
+        val remote = object : ExchangeRateDataSource {
+            override suspend fun getExchangeRates(base: Currency): Result<ExchangeRates> {
+                remoteCallCount++
+                return Result.success(ratesForToday)
+            }
+        }
+        val local = object : LocalExchangeRateDataSource {
+            override suspend fun get(base: Currency) = ratesForYesterday.copy(fetchedOn = today)
+            override suspend fun save(rates: ExchangeRates) = Unit
+        }
+        // WHEN
+        val result = buildRepo(remote, local).getExchangeRates(Currency.EUR)
+        // THEN
+        assertEquals(0, remoteCallCount)
+        assertEquals(1.03, result.getOrThrow().rates[Currency.USD])
     }
 }

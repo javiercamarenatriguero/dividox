@@ -15,4 +15,5 @@ import kotlinx.serialization.Serializable
 internal data class CachedExchangeRatesDto(
     val date: String,
     val rates: Map<String, Double>,
+    val fetchedOn: String? = null,
 )
