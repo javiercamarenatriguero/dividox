@@ -38,11 +38,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.akole.dividox.common.currency.domain.model.Currency
 import com.akole.dividox.common.mvi.CollectSideEffect
-import com.akole.dividox.common.ui.resources.charts.BarChart
+import com.akole.dividox.common.ui.resources.charts.EvenBarChart
 import com.akole.dividox.common.ui.resources.charts.BarChartEntry
 import com.akole.dividox.component.market.domain.model.DividendHistoryRange
 import com.akole.dividox.common.ui.resources.components.DividoxPullToRefreshBox
@@ -355,23 +354,10 @@ private fun ProjectionChartSection(
                     )
                 }
             } else {
-                val barWidth: Dp = when (selectedRange) {
-                    DividendHistoryRange.YTD,
-                    DividendHistoryRange.ONE_YEAR -> 16.dp
-                    DividendHistoryRange.FIVE_YEARS,
-                    DividendHistoryRange.MAX -> 28.dp
-                }
-                // For ONE_YEAR, keep minBarSlotWidth small so the chart width
-                // stays within the viewport — SpaceEvenly then handles the gaps.
-                val minBarSlotWidth: Dp = 20.dp
-
-                BarChart(
+                EvenBarChart(
                     entries = entries,
                     modifier = Modifier.fillMaxWidth(),
                     barColor = MaterialTheme.colorScheme.primary,
-                    barWidth = barWidth,
-                    minBarSlotWidth = minBarSlotWidth,
-                    skipAlternateXLabels = entries.size > 6,
                     popupLabelFormatter = { entry ->
                         formatBarChartPopupLabel(entry.value, currency.code, entry.label)
                     },

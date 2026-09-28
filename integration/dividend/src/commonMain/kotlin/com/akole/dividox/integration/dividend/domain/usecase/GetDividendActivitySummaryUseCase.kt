@@ -2,7 +2,6 @@ package com.akole.dividox.integration.dividend.domain.usecase
 
 import com.akole.dividox.component.dividend.domain.repository.DividendRepository
 import com.akole.dividox.component.market.domain.repository.MarketRepository
-import com.akole.dividox.component.portfolio.domain.repository.PortfolioRepository
 import com.akole.dividox.integration.dividend.domain.model.DividendActivitySummary
 import com.akole.dividox.integration.dividend.domain.model.EnrichedPayment
 import kotlinx.coroutines.flow.Flow
@@ -14,7 +13,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
 
 /**
- * Combines dividend, portfolio and market data into a single [DividendActivitySummary].
+ * Combines dividend and market data into a single [DividendActivitySummary].
  *
  * The summary includes:
  * - **lifetime**: all-time cumulative dividends via [DividendRepository.getLifetimeDividends].
@@ -22,13 +21,11 @@ import kotlinx.datetime.todayIn
  * - **yoyPercent**: year-over-year change computed from the full history; `null` when
  *   there are no payments in the same period last year.
  * - **nextPayout**: the earliest upcoming [EnrichedPayment]; `null` when none recorded.
- * - **yoc**: annualised YTD yield on cost = `(ytd / currentMonth * 12) / totalCostBasis * 100`.
  *
  * All monetary values are in the user's base currency as stored by the repositories.
  */
 class GetDividendActivitySummaryUseCase(
     private val dividendRepository: DividendRepository,
-    private val portfolioRepository: PortfolioRepository,
     private val marketRepository: MarketRepository,
 ) {
     operator fun invoke(): Flow<DividendActivitySummary> =
@@ -37,24 +34,12 @@ class GetDividendActivitySummaryUseCase(
             dividendRepository.getYtdDividends(),
             dividendRepository.getDividendHistory(),
             dividendRepository.getUpcomingPayments(),
-            portfolioRepository.observePortfolio(),
-        ) { lifetime, ytd, history, upcoming, holdingsResult ->
+        ) { lifetime, ytd, history, upcoming ->
 
             val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
-            val currentMonth = today.monthNumber
 
             // YoY: compare YTD amount with the same period in the previous year
             val yoyPercent = computeYoY(history, today)
-
-            // YoC: annualise YTD dividends and divide by total cost basis
-            val costBasis = holdingsResult.getOrDefault(emptyList())
-                .sumOf { it.shares * it.purchasePrice }
-            val yoc = if (costBasis > 0.0 && currentMonth > 0) {
-                val annualisedYtd = ytd / currentMonth * 12.0
-                (annualisedYtd / costBasis) * 100.0
-            } else {
-                0.0
-            }
 
             // Enrich the next upcoming payment with company metadata
             val nextPayout = upcoming
@@ -69,7 +54,6 @@ class GetDividendActivitySummaryUseCase(
                 ytd = ytd,
                 yoyPercent = yoyPercent,
                 nextPayout = nextPayout,
-                yoc = yoc,
             )
         }
 

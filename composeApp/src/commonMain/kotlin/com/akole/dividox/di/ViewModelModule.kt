@@ -39,7 +39,7 @@ val viewModelModule: Module = module {
     viewModelOf(::SearchViewModel)
     factory { DeleteAccountUseCase(get(), get(), get(), get()) }
     viewModel { SettingsViewModel(get(), get(), get(), get(), get(), get(), get(), getAppVersion()) }
-    viewModel { PortfolioViewModel(get(), get(), get(), get()) }
+    viewModel { PortfolioViewModel(get(), get(), get(), get(), get()) }
 
     // SecurityDetailViewModel with required ticker parameter
     viewModel { params ->

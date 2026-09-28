@@ -105,8 +105,6 @@
     <string name="dividends_metric_ytd">YTD</string>
     <string name="dividends_metric_yoy">YoY</string>
     <string name="dividends_metric_next_payout">Next Payout</string>
-    <string name="dividends_metric_yoc">YoC</string>
-    <string name="dividends_metric_yoc_target">Target %1$s</string>
     <string name="dividends_section_projection">Dividend Projection</string>
     <string name="dividends_empty_state">No dividend data yet</string>
     <string name="cd_collapse">Collapse</string>
@@ -277,4 +275,9 @@
     <string name="dashboard_analyze_cta_title">Analyze any stock</string>
     <string name="dashboard_analyze_cta_subtitle">See its fundamentals, dividends and valuation</string>
     <string name="dividends_yoy_caption">vs. last year</string>
+    <string name="portfolio_evolution_title">Evolution</string>
+    <string name="portfolio_evolution_caption">Your current positions at historical prices</string>
+    <string name="portfolio_evolution_1m">1M</string>
+    <string name="portfolio_evolution_1y">1Y</string>
+    <string name="portfolio_evolution_5y">5Y</string>
 </resources>

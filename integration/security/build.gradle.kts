@@ -11,6 +11,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(libs.kotlinx.coroutines.core)
+            api(libs.kotlinx.datetime)
             implementation(projects.common.currency)
             implementation(projects.component.portfolio)
             implementation(projects.component.market)

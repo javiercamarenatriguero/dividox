@@ -105,8 +105,6 @@
     <string name="dividends_metric_ytd">Este Año</string>
     <string name="dividends_metric_yoy">YoY</string>
     <string name="dividends_metric_next_payout">Próximo Pago</string>
-    <string name="dividends_metric_yoc">RBC</string>
-    <string name="dividends_metric_yoc_target">Objetivo %1$s</string>
     <string name="dividends_section_projection">Proyección de Dividendos</string>
     <string name="dividends_empty_state">Sin datos de dividendos aún</string>
     <string name="cd_collapse">Contraer</string>
@@ -273,4 +271,9 @@
     <string name="dashboard_analyze_cta_title">Analiza cualquier acción</string>
     <string name="dashboard_analyze_cta_subtitle">Consulta sus fundamentales, dividendos y valoración</string>
     <string name="dividends_yoy_caption">vs. año anterior</string>
+    <string name="portfolio_evolution_title">Evolución</string>
+    <string name="portfolio_evolution_caption">Tus posiciones actuales a precios históricos</string>
+    <string name="portfolio_evolution_1m">1M</string>
+    <string name="portfolio_evolution_1y">1A</string>
+    <string name="portfolio_evolution_5y">5A</string>
 </resources>

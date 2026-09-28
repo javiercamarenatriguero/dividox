@@ -11,6 +11,7 @@ import com.akole.dividox.component.portfolio.domain.model.Holding
 import com.akole.dividox.component.portfolio.domain.model.HoldingId
 import com.akole.dividox.integration.security.domain.model.SecurityHolding
 import com.akole.dividox.integration.security.domain.usecase.GetPortfolioWithQuotesUseCase
+import com.akole.dividox.integration.security.domain.usecase.GetPortfolioValueHistoryUseCase
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -40,6 +41,9 @@ class PortfolioViewModelTest {
     private val mockObserveSettings = mockk<ObserveAppSettingsUseCase>()
     private val mockCurrencyConverter = mockk<CurrencyConverter>()
     private val mockConnectivityManager = mockk<NetworkConnectivityManager>()
+    private val mockValueHistory = mockk<GetPortfolioValueHistoryUseCase> {
+        coEvery { this@mockk.invoke(any(), any(), any()) } returns emptyList()
+    }
 
     @BeforeTest
     fun setup() {
@@ -55,7 +59,13 @@ class PortfolioViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun viewModel() = PortfolioViewModel(mockUseCase, mockObserveSettings, mockCurrencyConverter, mockConnectivityManager)
+    private fun viewModel() = PortfolioViewModel(
+        mockUseCase,
+        mockObserveSettings,
+        mockCurrencyConverter,
+        mockConnectivityManager,
+        mockValueHistory,
+    )
 
     private fun createDividendInfo(ticker: String, yield: Double): DividendInfo {
         return DividendInfo(

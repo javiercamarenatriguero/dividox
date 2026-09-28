@@ -20,11 +20,9 @@ import androidx.compose.material.icons.automirrored.outlined.TrendingDown
 import androidx.compose.material.icons.automirrored.outlined.TrendingUp
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Event
-import androidx.compose.material.icons.outlined.Savings
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -39,7 +37,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.akole.dividox.common.currency.domain.model.Currency
 import com.akole.dividox.common.ui.resources.components.AnimatedValueText
-import com.akole.dividox.common.ui.resources.format.formatPercent
 import com.akole.dividox.common.ui.resources.format.formatPercentSigned
 import com.akole.dividox.common.ui.resources.format.formatPrice
 import com.akole.dividox.common.ui.resources.format.formatShort
@@ -49,8 +46,6 @@ import com.akole.dividox.integration.dividend.domain.model.DividendActivitySumma
 import dividox.common.ui_resources.generated.resources.Res
 import dividox.common.ui_resources.generated.resources.dividends_metric_lifetime
 import dividox.common.ui_resources.generated.resources.dividends_metric_next_payout
-import dividox.common.ui_resources.generated.resources.dividends_metric_yoc
-import dividox.common.ui_resources.generated.resources.dividends_metric_yoc_target
 import dividox.common.ui_resources.generated.resources.dividends_metric_ytd
 import dividox.common.ui_resources.generated.resources.dividends_yoy_caption
 import dividox.common.ui_resources.generated.resources.ui_no_value
@@ -63,7 +58,6 @@ private const val TILE_CORNER_DP = 16
 private const val TILE_ICON_DP = 14
 private const val TILE_BG_ALPHA = 0.7f
 private const val PILL_BG_ALPHA = 0.14f
-private const val PROGRESS_HEIGHT_DP = 6
 
 /**
  * Dividend overview: lifetime dividends as the hero number with the year-over-year change as a
@@ -136,8 +130,6 @@ internal fun DividendOverviewCard(
                     modifier = Modifier.weight(1f).fillMaxHeight(),
                 )
             }
-            Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
-            YieldOnCostTile(summary)
         }
     }
 }
@@ -169,45 +161,14 @@ private fun YoyPill(yoy: Double) {
 }
 
 @Composable
-private fun YieldOnCostTile(summary: DividendActivitySummary) {
-    val reached = summary.yoc >= summary.yocTarget
-    val accent = if (reached) MaterialTheme.extendedColors.profit else MaterialTheme.colorScheme.primary
-    val progress = (summary.yoc / summary.yocTarget).coerceIn(0.0, 1.0).toFloat()
-    OverviewTile(
-        icon = Icons.Outlined.Savings,
-        label = stringResource(Res.string.dividends_metric_yoc),
-        value = summary.yoc.formatPercent(),
-        caption = stringResource(Res.string.dividends_metric_yoc_target, summary.yocTarget.formatPercent()),
-        accent = if (reached) accent else MaterialTheme.colorScheme.onSurface,
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
-        LinearProgressIndicator(
-            progress = { progress },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(PROGRESS_HEIGHT_DP.dp)
-                .clip(CircleShape),
-            color = accent,
-            trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-            drawStopIndicator = {},
-        )
-        Spacer(modifier = Modifier.height(MaterialTheme.spacing.xSmall))
-    }
-}
-
-@Composable
 private fun OverviewTile(
     icon: ImageVector,
     label: String,
     value: String,
     modifier: Modifier = Modifier,
     caption: String? = null,
-    accent: Color = MaterialTheme.colorScheme.onSurface,
-    footer: @Composable () -> Unit = {},
 ) {
-    val neutral = accent == MaterialTheme.colorScheme.onSurface
-    val iconTint = if (neutral) MaterialTheme.colorScheme.primary else accent
+    val iconTint = MaterialTheme.colorScheme.primary
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(TILE_CORNER_DP.dp))
@@ -239,18 +200,17 @@ private fun OverviewTile(
             value = value,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
-            color = accent,
+            color = MaterialTheme.colorScheme.onSurface,
             autoShrink = true,
         )
         if (caption != null) {
             Text(
                 text = caption,
                 style = MaterialTheme.typography.labelSmall,
-                color = if (neutral) MaterialTheme.colorScheme.onSurfaceVariant else accent,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
         }
-        footer()
     }
 }

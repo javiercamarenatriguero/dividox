@@ -5,10 +5,6 @@ import com.akole.dividox.component.dividend.domain.model.DividendPaymentId
 import com.akole.dividox.component.dividend.domain.repository.DividendRepository
 import com.akole.dividox.component.market.domain.model.CompanyInfo
 import com.akole.dividox.component.market.domain.repository.MarketRepository
-import com.akole.dividox.common.currency.domain.model.Currency
-import com.akole.dividox.component.portfolio.domain.model.Holding
-import com.akole.dividox.component.portfolio.domain.model.HoldingId
-import com.akole.dividox.component.portfolio.domain.repository.PortfolioRepository
 import com.akole.dividox.integration.dividend.domain.usecase.GetDividendActivitySummaryUseCase
 import io.mockk.coEvery
 import io.mockk.every
@@ -22,19 +18,16 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
-import kotlin.test.assertTrue
 import kotlin.time.Clock
 import kotlinx.datetime.todayIn
 
 class GetDividendActivitySummaryUseCaseTest {
 
     private val dividendRepo: DividendRepository = mockk()
-    private val portfolioRepo: PortfolioRepository = mockk()
     private val marketRepo: MarketRepository = mockk()
 
     private val useCase = GetDividendActivitySummaryUseCase(
         dividendRepository = dividendRepo,
-        portfolioRepository = portfolioRepo,
         marketRepository = marketRepo,
     )
 
@@ -43,13 +36,11 @@ class GetDividendActivitySummaryUseCaseTest {
         ytd: Double = 0.0,
         history: List<DividendPayment> = emptyList(),
         upcoming: List<DividendPayment> = emptyList(),
-        holdings: List<Holding> = emptyList(),
     ) {
         every { dividendRepo.getLifetimeDividends() } returns flowOf(lifetime)
         every { dividendRepo.getYtdDividends() } returns flowOf(ytd)
         every { dividendRepo.getDividendHistory() } returns flowOf(history)
         every { dividendRepo.getUpcomingPayments() } returns flowOf(upcoming)
-        every { portfolioRepo.observePortfolio() } returns flowOf(Result.success(holdings))
     }
 
     // ── GIVEN lifetime and ytd WHEN invoked THEN summary reflects those values ─
@@ -100,25 +91,6 @@ class GetDividendActivitySummaryUseCaseTest {
         assertNull(useCase().first().nextPayout!!.companyInfo)
     }
 
-    // ── GIVEN empty portfolio WHEN invoked THEN yoc is zero ───────────────────
-    @Test
-    fun `GIVEN empty portfolio WHEN invoked THEN yoc is zero`() = runTest {
-        stubDefaults(ytd = 100.0)
-
-        assertEquals(0.0, useCase().first().yoc)
-    }
-
-    // ── GIVEN holdings and ytd WHEN invoked THEN yoc is positive ─────────────
-    @Test
-    fun `GIVEN holdings and ytd dividends WHEN invoked THEN yoc is positive`() = runTest {
-        stubDefaults(
-            ytd = 500.0,
-            holdings = listOf(holding("h1", "AAPL", shares = 10.0, purchasePrice = 100.0)),
-        )
-
-        assertTrue(useCase().first().yoc > 0.0)
-    }
-
     // ── GIVEN no prior year history WHEN invoked THEN yoyPercent is null ──────
     @Test
     fun `GIVEN no prior year payments WHEN invoked THEN yoyPercent is null`() = runTest {
@@ -157,16 +129,6 @@ class GetDividendActivitySummaryUseCaseTest {
             shares = 0.0,
             currency = "USD",
             paymentDate = date,
-        )
-
-    private fun holding(id: String, ticker: String, shares: Double, purchasePrice: Double) =
-        Holding(
-            id = HoldingId(id),
-            tickerId = ticker,
-            shares = shares,
-            purchasePrice = purchasePrice,
-            purchaseCurrency = Currency.USD,
-            purchaseDate = 0L,
         )
 
     private fun companyInfo(ticker: String, name: String) =

@@ -11,10 +11,16 @@ import com.akole.dividox.feature.portfolio.PortfolioContract.PortfolioSideEffect
 import com.akole.dividox.feature.portfolio.PortfolioContract.PortfolioViewEvent
 import com.akole.dividox.feature.portfolio.PortfolioContract.PortfolioViewState
 import com.akole.dividox.integration.security.domain.model.SecurityHolding
+import com.akole.dividox.integration.security.domain.usecase.GetPortfolioValueHistoryUseCase
 import com.akole.dividox.integration.security.domain.usecase.GetPortfolioWithQuotesUseCase
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.launch
 
 class PortfolioViewModel(
@@ -22,16 +28,20 @@ class PortfolioViewModel(
     private val observeAppSettings: ObserveAppSettingsUseCase,
     private val currencyConverter: CurrencyConverter,
     private val connectivityManager: NetworkConnectivityManager,
+    private val getPortfolioValueHistory: GetPortfolioValueHistoryUseCase,
 ) : ViewModel(),
     MVI<PortfolioViewState, PortfolioViewEvent, PortfolioSideEffect> by mvi(PortfolioViewState()) {
 
-    private val rawHoldings = MutableStateFlow<List<SecurityHolding>>(emptyList())
+    // Null until the first portfolio emission, so the evolution chart doesn't flash an empty state.
+    private val rawHoldings = MutableStateFlow<List<SecurityHolding>?>(null)
+    private val evolutionPeriod = MutableStateFlow(PortfolioViewState.DEFAULT_EVOLUTION_PERIOD)
     private val searchQuery = MutableStateFlow("")
     private val sortOrder = MutableStateFlow(SortOrder())
 
     init {
         observeData()
         observeConnectivity()
+        observeEvolution()
     }
 
     override fun onViewEvent(viewEvent: PortfolioViewEvent) {
@@ -39,6 +49,10 @@ class PortfolioViewModel(
             is PortfolioViewEvent.SearchQueryChanged -> {
                 searchQuery.value = viewEvent.query
                 updateViewState { copy(searchQuery = viewEvent.query) }
+            }
+            is PortfolioViewEvent.EvolutionPeriodSelected -> {
+                evolutionPeriod.value = viewEvent.period
+                updateViewState { copy(evolutionPeriod = viewEvent.period, isEvolutionLoading = true) }
             }
             is PortfolioViewEvent.SortOrderChanged -> {
                 sortOrder.value = viewEvent.order
@@ -125,4 +139,21 @@ class PortfolioViewModel(
         }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun observeEvolution() {
+        viewModelScope.launch {
+            combine(
+                rawHoldings.filterNotNull(),
+                evolutionPeriod,
+                observeAppSettings().map { it.currency }.distinctUntilChanged(),
+            ) { holdings, period, currency -> Triple(holdings, period, currency) }
+                .mapLatest { (holdings, period, currency) ->
+                    runCatching { getPortfolioValueHistory(holdings, period, currency) }.getOrNull()
+                }
+                .collect { points ->
+                    // Keep the previous curve if the refresh failed, instead of blanking the card.
+                    updateViewState { copy(evolution = points ?: evolution, isEvolutionLoading = false) }
+                }
+        }
+    }
 }
