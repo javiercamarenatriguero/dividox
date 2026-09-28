@@ -280,4 +280,5 @@
     <string name="portfolio_evolution_1m">1M</string>
     <string name="portfolio_evolution_1y">1Y</string>
     <string name="portfolio_evolution_5y">5Y</string>
+    <string name="dashboard_search_hint">Search stocks, ETFs or funds</string>
 </resources>

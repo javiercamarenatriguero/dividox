@@ -44,13 +44,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.retain.retain
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -67,7 +67,6 @@ import com.akole.dividox.common.ui.resources.components.AnimatedValueText
 import com.akole.dividox.common.ui.resources.components.NewsSection
 import com.akole.dividox.common.ui.resources.components.DividoxPullToRefreshBox
 import com.akole.dividox.common.ui.resources.components.SecurityCard
-import com.akole.dividox.common.ui.resources.components.DividoxTopAppBar
 import com.akole.dividox.common.ui.resources.components.LastUpdatedBar
 import com.akole.dividox.common.ui.resources.components.connectivity.ConnectivityBannerHost
 import com.akole.dividox.common.ui.resources.components.connectivity.LocalNetworkConnectivityManager
@@ -81,6 +80,7 @@ import com.akole.dividox.common.ui.resources.format.nameRes
 import com.akole.dividox.common.ui.resources.theme.extendedColors
 import com.akole.dividox.common.ui.resources.theme.spacing
 import dividox.common.ui_resources.generated.resources.Res
+import dividox.common.ui_resources.generated.resources.*
 import dividox.common.ui_resources.generated.resources.favourites_empty_hint
 import org.jetbrains.compose.resources.stringResource
 import com.akole.dividox.feature.dashboard.DashboardContract.DashboardSideEffect
@@ -88,9 +88,7 @@ import com.akole.dividox.feature.dashboard.DashboardContract.DashboardViewEvent
 import com.akole.dividox.feature.dashboard.DashboardContract.DashboardViewState
 import com.akole.dividox.integration.security.domain.model.EnrichedWatchlistEntry
 import com.akole.dividox.integration.security.domain.model.PortfolioSummary
-import dividox.common.ui_resources.generated.resources.*
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emptyFlow
 
 @Composable
 fun DashboardScreen(
@@ -140,10 +138,15 @@ private fun DashboardContent(
         modifier = Modifier.background(backgroundBrush),
         containerColor = Color.Transparent,
         topBar = {
-            DividoxTopAppBar(
-                title = stringResource(Res.string.section_dashboard),
+            // The search bar replaces the title: the bottom navigation already tells which tab is open.
+            TopAppBar(
+                title = {
+                    DashboardSearchBar(
+                        onClick = { onEvent(DashboardViewEvent.SearchClicked) },
+                        modifier = Modifier.padding(end = MaterialTheme.spacing.small),
+                    )
+                },
                 actions = {
-                    DashboardSearchButton(onClick = { onEvent(DashboardViewEvent.SearchClicked) })
                     CurrencyDropdown(
                         selected = state.currency,
                         onCurrencySelected = { onEvent(DashboardViewEvent.CurrencySelected(it)) },
@@ -265,7 +268,8 @@ private fun CurrencyDropdown(
     Box(modifier = modifier.padding(end = MaterialTheme.spacing.small)) {
         FilledTonalButton(
             onClick = { expanded = true },
-            shape = RoundedCornerShape(8.dp),
+            modifier = Modifier.height(MaterialTheme.spacing.xxLarge),
+            shape = CircleShape,
             colors = ButtonDefaults.filledTonalButtonColors(
                 containerColor = MaterialTheme.colorScheme.secondaryContainer,
                 contentColor = MaterialTheme.colorScheme.onSecondaryContainer,

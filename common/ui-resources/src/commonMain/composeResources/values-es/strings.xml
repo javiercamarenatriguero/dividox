@@ -276,4 +276,5 @@
     <string name="portfolio_evolution_1m">1M</string>
     <string name="portfolio_evolution_1y">1A</string>
     <string name="portfolio_evolution_5y">5A</string>
+    <string name="dashboard_search_hint">Busca acciones, ETFs o fondos</string>
 </resources>
