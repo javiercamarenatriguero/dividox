@@ -157,6 +157,21 @@ private fun PortfolioContent(
                     ) {
                         Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
 
+                        // Hidden only for an empty portfolio; stays visible while searching.
+                        if (state.holdings.isNotEmpty() || state.searchQuery.isNotBlank()) {
+                            PortfolioEvolutionCard(
+                                points = state.evolution,
+                                isLoading = state.isEvolutionLoading,
+                                period = state.evolutionPeriod,
+                                periods = PortfolioContract.PortfolioViewState.EVOLUTION_PERIODS,
+                                currency = state.currency,
+                                onPeriodSelected = { period ->
+                                    onEvent(PortfolioContract.PortfolioViewEvent.EvolutionPeriodSelected(period))
+                                },
+                            )
+                            Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
+                        }
+
                         SearchBar(
                             query = state.searchQuery,
                             onQueryChanged = { query ->
@@ -189,22 +204,6 @@ private fun PortfolioContent(
                             )
                         } else {
                             HoldingsList(
-                                header = if (state.searchQuery.isBlank()) {
-                                    {
-                                        PortfolioEvolutionCard(
-                                            points = state.evolution,
-                                            isLoading = state.isEvolutionLoading,
-                                            period = state.evolutionPeriod,
-                                            periods = PortfolioContract.PortfolioViewState.EVOLUTION_PERIODS,
-                                            currency = state.currency,
-                                            onPeriodSelected = { period ->
-                                                onEvent(PortfolioContract.PortfolioViewEvent.EvolutionPeriodSelected(period))
-                                            },
-                                        )
-                                    }
-                                } else {
-                                    null
-                                },
                                 holdings = state.holdings,
                                 currency = state.currency,
                                 convertedPrices = state.convertedPrices,
@@ -337,7 +336,6 @@ private fun SortChip(
 
 @Composable
 private fun HoldingsList(
-    header: (@Composable () -> Unit)?,
     holdings: List<SecurityHolding>,
     currency: Currency,
     convertedPrices: Map<String, Double>,
@@ -351,7 +349,6 @@ private fun HoldingsList(
         // Keep the last card clear of the "Add position" FAB.
         contentPadding = PaddingValues(bottom = MaterialTheme.spacing.buttonMinHeight + MaterialTheme.spacing.large),
     ) {
-        header?.let { item(key = "evolution") { it() } }
         items(holdings) { holding ->
             HoldingCard(
                 holding = holding,
