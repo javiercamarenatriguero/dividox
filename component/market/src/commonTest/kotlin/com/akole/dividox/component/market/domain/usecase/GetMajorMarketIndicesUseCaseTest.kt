@@ -2,7 +2,7 @@ package com.akole.dividox.component.market.domain.usecase
 
 import com.akole.dividox.component.market.domain.model.StockQuote
 import com.akole.dividox.component.market.FakeMarketRepository
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
