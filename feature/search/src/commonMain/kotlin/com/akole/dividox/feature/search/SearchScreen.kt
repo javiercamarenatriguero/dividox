@@ -40,6 +40,9 @@ import com.akole.dividox.feature.search.SearchContract.SearchViewEvent.SecurityC
 import com.akole.dividox.feature.search.SearchContract.SearchViewEvent.TypeFilterChanged
 import com.akole.dividox.feature.search.SearchContract.SearchViewState
 import dividox.common.ui_resources.generated.resources.Res
+import dividox.common.ui_resources.generated.resources.action_add_position
+import dividox.common.ui_resources.generated.resources.add_position_search_hint
+import dividox.common.ui_resources.generated.resources.add_position_search_subtitle
 import dividox.common.ui_resources.generated.resources.holding_search_security_hint
 import dividox.common.ui_resources.generated.resources.search_no_results
 import dividox.common.ui_resources.generated.resources.search_title
@@ -57,6 +60,7 @@ fun SearchScreen(
     sideEffect: Flow<SearchSideEffect> = emptyFlow(),
     onEvent: (SearchViewEvent) -> Unit = {},
     onNavigation: (Navigation) -> Unit = {},
+    addMode: Boolean = false,
 ) {
     CollectSideEffect(sideEffect) { effect ->
         if (effect is Navigation) onNavigation(effect)
@@ -67,7 +71,7 @@ fun SearchScreen(
     Scaffold(
         topBar = {
             DividoxTopAppBar(
-                title = stringResource(Res.string.search_title),
+                title = stringResource(if (addMode) Res.string.action_add_position else Res.string.search_title),
                 onBack = { onEvent(BackClicked) },
             )
         },
@@ -82,11 +86,24 @@ fun SearchScreen(
                 ConnectivityBannerHost(connectivityFlow = connectivityManager.observeConnectivity())
             }
 
+            if (addMode) {
+                item {
+                    Text(
+                        text = stringResource(Res.string.add_position_search_subtitle),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = MaterialTheme.spacing.medium),
+                    )
+                }
+            }
+
             item {
                 SearchBar(
                     query = state.query,
                     onQueryChange = { onEvent(QueryChanged(it)) },
-                    placeholder = stringResource(Res.string.holding_search_security_hint),
+                    placeholder = stringResource(
+                        if (addMode) Res.string.add_position_search_hint else Res.string.holding_search_security_hint,
+                    ),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(

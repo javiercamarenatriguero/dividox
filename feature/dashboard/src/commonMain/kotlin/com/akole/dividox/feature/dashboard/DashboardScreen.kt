@@ -81,6 +81,7 @@ import com.akole.dividox.common.ui.resources.format.nameRes
 import com.akole.dividox.common.ui.resources.theme.extendedColors
 import com.akole.dividox.common.ui.resources.theme.spacing
 import dividox.common.ui_resources.generated.resources.Res
+import dividox.common.ui_resources.generated.resources.favourites_empty_hint
 import org.jetbrains.compose.resources.stringResource
 import com.akole.dividox.feature.dashboard.DashboardContract.DashboardSideEffect
 import com.akole.dividox.feature.dashboard.DashboardContract.DashboardViewEvent
@@ -142,6 +143,7 @@ private fun DashboardContent(
             DividoxTopAppBar(
                 title = stringResource(Res.string.section_dashboard),
                 actions = {
+                    DashboardSearchButton(onClick = { onEvent(DashboardViewEvent.SearchClicked) })
                     CurrencyDropdown(
                         selected = state.currency,
                         onCurrencySelected = { onEvent(DashboardViewEvent.CurrencySelected(it)) },
@@ -177,7 +179,9 @@ private fun DashboardContent(
 
                     // Each section renders as soon as its slice of state is available.
                     // Loading flags gate individual sections instead of blocking the whole screen.
-                    if (state.summaryLoading && state.summary == null) {
+                    if (!state.hasHoldings) {
+                        EmptyPortfolioCard(onAddClick = { onEvent(DashboardViewEvent.AddPositionClicked) })
+                    } else if (state.summaryLoading && state.summary == null) {
                         SectionSkeleton(heightDp = SKELETON_METRICS_HEIGHT)
                     } else {
                         PortfolioOverviewCard(
@@ -226,6 +230,9 @@ private fun DashboardContent(
                     )
                     Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
 
+                    AnalyzeStockCard(onClick = { onEvent(DashboardViewEvent.SearchClicked) })
+                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
+
                     NewsSection(
                         news = state.marketNews,
                         isLoading = state.marketNewsLoading,
@@ -234,7 +241,8 @@ private fun DashboardContent(
 
                     DisclaimerText()
 
-                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
+                    // Clearance for the "Add position" FAB so the disclaimer stays readable.
+                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.buttonMinHeight + MaterialTheme.spacing.large))
                 }
             }
         }

@@ -8,18 +8,15 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.FabPosition
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.retain.retain
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
@@ -33,7 +30,7 @@ import androidx.navigation.compose.rememberNavController
 import com.akole.dividox.common.ui.resources.components.BottomTab
 import com.akole.dividox.common.ui.resources.components.DividoxBottomBar
 import dividox.common.ui_resources.generated.resources.Res
-import dividox.common.ui_resources.generated.resources.portfolio_add_holding
+import dividox.common.ui_resources.generated.resources.action_add_position
 import dividox.common.ui_resources.generated.resources.section_dividends
 import dividox.common.ui_resources.generated.resources.section_portfolio
 import dividox.common.ui_resources.generated.resources.section_settings
@@ -51,6 +48,7 @@ import com.akole.dividox.feature.settings.SettingsViewSideEffect
 import com.akole.dividox.feature.settings.TermsScreen
 import com.akole.dividox.common.mvi.collectViewState
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.stringResource
@@ -64,7 +62,7 @@ data object MainGraphRoute
 data object PortfolioRoute
 
 @Serializable
-data class AddHoldingRoute(val ticker: String? = null)
+data class AddHoldingRoute(val ticker: String)
 
 @Serializable
 data class EditHoldingRoute(val holdingId: String)
@@ -92,11 +90,25 @@ fun NavController.navigateToMain(navOptions: NavOptions? = null) {
     this.navigate(MainGraphRoute, navOptions)
 }
 
-fun NavGraphBuilder.mainGraphNode(rootNavController: NavController) {
+/**
+ * @param tabRequests one-shot request to switch tab from outside the main graph (e.g. snackbar "View").
+ */
+fun NavGraphBuilder.mainGraphNode(
+    rootNavController: NavController,
+    snackbarHostState: SnackbarHostState,
+    tabRequests: MutableStateFlow<BottomTab?>,
+    onViewPortfolio: () -> Unit,
+) {
     composable<MainGraphRoute> {
         val innerNavController = rememberNavController()
         val navBackStackEntry by innerNavController.currentBackStackEntryAsState()
-        var portfolioFabClick by retain { mutableStateOf({}) }
+        val requestedTab by tabRequests.collectAsState()
+
+        LaunchedEffect(requestedTab) {
+            val tab = requestedTab ?: return@LaunchedEffect
+            innerNavController.navigateToTab(tab)
+            tabRequests.value = null
+        }
 
         val currentRoute = navBackStackEntry?.destination?.route
         val selectedTab = when {
@@ -112,42 +124,18 @@ fun NavGraphBuilder.mainGraphNode(rootNavController: NavController) {
             bottomBar = {
                 DividoxBottomBar(
                     selectedTab = selectedTab,
-                    onTabSelected = { tab ->
-                        val route = when (tab) {
-                            BottomTab.DASHBOARD -> DashboardRoute
-                            BottomTab.PORTFOLIO -> PortfolioRoute
-                            BottomTab.DIVIDENDS -> DividendsRoute
-                            BottomTab.SETTINGS -> SettingsRoute
-                        }
-                        innerNavController.navigate(route) {
-                            popUpTo(innerNavController.graph.startDestinationId) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    },
+                    onTabSelected = innerNavController::navigateToTab,
                 )
             },
+            snackbarHost = { PositionSnackbarHost(snackbarHostState, onViewPortfolio) },
             floatingActionButton = {
-                when (selectedTab) {
-                    BottomTab.DASHBOARD -> {
-                        FloatingActionButton(onClick = { rootNavController.navigate(SearchRoute) }) {
-                            Icon(
-                                imageVector = Icons.Default.Search,
-                                contentDescription = null,
-                            )
-                        }
-                    }
-                    BottomTab.PORTFOLIO -> {
-                        FloatingActionButton(onClick = portfolioFabClick) {
-                            Icon(
-                                imageVector = Icons.Default.Add,
-                                contentDescription = stringResource(Res.string.portfolio_add_holding),
-                            )
-                        }
-                    }
-                    else -> {}
+                // Same "Add position" entry point wherever positions are shown: search → form.
+                if (selectedTab == BottomTab.DASHBOARD || selectedTab == BottomTab.PORTFOLIO) {
+                    ExtendedFloatingActionButton(
+                        onClick = { rootNavController.navigateToSearch(addMode = true) },
+                        icon = { Icon(imageVector = Icons.Default.Add, contentDescription = null) },
+                        text = { Text(stringResource(Res.string.action_add_position)) },
+                    )
                 }
             },
             floatingActionButtonPosition = FabPosition.End,
@@ -158,15 +146,25 @@ fun NavGraphBuilder.mainGraphNode(rootNavController: NavController) {
                 modifier = Modifier.padding(innerPadding),
             ) {
                 dashboardScreenNode(navController = innerNavController, rootNavController = rootNavController)
-                portfolioScreenNode(
-                    navController = innerNavController,
-                    rootNavController = rootNavController,
-                    onRegisterFabClick = { callback -> portfolioFabClick = callback },
-                )
+                portfolioScreenNode(navController = innerNavController, rootNavController = rootNavController)
                 dividendsScreenNode(navController = innerNavController, rootNavController = rootNavController)
                 settingsScreenNode(navController = innerNavController, rootNavController = rootNavController)
             }
         }
+    }
+}
+
+private fun NavController.navigateToTab(tab: BottomTab) {
+    val route: Any = when (tab) {
+        BottomTab.DASHBOARD -> DashboardRoute
+        BottomTab.PORTFOLIO -> PortfolioRoute
+        BottomTab.DIVIDENDS -> DividendsRoute
+        BottomTab.SETTINGS -> SettingsRoute
+    }
+    navigate(route) {
+        popUpTo(graph.startDestinationId) { saveState = true }
+        launchSingleTop = true
+        restoreState = true
     }
 }
 

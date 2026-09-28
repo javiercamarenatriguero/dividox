@@ -68,11 +68,8 @@ val viewModelModule: Module = module {
         HoldingViewModel(
             holdingId = holdingId,
             prefillTicker = prefillTicker,
-            searchSecurities = get(),
             getStockQuote = get(),
-            addHolding = get(),
-            updateHolding = get(),
-            removeHolding = get(),
+            positionActions = get(),
             getPortfolio = get(),
             getCurrentTimeMillis = { getCurrentTimeMillis() },
             observeAppSettings = get(),

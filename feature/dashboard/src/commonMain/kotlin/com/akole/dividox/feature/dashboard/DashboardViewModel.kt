@@ -121,6 +121,12 @@ class DashboardViewModel(
             ViewAllPortfolioClicked -> viewModelScope.emitSideEffect(
                 DashboardSideEffect.Navigation.NavigateToPortfolio,
             )
+            DashboardViewEvent.SearchClicked -> viewModelScope.emitSideEffect(
+                DashboardSideEffect.Navigation.NavigateToSearch,
+            )
+            DashboardViewEvent.AddPositionClicked -> viewModelScope.emitSideEffect(
+                DashboardSideEffect.Navigation.NavigateToAddPosition,
+            )
             Refresh -> {
                 updateViewState { copy(isRefreshing = true) }
                 observeData()
@@ -276,6 +282,7 @@ class DashboardViewModel(
                         topGainers = gainersItems,
                         topLosers = losersItems,
                         portfolioTodayLoading = false,
+                        hasHoldings = holdings.isNotEmpty(),
                     )
                 }
             }

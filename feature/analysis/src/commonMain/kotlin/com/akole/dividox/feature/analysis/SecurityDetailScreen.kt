@@ -121,7 +121,7 @@ fun SecurityDetailScreen(
                         Icon(
                             imageVector = if (state.isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
                             contentDescription = stringResource(Res.string.cd_remove_from_favourites),
-                            tint = if (state.isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                            tint = if (state.isFavorite) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
                         )
                     }
                 },

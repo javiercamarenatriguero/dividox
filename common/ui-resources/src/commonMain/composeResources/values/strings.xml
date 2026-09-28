@@ -69,7 +69,7 @@
     <string name="disclaimer_prices_delayed">Prices delayed 15 minutes</string>
     <string name="portfolio_search_placeholder">Filter holdings...</string>
     <string name="portfolio_add_holding">Add Stock</string>
-    <string name="portfolio_empty_state">No holdings yet.\nTap + to add your first one.</string>
+    <string name="portfolio_empty_state">Search the securities you own and add them in seconds.</string>
     <string name="portfolio_sort_gain">Gain</string>
     <string name="portfolio_sort_value">Value</string>
     <string name="portfolio_sort_yield">Dividend</string>
@@ -83,7 +83,7 @@
     <string name="action_update_position">Update Position</string>
     <string name="action_delete">Delete</string>
     <string name="action_cancel">Cancel</string>
-    <string name="label_shares">Shares</string>
+    <string name="label_shares">Number of shares</string>
     <string name="label_price_per_share">Price per Share</string>
     <string name="label_purchase_date">Purchase Date</string>
     <string name="label_estimated_value">Estimated Value</string>
@@ -259,4 +259,22 @@
     <string name="onboarding_page5_feature3">Private data</string>
     <string name="onboarding_sample_search_query">Coca</string>
     <string name="onboarding_cd_illustration">Illustration of the feature</string>
+    <!-- Add position flow -->
+    <string name="add_position_search_hint">Search the stock, ETF or fund you own</string>
+    <string name="add_position_search_subtitle">Pick a security to add it to your portfolio</string>
+    <string name="holding_security_unavailable">Couldn\'t load this security. Check your connection and try again.</string>
+    <string name="position_added">%1$s added to your portfolio</string>
+    <string name="position_updated">%1$s updated</string>
+    <string name="position_removed">%1$s removed from your portfolio</string>
+    <string name="position_save_failed">Couldn\'t save %1$s. Please try again.</string>
+    <string name="action_view">View</string>
+    <string name="action_undo">Undo</string>
+    <string name="cd_search">Search</string>
+    <string name="portfolio_empty_title">Your portfolio is empty</string>
+    <string name="portfolio_empty_cta">Add your first position</string>
+    <string name="dashboard_empty_title">Start your portfolio</string>
+    <string name="dashboard_empty_message">Add the securities you own to track value, returns and dividends.</string>
+    <string name="dashboard_analyze_cta_title">Analyze any stock</string>
+    <string name="dashboard_analyze_cta_subtitle">See its fundamentals, dividends and valuation</string>
+    <string name="dividends_yoy_caption">vs. last year</string>
 </resources>

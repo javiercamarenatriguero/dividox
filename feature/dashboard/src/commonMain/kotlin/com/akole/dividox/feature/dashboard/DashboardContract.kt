@@ -44,6 +44,8 @@ interface DashboardContract {
         val lifetimeDividendsLoading: Boolean = true,
         val portfolioTodayLoading: Boolean = true,
         val watchlistLoading: Boolean = true,
+        /** `false` once the portfolio is known to be empty → show the "add your first position" CTA. */
+        val hasHoldings: Boolean = true,
     ) : ViewState
 
     sealed interface DashboardViewEvent : ViewEvent {
@@ -54,6 +56,8 @@ interface DashboardContract {
         data object ViewAllFavouritesClicked : DashboardViewEvent
         data object ViewAllPortfolioClicked : DashboardViewEvent
         data object Refresh : DashboardViewEvent
+        data object SearchClicked : DashboardViewEvent
+        data object AddPositionClicked : DashboardViewEvent
     }
 
     sealed interface DashboardSideEffect : SideEffect {
@@ -61,6 +65,10 @@ interface DashboardContract {
             data class NavigateToSecurity(val ticker: String) : Navigation
             data object NavigateToFavorites : Navigation
             data object NavigateToPortfolio : Navigation
+            /** Explore search: a result opens the security analysis. */
+            data object NavigateToSearch : Navigation
+            /** "Add position" search: a result opens the position form. */
+            data object NavigateToAddPosition : Navigation
         }
     }
 }

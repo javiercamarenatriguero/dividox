@@ -69,7 +69,7 @@
     <string name="disclaimer_prices_delayed">Precios atrasados 15 minutos</string>
     <string name="portfolio_search_placeholder">Filtrar tenencias...</string>
     <string name="portfolio_add_holding">Añadir Acción</string>
-    <string name="portfolio_empty_state">Sin tenencias aún.\nToca + para añadir la primera.</string>
+    <string name="portfolio_empty_state">Busca los valores que tienes y añádelos en segundos.</string>
     <string name="portfolio_sort_gain">Ganancia</string>
     <string name="portfolio_sort_value">Valor</string>
     <string name="portfolio_sort_yield">Dividendo</string>
@@ -83,7 +83,7 @@
     <string name="action_update_position">Actualizar</string>
     <string name="action_delete">Eliminar</string>
     <string name="action_cancel">Cancelar</string>
-    <string name="label_shares">Acciones</string>
+    <string name="label_shares">Número de acciones</string>
     <string name="label_price_per_share">Precio por Acción</string>
     <string name="label_purchase_date">Fecha de Compra</string>
     <string name="label_estimated_value">Valor Estimado</string>
@@ -255,4 +255,22 @@
     <string name="onboarding_page5_feature3">Datos privados</string>
     <string name="onboarding_sample_search_query">Coca</string>
     <string name="onboarding_cd_illustration">Ilustración de la funcionalidad</string>
+    <!-- Add position flow -->
+    <string name="add_position_search_hint">Busca la acción, ETF o fondo que tienes</string>
+    <string name="add_position_search_subtitle">Elige un valor para añadirlo a tu portfolio</string>
+    <string name="holding_security_unavailable">No se pudo cargar este valor. Comprueba tu conexión e inténtalo de nuevo.</string>
+    <string name="position_added">%1$s añadida a tu portfolio</string>
+    <string name="position_updated">%1$s actualizada</string>
+    <string name="position_removed">%1$s eliminada de tu portfolio</string>
+    <string name="position_save_failed">No se pudo guardar %1$s. Inténtalo de nuevo.</string>
+    <string name="action_view">Ver</string>
+    <string name="action_undo">Deshacer</string>
+    <string name="cd_search">Buscar</string>
+    <string name="portfolio_empty_title">Tu portfolio está vacío</string>
+    <string name="portfolio_empty_cta">Añade tu primera posición</string>
+    <string name="dashboard_empty_title">Empieza tu portfolio</string>
+    <string name="dashboard_empty_message">Añade los valores que tienes para seguir su valor, rentabilidad y dividendos.</string>
+    <string name="dashboard_analyze_cta_title">Analiza cualquier acción</string>
+    <string name="dashboard_analyze_cta_subtitle">Consulta sus fundamentales, dividendos y valoración</string>
+    <string name="dividends_yoy_caption">vs. año anterior</string>
 </resources>

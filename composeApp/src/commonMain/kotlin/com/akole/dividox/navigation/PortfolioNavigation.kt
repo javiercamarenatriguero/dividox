@@ -4,6 +4,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.getValue
 import androidx.navigation.NavController
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavOptions
 import androidx.navigation.compose.composable
@@ -11,7 +12,6 @@ import androidx.navigation.toRoute
 import com.akole.dividox.common.mvi.collectViewState
 import com.akole.dividox.feature.portfolio.HoldingScreen
 import com.akole.dividox.feature.portfolio.HoldingViewModel
-import com.akole.dividox.feature.portfolio.PortfolioContract
 import com.akole.dividox.feature.portfolio.PortfolioContract.PortfolioSideEffect
 import com.akole.dividox.feature.portfolio.PortfolioScreen
 import com.akole.dividox.feature.portfolio.PortfolioViewModel
@@ -22,7 +22,7 @@ fun NavController.navigateToPortfolio(navOptions: NavOptions? = null) {
     this.navigate(PortfolioRoute, navOptions)
 }
 
-fun NavController.navigateToAddHolding(ticker: String? = null) {
+fun NavController.navigateToAddHolding(ticker: String) {
     this.navigate(AddHoldingRoute(ticker))
 }
 
@@ -33,16 +33,10 @@ fun NavController.navigateToEditHolding(holdingId: String) {
 fun NavGraphBuilder.portfolioScreenNode(
     navController: NavController,
     rootNavController: NavController,
-    onRegisterFabClick: ((() -> Unit) -> Unit) = {},
 ) {
     composable<PortfolioRoute> {
         val viewModel = koinViewModel<PortfolioViewModel>()
         val state by collectViewState(viewModel.viewState)
-
-        onRegisterFabClick {
-            viewModel.onViewEvent(PortfolioContract.PortfolioViewEvent.AddHoldingClicked)
-        }
-
         PortfolioScreen(
             state = state,
             onEvent = viewModel::onViewEvent,
@@ -52,7 +46,7 @@ fun NavGraphBuilder.portfolioScreenNode(
                     is PortfolioSideEffect.Navigation.NavigateToSecurity ->
                         rootNavController.navigateToSecurityDetail(ticker = navigation.ticker)
                     is PortfolioSideEffect.Navigation.NavigateToAddHolding ->
-                        rootNavController.navigateToAddHolding()
+                        rootNavController.navigateToSearch(addMode = true)
                     is PortfolioSideEffect.Navigation.NavigateToEditHolding ->
                         rootNavController.navigateToEditHolding(navigation.holdingId)
                 }
@@ -75,10 +69,23 @@ fun NavGraphBuilder.addHoldingScreenNode(navController: NavController) {
         HoldingScreen(
             viewModel = viewModel,
             onBack = { navController.popBackStack() },
-            onPositionSaved = { navController.popBackStack() },
-            onPositionDeleted = { navController.popBackStack() },
+            onPositionSaved = { navController.popAddPositionFlow() },
+            onPositionDeleted = { navController.popAddPositionFlow() },
         )
     }
+}
+
+/**
+ * Leaves the form; when it was reached through the "Add position" search, that search is closed too
+ * so the user lands back where the flow started (Dashboard / Portfolio). From Security detail, the
+ * user returns to the detail.
+ */
+private fun NavController.popAddPositionFlow() {
+    val previous = previousBackStackEntry
+    val cameFromAddSearch = previous?.destination?.hasRoute<SearchRoute>() == true &&
+        previous.toRoute<SearchRoute>().addMode
+    popBackStack()
+    if (cameFromAddSearch) popBackStack()
 }
 
 fun NavGraphBuilder.editHoldingScreenNode(navController: NavController) {

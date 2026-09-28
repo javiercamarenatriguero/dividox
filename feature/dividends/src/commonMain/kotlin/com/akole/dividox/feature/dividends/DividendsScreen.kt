@@ -5,10 +5,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -28,7 +26,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -38,7 +35,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -55,29 +51,19 @@ import com.akole.dividox.common.ui.resources.components.LastUpdatedBar
 import com.akole.dividox.common.ui.resources.components.connectivity.ConnectivityBannerHost
 import com.akole.dividox.common.ui.resources.components.connectivity.LocalNetworkConnectivityManager
 import com.akole.dividox.common.ui.resources.format.formatBarChartPopupLabel
-import com.akole.dividox.common.ui.resources.format.formatPercent
-import com.akole.dividox.common.ui.resources.format.formatPercentSigned
 import com.akole.dividox.common.ui.resources.format.formatPrice
 import com.akole.dividox.common.ui.resources.format.formatShort
 import com.akole.dividox.common.ui.resources.format.monthFull
-import com.akole.dividox.common.ui.resources.theme.extendedColors
 import com.akole.dividox.common.ui.resources.theme.spacing
 import com.akole.dividox.feature.dividends.DividendsContract.DividendsSideEffect
 import com.akole.dividox.feature.dividends.DividendsContract.DividendsViewEvent
 import com.akole.dividox.feature.dividends.DividendsContract.DividendsViewState
-import com.akole.dividox.integration.dividend.domain.model.DividendActivitySummary
 import com.akole.dividox.integration.dividend.domain.model.EnrichedPayment
 import com.akole.dividox.integration.dividend.domain.model.MonthBar
 import dividox.common.ui_resources.generated.resources.Res
 import dividox.common.ui_resources.generated.resources.cd_collapse
 import dividox.common.ui_resources.generated.resources.cd_expand
 import dividox.common.ui_resources.generated.resources.dividends_empty_state
-import dividox.common.ui_resources.generated.resources.dividends_metric_lifetime
-import dividox.common.ui_resources.generated.resources.dividends_metric_next_payout
-import dividox.common.ui_resources.generated.resources.dividends_metric_ytd
-import dividox.common.ui_resources.generated.resources.dividends_metric_yoc
-import dividox.common.ui_resources.generated.resources.dividends_metric_yoc_target
-import dividox.common.ui_resources.generated.resources.dividends_metric_yoy
 import dividox.common.ui_resources.generated.resources.dividends_section_past_activity
 import dividox.common.ui_resources.generated.resources.dividends_section_projection
 import dividox.common.ui_resources.generated.resources.dividends_ex_date
@@ -86,7 +72,6 @@ import dividox.common.ui_resources.generated.resources.dividends_show_less
 import dividox.common.ui_resources.generated.resources.dividends_show_more
 import dividox.common.ui_resources.generated.resources.dividends_tap_to_retry
 import dividox.common.ui_resources.generated.resources.dividends_title
-import dividox.common.ui_resources.generated.resources.ui_no_value
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.LocalDate
 import org.jetbrains.compose.resources.stringResource
@@ -189,7 +174,7 @@ private fun DividendsContent(
         // Section 1 — Critical Metrics
         item {
             state.summary?.let { summary ->
-                DividendMetricsBlock(
+                DividendOverviewCard(
                     summary = summary,
                     currency = state.currency,
                     modifier = Modifier
@@ -319,224 +304,6 @@ private fun DividendsContent(
         }
 
         item { Spacer(Modifier.height(MaterialTheme.spacing.medium)) }
-    }
-}
-
-// ─── Section 1: Metrics ──────────────────────────────────────────────────────
-
-@Composable
-private fun DividendMetricsBlock(
-    summary: DividendActivitySummary,
-    currency: Currency,
-    modifier: Modifier = Modifier,
-) {
-    val yoy = summary.yoyPercent
-    val yoyColor = when {
-        yoy == null -> MaterialTheme.colorScheme.onSurfaceVariant
-        yoy >= 0 -> MaterialTheme.extendedColors.profit
-        else -> MaterialTheme.colorScheme.error
-    }
-
-    Card(
-        modifier = modifier,
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer,
-        ),
-    ) {
-        Column {
-            // ── Hero: Lifetime ──────────────────────────────────────────────
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = MaterialTheme.spacing.medium)
-                    .padding(top = MaterialTheme.spacing.large, bottom = MaterialTheme.spacing.medium),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Text(
-                    text = stringResource(Res.string.dividends_metric_lifetime),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Spacer(Modifier.height(MaterialTheme.spacing.xSmall))
-                Text(
-                    text = summary.lifetime.formatPrice(currency),
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                )
-            }
-
-            // ── YoY accent strip ────────────────────────────────────────────
-            if (yoy != null) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(yoyColor.copy(alpha = 0.10f))
-                        .padding(horizontal = MaterialTheme.spacing.medium, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = stringResource(Res.string.dividends_metric_yoy),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = yoyColor,
-                    )
-                    Spacer(Modifier.width(MaterialTheme.spacing.xSmall))
-                    Text(
-                        text = yoy.formatPercentSigned(),
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = yoyColor,
-                    )
-                }
-            }
-
-            HorizontalDivider(
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
-            )
-
-            // ── Row: YTD | Next Payout ──────────────────────────────────────
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(IntrinsicSize.Min)
-                    .padding(MaterialTheme.spacing.medium),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-            ) {
-                MetricItem(
-                    label = stringResource(Res.string.dividends_metric_ytd),
-                    value = summary.ytd.formatPrice(currency),
-                    modifier = Modifier.weight(1f),
-                )
-                Box(
-                    Modifier
-                        .width(1.dp)
-                        .fillMaxHeight()
-                        .background(MaterialTheme.colorScheme.outlineVariant),
-                )
-                val nextPayout = summary.nextPayout
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(horizontal = MaterialTheme.spacing.small),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Text(
-                        text = stringResource(Res.string.dividends_metric_next_payout),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Spacer(Modifier.height(2.dp))
-                    if (nextPayout != null) {
-                        Text(
-                            text = nextPayout.payment.tickerId,
-                            style = MaterialTheme.typography.bodySmall,
-                            fontWeight = FontWeight.SemiBold,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                        Text(
-                            text = nextPayout.payment.paymentDate.formatShort(),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    } else {
-                        Text(
-                            text = stringResource(Res.string.ui_no_value),
-                            style = MaterialTheme.typography.bodySmall,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                    }
-                }
-            }
-
-            HorizontalDivider(
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
-            )
-
-            // ── YoC progress ────────────────────────────────────────────────
-            val progress = (summary.yoc / summary.yocTarget).coerceIn(0.0, 1.0).toFloat()
-            val progressColor = if (summary.yoc >= summary.yocTarget) {
-                MaterialTheme.extendedColors.profit
-            } else {
-                MaterialTheme.colorScheme.primary
-            }
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(MaterialTheme.spacing.medium),
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = stringResource(Res.string.dividends_metric_yoc),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Text(
-                        text = stringResource(
-                            Res.string.dividends_metric_yoc_target,
-                            summary.yocTarget.formatPercent(),
-                        ),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                Spacer(Modifier.height(MaterialTheme.spacing.xSmall))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
-                ) {
-                    LinearProgressIndicator(
-                        progress = { progress },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(6.dp)
-                            .clip(RoundedCornerShape(3.dp)),
-                        color = progressColor,
-                        trackColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    )
-                    Text(
-                        text = summary.yoc.formatPercent(),
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = progressColor,
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun MetricItem(
-    label: String,
-    value: String,
-    modifier: Modifier = Modifier,
-    valueColor: Color = MaterialTheme.colorScheme.onSurface,
-) {
-    Column(
-        modifier = modifier.padding(horizontal = 8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Spacer(Modifier.height(2.dp))
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.SemiBold,
-            color = valueColor,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
     }
 }
 

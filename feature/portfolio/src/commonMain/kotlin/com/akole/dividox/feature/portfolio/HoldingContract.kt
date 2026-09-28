@@ -1,8 +1,6 @@
 package com.akole.dividox.feature.portfolio
 
 import com.akole.dividox.common.currency.domain.model.Currency
-import com.akole.dividox.common.ui.resources.components.ExchangeMarket
-import com.akole.dividox.component.market.domain.model.SecurityType
 import com.akole.dividox.component.market.domain.model.StockQuote
 import com.akole.dividox.component.portfolio.domain.model.HoldingId
 import com.akole.dividox.component.portfolio.domain.model.Holding
@@ -17,17 +15,14 @@ object HoldingContract {
         val mode: Mode = Mode.ADD,
         val holdingId: HoldingId? = null,
         val originalHolding: Holding? = null,
-        val searchQuery: String = "",
-        val searchResults: List<StockQuote> = emptyList(),
         val selectedSecurity: StockQuote? = null,
         val shares: String = "",
         val pricePerShare: String = "",
         val currency: Currency = Currency.USD,
         val purchaseDateMillis: Long = kotlin.time.Clock.System.now().toEpochMilliseconds(),
         val estimatedTotal: Double = 0.0,
-        val selectedMarket: ExchangeMarket = ExchangeMarket.ALL,
-        val selectedType: SecurityType? = null,
-        val isSearching: Boolean = false,
+        /** The security is being resolved (quote fetch) before the form can be shown. */
+        val isLoadingSecurity: Boolean = false,
         val isSaving: Boolean = false,
         val error: String? = null,
         val showDeleteConfirmation: Boolean = false,
@@ -38,12 +33,6 @@ object HoldingContract {
     sealed interface HoldingViewEvent {
         // Initialization (EDIT mode only)
         data class LoadHolding(val holdingId: HoldingId) : HoldingViewEvent
-
-        // Search & selection
-        data class SearchQueryChanged(val query: String) : HoldingViewEvent
-        data class MarketFilterChanged(val market: ExchangeMarket) : HoldingViewEvent
-        data class TypeFilterChanged(val type: SecurityType?) : HoldingViewEvent
-        data class SecuritySelected(val security: StockQuote) : HoldingViewEvent
 
         // Form inputs
         data class SharesChanged(val shares: String) : HoldingViewEvent
