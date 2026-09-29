@@ -44,7 +44,7 @@
     <string name="metric_total_value">Valor Total</string>
     <string name="metric_invested">Invertido</string>
     <string name="metric_total_gain">Ganancia Total</string>
-    <string name="metric_yield">Rend. de Dividendos</string>
+    <string name="metric_yield">Rto. de dividendos</string>
     <string name="metric_period_gain">Cartera</string>
     <string name="dashboard_portfolio_today">Tu Cartera Hoy</string>
     <string name="dashboard_gainers">Ganadores</string>
@@ -52,7 +52,7 @@
     <string name="metric_dividends">Dividendos</string>
     <string name="metric_dividends_lifetime">total</string>
     <string name="metric_total_return">Rentabilidad total</string>
-    <string name="metric_dividends_received">Dividendos cobrados</string>
+    <string name="metric_dividends_received">Dividendos total</string>
     <string name="dashboard_period_dividends">+%1$s · %2$s</string>
     <string name="section_favourites">Tus Favoritos</string>
     <string name="action_view_all">VER TODO</string>
@@ -79,7 +79,7 @@
     <string name="portfolio_purchase_price">Compra</string>
     <string name="portfolio_per_share">/acción</string>
     <string name="portfolio_shares_format">%1$s acciones</string>
-    <string name="portfolio_yield_label">Rend. de Dividendos: %1$s</string>
+    <string name="portfolio_yield_label">Rto. de dividendos: %1$s</string>
     <string name="action_add_position">Añadir Acción</string>
     <string name="action_update_position">Actualizar</string>
     <string name="action_delete">Eliminar</string>
@@ -103,9 +103,9 @@
     <string name="dividends_show_less">Mostrar menos</string>
     <string name="dividends_section_past_activity">Actividad Pasada</string>
     <string name="dividends_metric_lifetime">Histórico</string>
-    <string name="dividends_metric_ytd">Este Año</string>
+    <string name="dividends_metric_ytd">Este año</string>
     <string name="dividends_metric_yoy">YoY</string>
-    <string name="dividends_metric_next_payout">Próximo Pago</string>
+    <string name="dividends_metric_next_payout">Próximo pago</string>
     <string name="dividends_section_projection">Proyección de Dividendos</string>
     <string name="dividends_empty_state">Sin datos de dividendos aún</string>
     <string name="cd_collapse">Contraer</string>
@@ -127,7 +127,7 @@
     <string name="analysis_error_loading">Error cargando detalles</string>
     <string name="analysis_retry">Reintentar</string>
     <string name="analysis_price_chart">Gráfico de Precios</string>
-    <string name="analysis_metric_yield">Rend. de Dividendos</string>
+    <string name="analysis_metric_yield">Rto. de dividendos</string>
     <string name="analysis_metric_annual_payout">Pago Anual</string>
     <string name="analysis_metric_payout_ratio">Ratio de Pago</string>
     <string name="analysis_metric_5y_growth">Crecimiento 5A</string>
@@ -158,15 +158,15 @@
     <string name="settings_about">Acerca de DiviDox</string>
     <string name="settings_terms">Términos y Condiciones</string>
     <string name="settings_privacy">Política de Privacidad</string>
-    <string name="settings_export">Exportar Cartera</string>
-    <string name="settings_delete_account">Eliminar Cuenta</string>
-    <string name="settings_sign_out">Cerrar Sesión</string>
-    <string name="settings_sign_out_confirm_title">Cerrar Sesión</string>
+    <string name="settings_export">Exportar cartera</string>
+    <string name="settings_delete_account">Eliminar cuenta</string>
+    <string name="settings_sign_out">Cerrar sesión</string>
+    <string name="settings_sign_out_confirm_title">Cerrar sesión</string>
     <string name="settings_sign_out_confirm_message">¿Seguro de que deseas cerrar sesión?</string>
-    <string name="settings_delete_confirm_title">Eliminar Cuenta</string>
+    <string name="settings_delete_confirm_title">Eliminar cuenta</string>
     <string name="settings_delete_confirm_message">Esta acción es permanente y no se puede deshacer.</string>
     <string name="settings_currency_picker_title">Seleccionar Moneda</string>
-    <string name="settings_default_market">Mercado Predeterminado</string>
+    <string name="settings_default_market">Mercado predeterminado</string>
     <string name="settings_market_picker_title">Seleccionar Mercado</string>
     <string name="settings_close">Cerrar</string>
     <!-- About screen -->

@@ -44,7 +44,7 @@
     <string name="metric_total_value">Total Value</string>
     <string name="metric_invested">Invested</string>
     <string name="metric_total_gain">Total Gain</string>
-    <string name="metric_yield">Dividend Yield</string>
+    <string name="metric_yield">Dividend yield</string>
     <string name="metric_period_gain">Portfolio</string>
     <string name="dashboard_portfolio_today">Your Portfolio Today</string>
     <string name="dashboard_gainers">Gainers</string>
@@ -52,7 +52,7 @@
     <string name="metric_dividends">Dividends</string>
     <string name="metric_dividends_lifetime">total</string>
     <string name="metric_total_return">Total return</string>
-    <string name="metric_dividends_received">Dividends received</string>
+    <string name="metric_dividends_received">Total dividends</string>
     <string name="dashboard_period_dividends">+%1$s · %2$s</string>
     <string name="section_favourites">Favourites</string>
     <string name="action_view_all">VIEW ALL</string>
@@ -79,7 +79,7 @@
     <string name="portfolio_purchase_price">Purchase</string>
     <string name="portfolio_per_share">/share</string>
     <string name="portfolio_shares_format">%1$s shares</string>
-    <string name="portfolio_yield_label">Dividend Yield: %1$s</string>
+    <string name="portfolio_yield_label">Dividend yield: %1$s</string>
     <string name="action_add_position">Add Position</string>
     <string name="action_update_position">Update Position</string>
     <string name="action_delete">Delete</string>
@@ -105,7 +105,7 @@
     <string name="dividends_metric_lifetime">Lifetime</string>
     <string name="dividends_metric_ytd">YTD</string>
     <string name="dividends_metric_yoy">YoY</string>
-    <string name="dividends_metric_next_payout">Next Payout</string>
+    <string name="dividends_metric_next_payout">Next payout</string>
     <string name="dividends_section_projection">Dividend Projection</string>
     <string name="dividends_empty_state">No dividend data yet</string>
     <string name="cd_collapse">Collapse</string>
@@ -159,15 +159,15 @@
     <string name="settings_about">About DiviDox</string>
     <string name="settings_terms">Terms &amp; Conditions</string>
     <string name="settings_privacy">Privacy Policy</string>
-    <string name="settings_export">Export Portfolio</string>
-    <string name="settings_delete_account">Delete Account</string>
-    <string name="settings_sign_out">Sign Out</string>
-    <string name="settings_sign_out_confirm_title">Sign Out</string>
+    <string name="settings_export">Export portfolio</string>
+    <string name="settings_delete_account">Delete account</string>
+    <string name="settings_sign_out">Sign out</string>
+    <string name="settings_sign_out_confirm_title">Sign out</string>
     <string name="settings_sign_out_confirm_message">Are you sure you want to sign out?</string>
-    <string name="settings_delete_confirm_title">Delete Account</string>
+    <string name="settings_delete_confirm_title">Delete account</string>
     <string name="settings_delete_confirm_message">This action is permanent and cannot be undone.</string>
     <string name="settings_currency_picker_title">Select Currency</string>
-    <string name="settings_default_market">Default Market</string>
+    <string name="settings_default_market">Default market</string>
     <string name="settings_market_picker_title">Select Market</string>
     <string name="settings_close">Close</string>
     <!-- About screen -->
