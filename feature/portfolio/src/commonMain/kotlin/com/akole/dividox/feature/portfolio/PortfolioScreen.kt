@@ -26,6 +26,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -48,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.retain.retain
@@ -73,6 +75,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Instant
 import dividox.common.ui_resources.generated.resources.Res
+import dividox.common.ui_resources.generated.resources.cd_clear_search
 import dividox.common.ui_resources.generated.resources.portfolio_edit
 import dividox.common.ui_resources.generated.resources.portfolio_per_share
 import dividox.common.ui_resources.generated.resources.portfolio_purchase_price
@@ -249,6 +252,22 @@ private fun SearchBar(
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+        },
+        trailingIcon = {
+            if (localQuery.isNotEmpty()) {
+                IconButton(
+                    onClick = {
+                        localQuery = ""
+                        onQueryChanged("")
+                    },
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = stringResource(Res.string.cd_clear_search),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
         },
         singleLine = true,
         shape = RoundedCornerShape(12.dp),

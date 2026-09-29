@@ -11,6 +11,7 @@ import com.akole.dividox.component.portfolio.domain.model.HoldingId
 import com.akole.dividox.component.portfolio.domain.usecase.GetPortfolioUseCase
 import kotlin.math.pow
 import kotlin.math.round
+import kotlin.math.roundToLong
 import kotlin.time.Clock
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -69,7 +70,8 @@ class HoldingViewModel(
     fun onEvent(event: HoldingContract.HoldingViewEvent) {
         when (event) {
             is HoldingContract.HoldingViewEvent.SharesChanged -> {
-                _state.update { it.copy(shares = event.shares) }
+                // Whole shares only: drop anything from the first non-digit on ("10.5" -> "10").
+                _state.update { it.copy(shares = event.shares.takeWhile { char -> char.isDigit() }) }
                 recalculateTotal()
             }
 
@@ -160,8 +162,8 @@ class HoldingViewModel(
         mode = HoldingContract.Mode.EDIT,
         holdingId = holding.id,
         originalHolding = holding,
-        shares = holding.shares.toString(),
-        pricePerShare = holding.purchasePrice.toString(),
+        shares = holding.shares.toSharesInput(),
+        pricePerShare = holding.purchasePrice.toPriceInput(),
         currency = holding.purchaseCurrency,
         purchaseDateMillis = holding.purchaseDate,
     )
@@ -178,7 +180,7 @@ class HoldingViewModel(
     private fun handleConfirm() {
         val state = _state.value
         val security = state.selectedSecurity ?: return sendError("Please select a security")
-        val shares = state.shares.toDoubleOrNull() ?: return sendError("Please enter shares")
+        val shares = state.shares.toLongOrNull()?.toDouble() ?: return sendError("Please enter shares")
         val price = state.pricePerShare.toDoubleOrNull() ?: return sendError("Please enter price per share")
 
         val holding = Holding(
@@ -215,6 +217,9 @@ class HoldingViewModel(
 private const val PRICE_DECIMALS = 2
 private const val SMALL_PRICE_DECIMALS = 4
 private const val DECIMAL_BASE = 10.0
+
+/** Share count as an editable form value: whole number only, so backspacing never hits a "." */
+internal fun Double.toSharesInput(): String = roundToLong().toString()
 
 /** Quote price as an editable form value: 2 decimals (4 for sub-unit prices), no trailing ".0". */
 internal fun Double.toPriceInput(): String {

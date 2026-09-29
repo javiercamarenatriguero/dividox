@@ -15,6 +15,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.BasicAlertDialog
@@ -25,6 +26,7 @@ import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -70,6 +72,7 @@ import dividox.common.ui_resources.generated.resources.action_add_position
 import dividox.common.ui_resources.generated.resources.action_cancel
 import dividox.common.ui_resources.generated.resources.action_delete
 import dividox.common.ui_resources.generated.resources.action_update_position
+import dividox.common.ui_resources.generated.resources.cd_clear_field
 import dividox.common.ui_resources.generated.resources.cd_delete
 import dividox.common.ui_resources.generated.resources.dialog_remove_message
 import dividox.common.ui_resources.generated.resources.dialog_remove_title
@@ -226,8 +229,13 @@ private fun HoldingForm(
                 }
             },
             label = { Text(stringResource(Res.string.label_shares)) },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().focusRequester(sharesFocus),
             singleLine = true,
+            trailingIcon = {
+                ClearFieldButton(visible = state.shares.isNotEmpty()) {
+                    onEvent(HoldingContract.HoldingViewEvent.SharesChanged(""))
+                }
+            },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
         )
 
@@ -242,6 +250,11 @@ private fun HoldingForm(
             label = { Text(stringResource(Res.string.label_price_per_share)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
+            trailingIcon = {
+                ClearFieldButton(visible = state.pricePerShare.isNotEmpty()) {
+                    onEvent(HoldingContract.HoldingViewEvent.PricePerShareChanged(""))
+                }
+            },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
         )
 
@@ -316,6 +329,18 @@ private fun HoldingForm(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun ClearFieldButton(visible: Boolean, onClear: () -> Unit) {
+    if (!visible) return
+    IconButton(onClick = onClear) {
+        Icon(
+            imageVector = Icons.Default.Close,
+            contentDescription = stringResource(Res.string.cd_clear_field),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 
@@ -597,9 +622,9 @@ private fun HoldingScreenEditPrefilledPreview() {
                 mode = HoldingContract.Mode.EDIT,
                 holdingId = HoldingId("h1"),
                 selectedSecurity = mockQuote,
-                shares = "10.5",
+                shares = "10",
                 pricePerShare = "320.0",
-                estimatedTotal = 3360.0,
+                estimatedTotal = 3200.0,
             ),
             onEvent = {},
         )

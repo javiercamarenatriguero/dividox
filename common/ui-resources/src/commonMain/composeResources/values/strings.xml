@@ -65,6 +65,7 @@
     <string name="security_type_etf">ETF</string>
     <string name="security_type_fund">Fund</string>
     <string name="cd_clear_search">Clear search</string>
+    <string name="cd_clear_field">Clear field</string>
     <string name="favorites_title">Favourites</string>
     <string name="disclaimer_prices_delayed">Prices delayed 15 minutes</string>
     <string name="portfolio_search_placeholder">Filter holdings...</string>

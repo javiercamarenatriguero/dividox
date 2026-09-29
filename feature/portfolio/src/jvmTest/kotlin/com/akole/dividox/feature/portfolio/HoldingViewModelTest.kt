@@ -132,15 +132,29 @@ class HoldingViewModelTest {
     }
 
     @Test
-    fun test_addMode_sharesChanged_updates_state() = runTest {
+    fun test_addMode_sharesChanged_keeps_only_whole_numbers() = runTest {
         // GIVEN: ADD mode viewmodel
         val vm = createAddViewModel()
 
-        // WHEN: user enters shares
+        // WHEN: user enters shares with a decimal part
         vm.onEvent(HoldingContract.HoldingViewEvent.SharesChanged("10.5"))
 
-        // THEN: shares value is updated
-        assertEquals("10.5", vm.viewState.value.shares)
+        // THEN: only the integer part is kept
+        assertEquals("10", vm.viewState.value.shares)
+    }
+
+    @Test
+    fun test_addMode_sharesChanged_can_be_cleared() = runTest {
+        // GIVEN: ADD mode viewmodel with shares typed
+        val vm = createAddViewModel()
+        vm.onEvent(HoldingContract.HoldingViewEvent.SharesChanged("120"))
+
+        // WHEN: the field is cleared (X button)
+        vm.onEvent(HoldingContract.HoldingViewEvent.SharesChanged(""))
+
+        // THEN: shares is empty and the estimated total resets
+        assertEquals("", vm.viewState.value.shares)
+        assertEquals(0.0, vm.viewState.value.estimatedTotal)
     }
 
     @Test
@@ -170,16 +184,16 @@ class HoldingViewModelTest {
     }
 
     @Test
-    fun test_addMode_estimatedTotal_handles_decimal_values() = runTest {
+    fun test_addMode_estimatedTotal_handles_decimal_price() = runTest {
         // GIVEN: ADD mode viewmodel
         val vm = createAddViewModel()
 
-        // WHEN: user enters decimal shares and price
-        vm.onEvent(HoldingContract.HoldingViewEvent.SharesChanged("2.5"))
+        // WHEN: user enters whole shares and a decimal price
+        vm.onEvent(HoldingContract.HoldingViewEvent.SharesChanged("3"))
         vm.onEvent(HoldingContract.HoldingViewEvent.PricePerShareChanged("100.5"))
 
-        // THEN: estimatedTotal = 2.5 * 100.5 = 251.25
-        assertEquals(251.25, vm.viewState.value.estimatedTotal)
+        // THEN: estimatedTotal = 3 * 100.5 = 301.5
+        assertEquals(301.5, vm.viewState.value.estimatedTotal)
     }
 
     @Test
@@ -288,7 +302,8 @@ class HoldingViewModelTest {
         val state = vm.viewState.value
         assertEquals(HoldingContract.Mode.EDIT, state.mode)
         assertEquals(HoldingId("h9"), state.holdingId)
-        assertEquals("120.0", state.pricePerShare)
+        assertEquals("3", state.shares)
+        assertEquals("120", state.pricePerShare)
     }
 
     @Test
