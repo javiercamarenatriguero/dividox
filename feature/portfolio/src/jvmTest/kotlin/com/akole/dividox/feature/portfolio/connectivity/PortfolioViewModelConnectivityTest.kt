@@ -12,6 +12,7 @@ import com.akole.dividox.common.currency.domain.model.Currency
 import com.akole.dividox.feature.portfolio.PortfolioViewModel
 import com.akole.dividox.integration.security.domain.model.SecurityHolding
 import com.akole.dividox.integration.security.domain.usecase.GetPortfolioWithQuotesUseCase
+import com.akole.dividox.integration.security.domain.usecase.GetPortfolioValueHistoryUseCase
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -66,6 +67,7 @@ class PortfolioViewModelConnectivityTest {
         mockObserveSettings,
         mockCurrencyConverter,
         mockConnectivityManager,
+        mockk<GetPortfolioValueHistoryUseCase> { coEvery { this@mockk.invoke(any(), any(), any()) } returns emptyList() },
     )
 
     private val apple = SecurityHolding(

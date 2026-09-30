@@ -2,7 +2,7 @@ package com.akole.dividox.component.market.data.mapper
 
 import com.akole.dividox.component.market.data.dto.NewsItemDto
 import com.akole.dividox.component.market.domain.model.NewsItem
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 
 internal fun NewsItemDto.toNewsItem(): NewsItem = NewsItem(
     id = uuid,

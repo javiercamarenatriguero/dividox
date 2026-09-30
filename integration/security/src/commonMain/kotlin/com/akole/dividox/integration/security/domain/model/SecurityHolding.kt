@@ -12,10 +12,13 @@ import com.akole.dividox.component.portfolio.domain.model.Holding
  * @property dividendInfo Dividend data for the ticker; null when unavailable.
  * @property totalGainPercent Percentage gain/loss relative to the cost basis:
  *   `(currentValue - costBasis) / costBasis * 100`.
+ * @property isDividendInfoResolved false while [dividendInfo] has not been fetched yet
+ *   (null means "pending"); true once fetched, even if the result is null (unavailable).
  */
 data class SecurityHolding(
     val holding: Holding,
     val quote: StockQuote,
     val dividendInfo: DividendInfo?,
     val totalGainPercent: Double,
+    val isDividendInfoResolved: Boolean = true,
 )

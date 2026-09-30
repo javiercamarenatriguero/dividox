@@ -55,13 +55,9 @@ fun MarketIndicesSection(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
-        Text(
-            text = stringResource(Res.string.dashboard_market_indices_title),
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.SemiBold,
-        )
+        DashboardSectionHeader(title = stringResource(Res.string.dashboard_market_indices_title))
 
-        Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
+        Spacer(modifier = Modifier.height(MaterialTheme.spacing.xSmall))
 
         when {
             isLoading -> MarketIndicesLoadingPlaceholder()

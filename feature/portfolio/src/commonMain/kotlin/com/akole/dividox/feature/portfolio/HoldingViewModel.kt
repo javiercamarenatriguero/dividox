@@ -2,18 +2,16 @@ package com.akole.dividox.feature.portfolio
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.akole.dividox.common.currency.domain.model.Currency
 import com.akole.dividox.common.settings.domain.usecase.ObserveAppSettingsUseCase
-import com.akole.dividox.common.ui.resources.components.ExchangeMarket
-import com.akole.dividox.component.market.domain.model.SecurityType
 import com.akole.dividox.component.market.domain.model.StockQuote
 import com.akole.dividox.component.market.domain.usecase.GetStockQuoteUseCase
-import com.akole.dividox.component.market.domain.usecase.SearchSecuritiesUseCase
 import com.akole.dividox.component.portfolio.domain.model.Holding
 import com.akole.dividox.component.portfolio.domain.model.HoldingId
-import com.akole.dividox.component.portfolio.domain.usecase.AddHoldingUseCase
 import com.akole.dividox.component.portfolio.domain.usecase.GetPortfolioUseCase
-import com.akole.dividox.component.portfolio.domain.usecase.RemoveHoldingUseCase
-import com.akole.dividox.component.portfolio.domain.usecase.UpdateHoldingUseCase
+import kotlin.math.pow
+import kotlin.math.round
+import kotlin.math.roundToLong
 import kotlin.time.Clock
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,28 +19,35 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+/**
+ * Position form (add / edit). The security is always chosen *before* reaching this screen
+ * (global search in "add" mode, security detail, or an existing holding), so the form never
+ * contains its own search.
+ *
+ * ADD mode pre-fills price (current quote), currency (quote currency) and date (today) so adding
+ * a position only requires typing the number of shares.
+ */
+@Suppress("TooManyFunctions")
 class HoldingViewModel(
     private val holdingId: HoldingId?,
     private val prefillTicker: String? = null,
-    private val searchSecurities: SearchSecuritiesUseCase,
     private val getStockQuote: GetStockQuoteUseCase,
-    private val addHolding: AddHoldingUseCase,
-    private val updateHolding: UpdateHoldingUseCase,
-    private val removeHolding: RemoveHoldingUseCase,
+    private val positionActions: PositionActions,
     private val getPortfolio: GetPortfolioUseCase,
     private val getCurrentTimeMillis: () -> Long,
     private val observeAppSettings: ObserveAppSettingsUseCase,
 ) : ViewModel() {
 
-    private var allSearchResults: List<StockQuote> = emptyList()
-
     private val _state = MutableStateFlow(
         HoldingContract.HoldingViewState(
             mode = if (holdingId != null) HoldingContract.Mode.EDIT else HoldingContract.Mode.ADD,
             holdingId = holdingId,
-        )
+            purchaseDateMillis = getCurrentTimeMillis(),
+            isLoadingSecurity = holdingId != null || prefillTicker != null,
+        ),
     )
     val viewState: StateFlow<HoldingContract.HoldingViewState> = _state.asStateFlow()
 
@@ -52,9 +57,8 @@ class HoldingViewModel(
     init {
         viewModelScope.launch {
             val settings = observeAppSettings().first()
-            val defaultMarket = ExchangeMarket.entries.firstOrNull { it.name == settings.defaultMarket }
-                ?: ExchangeMarket.ALL
-            _state.value = _state.value.copy(currency = settings.currency, selectedMarket = defaultMarket)
+            // Only a fallback: a resolved security/holding dictates its own currency.
+            _state.update { if (it.selectedSecurity == null) it.copy(currency = settings.currency) else it }
         }
         if (holdingId != null) {
             loadExistingHolding(holdingId)
@@ -65,63 +69,30 @@ class HoldingViewModel(
 
     fun onEvent(event: HoldingContract.HoldingViewEvent) {
         when (event) {
-            is HoldingContract.HoldingViewEvent.SearchQueryChanged -> {
-                _state.value = _state.value.copy(searchQuery = event.query)
-                performSearch(event.query)
-            }
-
-            is HoldingContract.HoldingViewEvent.MarketFilterChanged -> {
-                _state.value = _state.value.copy(
-                    selectedMarket = event.market,
-                    searchResults = allSearchResults.filterByMarket(event.market).filterByType(_state.value.selectedType),
-                )
-            }
-
-            is HoldingContract.HoldingViewEvent.TypeFilterChanged -> {
-                _state.value = _state.value.copy(
-                    selectedType = event.type,
-                    searchResults = allSearchResults.filterByMarket(_state.value.selectedMarket).filterByType(event.type),
-                )
-            }
-
-            is HoldingContract.HoldingViewEvent.SecuritySelected -> {
-                _state.value = _state.value.copy(
-                    selectedSecurity = event.security,
-                    searchQuery = "",
-                    searchResults = emptyList(),
-                )
-                checkPortfolioForExistingHolding(event.security.ticker)
-            }
-
             is HoldingContract.HoldingViewEvent.SharesChanged -> {
-                _state.value = _state.value.copy(shares = event.shares)
+                // Whole shares only: drop anything from the first non-digit on ("10.5" -> "10").
+                _state.update { it.copy(shares = event.shares.takeWhile { char -> char.isDigit() }) }
                 recalculateTotal()
             }
 
             is HoldingContract.HoldingViewEvent.PricePerShareChanged -> {
-                _state.value = _state.value.copy(pricePerShare = event.price)
+                _state.update { it.copy(pricePerShare = event.price) }
                 recalculateTotal()
             }
 
-            is HoldingContract.HoldingViewEvent.CurrencyChanged -> {
-                _state.value = _state.value.copy(currency = event.currency)
-            }
+            is HoldingContract.HoldingViewEvent.CurrencyChanged -> _state.update { it.copy(currency = event.currency) }
 
-            is HoldingContract.HoldingViewEvent.PurchaseDateChanged -> {
-                _state.value = _state.value.copy(purchaseDateMillis = event.dateMillis)
-            }
+            is HoldingContract.HoldingViewEvent.PurchaseDateChanged ->
+                _state.update { it.copy(purchaseDateMillis = event.dateMillis) }
 
             HoldingContract.HoldingViewEvent.ConfirmClicked -> handleConfirm()
 
-            HoldingContract.HoldingViewEvent.DeleteClicked -> {
-                _state.value = _state.value.copy(showDeleteConfirmation = true)
-            }
+            HoldingContract.HoldingViewEvent.DeleteClicked -> _state.update { it.copy(showDeleteConfirmation = true) }
 
             HoldingContract.HoldingViewEvent.ConfirmDeleteClicked -> handleDelete()
 
-            HoldingContract.HoldingViewEvent.CancelDeleteClicked -> {
-                _state.value = _state.value.copy(showDeleteConfirmation = false)
-            }
+            HoldingContract.HoldingViewEvent.CancelDeleteClicked ->
+                _state.update { it.copy(showDeleteConfirmation = false) }
 
             HoldingContract.HoldingViewEvent.DismissClicked -> Unit
             is HoldingContract.HoldingViewEvent.LoadHolding -> Unit
@@ -135,8 +106,12 @@ class HoldingViewModel(
      */
     private fun loadExistingHolding(id: HoldingId) {
         viewModelScope.launch {
-            val holdings = getPortfolio.execute().first().getOrNull() ?: return@launch
-            val holding = holdings.firstOrNull { it.id == id } ?: return@launch
+            val holdings = getPortfolio.execute().first().getOrNull()
+            val holding = holdings?.firstOrNull { it.id == id }
+            if (holding == null) {
+                _state.update { it.copy(isLoadingSecurity = false) }
+                return@launch
+            }
 
             val quote = getStockQuote(holding.tickerId).getOrNull() ?: StockQuote(
                 ticker = holding.tickerId,
@@ -147,164 +122,108 @@ class HoldingViewModel(
                 lastUpdated = Clock.System.now(),
             )
 
-            _state.value = _state.value.copy(
-                originalHolding = holding,
-                holdingId = holding.id,
-                selectedSecurity = quote,
-                searchQuery = holding.tickerId,
-                shares = holding.shares.toString(),
-                pricePerShare = holding.purchasePrice.toString(),
-                currency = holding.purchaseCurrency,
-                purchaseDateMillis = holding.purchaseDate,
-            )
+            _state.update { it.copy(selectedSecurity = quote, isLoadingSecurity = false).withHolding(holding) }
             recalculateTotal()
         }
     }
 
     private fun prefillSecurity(ticker: String) {
         viewModelScope.launch {
-            _state.value = _state.value.copy(searchQuery = ticker, isSearching = true)
-            val quote = getStockQuote(ticker).getOrNull() ?: run {
-                _state.value = _state.value.copy(isSearching = false)
+            val quote = getStockQuote(ticker).getOrNull()
+            if (quote == null) {
+                _state.update { it.copy(isLoadingSecurity = false) }
                 return@launch
             }
-            _state.value = _state.value.copy(
-                selectedSecurity = quote,
-                searchQuery = ticker,
-                searchResults = emptyList(),
-                isSearching = false,
-            )
+            _state.update {
+                it.copy(
+                    selectedSecurity = quote,
+                    isLoadingSecurity = false,
+                    pricePerShare = quote.price.toPriceInput(),
+                    currency = Currency.entries.firstOrNull { c -> c.code == quote.currency } ?: it.currency,
+                )
+            }
+            recalculateTotal()
             checkPortfolioForExistingHolding(ticker)
         }
     }
 
     /**
-     * When the user selects a security in ADD mode, checks whether that ticker already exists
-     * in the portfolio. If it does, the form is switched to EDIT mode and pre-filled with the
-     * existing holding's data so the user updates rather than duplicates a position.
+     * If the chosen ticker already exists in the portfolio, switch to EDIT mode pre-filled with the
+     * existing holding so the user updates rather than duplicates a position.
      */
-    private fun checkPortfolioForExistingHolding(ticker: String) {
-        if (_state.value.mode == HoldingContract.Mode.EDIT) return
-        viewModelScope.launch {
-            val holdings = getPortfolio.execute().first().getOrNull() ?: return@launch
-            val existing = holdings.firstOrNull { it.tickerId == ticker } ?: return@launch
-            _state.value = _state.value.copy(
-                mode = HoldingContract.Mode.EDIT,
-                holdingId = existing.id,
-                originalHolding = existing,
-                shares = existing.shares.toString(),
-                pricePerShare = existing.purchasePrice.toString(),
-                currency = existing.purchaseCurrency,
-                purchaseDateMillis = existing.purchaseDate,
-            )
-            recalculateTotal()
-        }
+    private suspend fun checkPortfolioForExistingHolding(ticker: String) {
+        val holdings = getPortfolio.execute().first().getOrNull() ?: return
+        val existing = holdings.firstOrNull { it.tickerId == ticker } ?: return
+        _state.update { it.withHolding(existing) }
+        recalculateTotal()
     }
 
-    private fun performSearch(query: String) {
-        viewModelScope.launch {
-            if (query.isNotBlank()) {
-                try {
-                    val market = _state.value.selectedMarket
-                    _state.value = _state.value.copy(isSearching = true)
-                    val results = searchSecurities(query, market.region).getOrElse { emptyList() }
-                    allSearchResults = results
-                    _state.value = _state.value.copy(
-                        searchResults = results.filterByMarket(market).filterByType(_state.value.selectedType),
-                        isSearching = false,
-                    )
-                } catch (e: Exception) {
-                    _state.value = _state.value.copy(isSearching = false, error = e.message)
-                    _sideEffect.send(HoldingContract.HoldingSideEffect.ShowError(e.message ?: "Search failed"))
-                }
-            } else {
-                allSearchResults = emptyList()
-                _state.value = _state.value.copy(searchResults = emptyList())
-            }
-        }
-    }
-
-    private fun List<StockQuote>.filterByMarket(market: ExchangeMarket): List<StockQuote> =
-        if (market == ExchangeMarket.ALL) this else filter { market.matches(it.exchange) }
-
-    private fun List<StockQuote>.filterByType(type: SecurityType?): List<StockQuote> =
-        if (type == null) this else filter { it.type == type }
+    private fun HoldingContract.HoldingViewState.withHolding(holding: Holding) = copy(
+        mode = HoldingContract.Mode.EDIT,
+        holdingId = holding.id,
+        originalHolding = holding,
+        shares = holding.shares.toSharesInput(),
+        pricePerShare = holding.purchasePrice.toPriceInput(),
+        currency = holding.purchaseCurrency,
+        purchaseDateMillis = holding.purchaseDate,
+    )
 
     private fun recalculateTotal() {
-        val shares = _state.value.shares.toDoubleOrNull() ?: 0.0
-        val price = _state.value.pricePerShare.toDoubleOrNull() ?: 0.0
-        _state.value = _state.value.copy(estimatedTotal = shares * price)
+        _state.update {
+            val shares = it.shares.toDoubleOrNull() ?: 0.0
+            val price = it.pricePerShare.toDoubleOrNull() ?: 0.0
+            it.copy(estimatedTotal = shares * price)
+        }
     }
 
+    @Suppress("ReturnCount")
     private fun handleConfirm() {
         val state = _state.value
-        if (state.selectedSecurity == null) {
-            viewModelScope.launch {
-                _sideEffect.send(HoldingContract.HoldingSideEffect.ShowError("Please select a security"))
-            }
-            return
-        }
-        if (state.shares.isBlank()) {
-            viewModelScope.launch {
-                _sideEffect.send(HoldingContract.HoldingSideEffect.ShowError("Please enter shares"))
-            }
-            return
-        }
-        if (state.pricePerShare.isBlank()) {
-            viewModelScope.launch {
-                _sideEffect.send(HoldingContract.HoldingSideEffect.ShowError("Please enter price per share"))
-            }
-            return
-        }
+        val security = state.selectedSecurity ?: return sendError("Please select a security")
+        val shares = state.shares.toLongOrNull()?.toDouble() ?: return sendError("Please enter shares")
+        val price = state.pricePerShare.toDoubleOrNull() ?: return sendError("Please enter price per share")
 
-        val shares = state.shares.toDouble()
-        val price = state.pricePerShare.toDouble()
-        val ticker = state.selectedSecurity.ticker
-        val currency = state.currency
-
-        // Navigate back immediately (optimistic), then execute in background
-        viewModelScope.launch {
-            _state.value = _state.value.copy(operationCompleted = true, operationIsDelete = false)
-            _sideEffect.send(HoldingContract.HoldingSideEffect.PositionSaved)
+        val holding = Holding(
+            id = state.holdingId ?: HoldingId("temp"),
+            tickerId = security.ticker,
+            shares = shares,
+            purchasePrice = price,
+            purchaseCurrency = state.currency,
+            purchaseDate = state.purchaseDateMillis,
+        )
+        if (state.mode == HoldingContract.Mode.EDIT && state.holdingId != null) {
+            positionActions.update(holding)
+        } else {
+            positionActions.add(holding)
         }
-
-        viewModelScope.launch {
-            if (state.mode == HoldingContract.Mode.ADD) {
-                addHolding.execute(
-                    Holding(
-                        id = HoldingId("temp"),
-                        tickerId = ticker,
-                        shares = shares,
-                        purchasePrice = price,
-                        purchaseCurrency = currency,
-                        purchaseDate = state.purchaseDateMillis,
-                    )
-                )
-            } else if (state.mode == HoldingContract.Mode.EDIT && state.holdingId != null) {
-                updateHolding.execute(
-                    Holding(
-                        id = state.holdingId,
-                        tickerId = ticker,
-                        shares = shares,
-                        purchasePrice = price,
-                        purchaseCurrency = currency,
-                        purchaseDate = state.purchaseDateMillis,
-                    )
-                )
-            }
-        }
+        // Navigate back immediately (optimistic); the write and its confirmation live in PositionActions.
+        _state.update { it.copy(operationCompleted = true, operationIsDelete = false) }
+        viewModelScope.launch { _sideEffect.send(HoldingContract.HoldingSideEffect.PositionSaved) }
     }
+
     private fun handleDelete() {
-        val holdingId = _state.value.holdingId ?: return
-
-        // Navigate back immediately (optimistic), then execute in background
-        viewModelScope.launch {
-            _state.value = _state.value.copy(operationCompleted = true, operationIsDelete = true)
-            _sideEffect.send(HoldingContract.HoldingSideEffect.PositionDeleted)
-        }
-
-        viewModelScope.launch {
-            removeHolding.execute(holdingId)
-        }
+        val state = _state.value
+        val holdingId = state.holdingId ?: return
+        positionActions.remove(holdingId, state.selectedSecurity?.ticker ?: state.originalHolding?.tickerId.orEmpty())
+        _state.update { it.copy(operationCompleted = true, operationIsDelete = true, showDeleteConfirmation = false) }
+        viewModelScope.launch { _sideEffect.send(HoldingContract.HoldingSideEffect.PositionDeleted) }
     }
+
+    private fun sendError(message: String) {
+        viewModelScope.launch { _sideEffect.send(HoldingContract.HoldingSideEffect.ShowError(message)) }
+    }
+}
+
+private const val PRICE_DECIMALS = 2
+private const val SMALL_PRICE_DECIMALS = 4
+private const val DECIMAL_BASE = 10.0
+
+/** Share count as an editable form value: whole number only, so backspacing never hits a "." */
+internal fun Double.toSharesInput(): String = roundToLong().toString()
+
+/** Quote price as an editable form value: 2 decimals (4 for sub-unit prices), no trailing ".0". */
+internal fun Double.toPriceInput(): String {
+    val factor = DECIMAL_BASE.pow(if (this >= 1.0) PRICE_DECIMALS else SMALL_PRICE_DECIMALS)
+    val text = (round(this * factor) / factor).toString()
+    return text.removeSuffix(".0")
 }

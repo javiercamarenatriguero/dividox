@@ -19,4 +19,11 @@ actual fun Currency.flag(): String = when (this) {
     Currency.MXN -> "MX"
     Currency.BRL -> "BR"
     Currency.ZAR -> "ZA"
+    Currency.SEK -> "SE"
+    Currency.NOK -> "NO"
+    Currency.DKK -> "DK"
+    Currency.PLN -> "PL"
+    Currency.HKD -> "HK"
+    Currency.SGD -> "SG"
+    Currency.KRW -> "KR"
 }

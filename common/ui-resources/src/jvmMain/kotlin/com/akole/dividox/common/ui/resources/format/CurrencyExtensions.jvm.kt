@@ -17,4 +17,11 @@ actual fun Currency.flag(): String = when (this) {
     Currency.MXN -> "🇲🇽"
     Currency.BRL -> "🇧🇷"
     Currency.ZAR -> "🇿🇦"
+    Currency.SEK -> "🇸🇪"
+    Currency.NOK -> "🇳🇴"
+    Currency.DKK -> "🇩🇰"
+    Currency.PLN -> "🇵🇱"
+    Currency.HKD -> "🇭🇰"
+    Currency.SGD -> "🇸🇬"
+    Currency.KRW -> "🇰🇷"
 }

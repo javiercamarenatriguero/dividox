@@ -15,6 +15,7 @@ kotlin {
             implementation(project(":common:settings"))
             implementation(project(":common:mvi"))
             implementation(libs.compose.foundation)
+            implementation(compose.materialIconsExtended)
             implementation(libs.kotlinx.coroutines.core)
         }
         commonTest.dependencies {

@@ -7,7 +7,7 @@ import com.akole.dividox.component.market.domain.model.StockQuote
 import com.akole.dividox.component.portfolio.domain.model.Holding
 import com.akole.dividox.component.portfolio.domain.model.HoldingId
 import com.akole.dividox.component.market.domain.usecase.GetStockQuoteUseCase
-import com.akole.dividox.component.market.domain.usecase.SearchSecuritiesUseCase
+import com.akole.dividox.component.portfolio.domain.repository.PortfolioRepository
 import com.akole.dividox.component.portfolio.domain.usecase.GetPortfolioUseCase
 import com.akole.dividox.component.portfolio.domain.usecase.AddHoldingUseCase
 import com.akole.dividox.component.portfolio.domain.usecase.RemoveHoldingUseCase
@@ -25,9 +25,13 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Instant
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -38,13 +42,20 @@ import kotlinx.coroutines.test.setMain
 class HoldingViewModelTest {
 
     private val testDispatcher = UnconfinedTestDispatcher()
-    private val mockSearch = mockk<SearchSecuritiesUseCase>()
     private val mockGetStockQuote = mockk<GetStockQuoteUseCase>()
-    private val mockAddHolding = mockk<AddHoldingUseCase>()
+    // MockK can't return Result<value class> (ClassCastException on HoldingId), so adds use a fake repo.
+    private val addRepository = FakeAddRepository()
+    private val mockAddHolding = AddHoldingUseCase(addRepository)
     private val mockUpdateHolding = mockk<UpdateHoldingUseCase>()
     private val mockRemoveHolding = mockk<RemoveHoldingUseCase>()
     private val mockGetPortfolio = mockk<GetPortfolioUseCase>()
     private val mockObserveSettings = mockk<ObserveAppSettingsUseCase>()
+    private val positionActions = PositionActions(
+        addHolding = mockAddHolding,
+        updateHolding = mockUpdateHolding,
+        removeHolding = mockRemoveHolding,
+        scope = CoroutineScope(testDispatcher),
+    )
 
     companion object {
         private const val FIXED_TIMESTAMP = 1700000000000L
@@ -65,11 +76,18 @@ class HoldingViewModelTest {
 
     private fun createAddViewModel() = HoldingViewModel(
         holdingId = null,
-        searchSecurities = mockSearch,
         getStockQuote = mockGetStockQuote,
-        addHolding = mockAddHolding,
-        updateHolding = mockUpdateHolding,
-        removeHolding = mockRemoveHolding,
+        positionActions = positionActions,
+        getPortfolio = mockGetPortfolio,
+        getCurrentTimeMillis = { FIXED_TIMESTAMP },
+        observeAppSettings = mockObserveSettings,
+    )
+
+    private fun createPrefillViewModel(ticker: String) = HoldingViewModel(
+        holdingId = null,
+        prefillTicker = ticker,
+        getStockQuote = mockGetStockQuote,
+        positionActions = positionActions,
         getPortfolio = mockGetPortfolio,
         getCurrentTimeMillis = { FIXED_TIMESTAMP },
         observeAppSettings = mockObserveSettings,
@@ -77,11 +95,8 @@ class HoldingViewModelTest {
 
     private fun createEditViewModel(holdingId: HoldingId = HoldingId("h1")) = HoldingViewModel(
         holdingId = holdingId,
-        searchSecurities = mockSearch,
         getStockQuote = mockGetStockQuote,
-        addHolding = mockAddHolding,
-        updateHolding = mockUpdateHolding,
-        removeHolding = mockRemoveHolding,
+        positionActions = positionActions,
         getPortfolio = mockGetPortfolio,
         getCurrentTimeMillis = { FIXED_TIMESTAMP },
         observeAppSettings = mockObserveSettings,
@@ -117,77 +132,29 @@ class HoldingViewModelTest {
     }
 
     @Test
-    fun test_addMode_searchQuery_updated() = runTest {
-        // GIVEN: ADD mode viewmodel
-        val vm = createAddViewModel()
-        val initialState = vm.viewState.value
-        assertEquals("", initialState.searchQuery)
-
-        // WHEN: user types "APP"
-        vm.onEvent(HoldingContract.HoldingViewEvent.SearchQueryChanged("APP"))
-
-        // THEN: searchQuery is updated
-        assertEquals("APP", vm.viewState.value.searchQuery)
-    }
-
-    @Test
-    fun test_addMode_search_performs_lookup() = runTest {
-        // GIVEN: mock search returns results for "AAPL"
-        val results = listOf(createQuote("AAPL", 150.0))
-        coEvery { mockSearch("AAPL") } returns Result.success(results)
-
-        val vm = createAddViewModel()
-
-        // WHEN: user types search query
-        vm.onEvent(HoldingContract.HoldingViewEvent.SearchQueryChanged("AAPL"))
-        advanceUntilIdle()
-
-        // THEN: searchResults are populated
-        assertEquals(results, vm.viewState.value.searchResults)
-    }
-
-    @Test
-    fun test_addMode_search_clears_on_empty_query() = runTest {
-        // GIVEN: search results exist
-        val results = listOf(createQuote("AAPL"))
-        coEvery { mockSearch("A") } returns Result.success(results)
-        val vm = createAddViewModel()
-        vm.onEvent(HoldingContract.HoldingViewEvent.SearchQueryChanged("A"))
-        advanceUntilIdle()
-        assertTrue(vm.viewState.value.searchResults.isNotEmpty())
-
-        // WHEN: user clears search query
-        vm.onEvent(HoldingContract.HoldingViewEvent.SearchQueryChanged(""))
-
-        // THEN: searchResults are cleared
-        assertTrue(vm.viewState.value.searchResults.isEmpty())
-    }
-
-    @Test
-    fun test_addMode_selectSecurity_populates_form() = runTest {
-        // GIVEN: search result exists
-        val quote = createQuote("MSFT", 350.0)
-        val vm = createAddViewModel()
-
-        // WHEN: user selects security
-        vm.onEvent(HoldingContract.HoldingViewEvent.SecuritySelected(quote))
-
-        // THEN: selectedSecurity is set, search query updated, results cleared
-        assertEquals(quote, vm.viewState.value.selectedSecurity)
-        assertEquals("MSFT", vm.viewState.value.searchQuery)
-        assertTrue(vm.viewState.value.searchResults.isEmpty())
-    }
-
-    @Test
-    fun test_addMode_sharesChanged_updates_state() = runTest {
+    fun test_addMode_sharesChanged_keeps_only_whole_numbers() = runTest {
         // GIVEN: ADD mode viewmodel
         val vm = createAddViewModel()
 
-        // WHEN: user enters shares
+        // WHEN: user enters shares with a decimal part
         vm.onEvent(HoldingContract.HoldingViewEvent.SharesChanged("10.5"))
 
-        // THEN: shares value is updated
-        assertEquals("10.5", vm.viewState.value.shares)
+        // THEN: only the integer part is kept
+        assertEquals("10", vm.viewState.value.shares)
+    }
+
+    @Test
+    fun test_addMode_sharesChanged_can_be_cleared() = runTest {
+        // GIVEN: ADD mode viewmodel with shares typed
+        val vm = createAddViewModel()
+        vm.onEvent(HoldingContract.HoldingViewEvent.SharesChanged("120"))
+
+        // WHEN: the field is cleared (X button)
+        vm.onEvent(HoldingContract.HoldingViewEvent.SharesChanged(""))
+
+        // THEN: shares is empty and the estimated total resets
+        assertEquals("", vm.viewState.value.shares)
+        assertEquals(0.0, vm.viewState.value.estimatedTotal)
     }
 
     @Test
@@ -217,16 +184,16 @@ class HoldingViewModelTest {
     }
 
     @Test
-    fun test_addMode_estimatedTotal_handles_decimal_values() = runTest {
+    fun test_addMode_estimatedTotal_handles_decimal_price() = runTest {
         // GIVEN: ADD mode viewmodel
         val vm = createAddViewModel()
 
-        // WHEN: user enters decimal shares and price
-        vm.onEvent(HoldingContract.HoldingViewEvent.SharesChanged("2.5"))
+        // WHEN: user enters whole shares and a decimal price
+        vm.onEvent(HoldingContract.HoldingViewEvent.SharesChanged("3"))
         vm.onEvent(HoldingContract.HoldingViewEvent.PricePerShareChanged("100.5"))
 
-        // THEN: estimatedTotal = 2.5 * 100.5 = 251.25
-        assertEquals(251.25, vm.viewState.value.estimatedTotal)
+        // THEN: estimatedTotal = 3 * 100.5 = 301.5
+        assertEquals(301.5, vm.viewState.value.estimatedTotal)
     }
 
     @Test
@@ -260,10 +227,9 @@ class HoldingViewModelTest {
     fun test_addMode_confirmClicked_adds_holding_successfully() = runTest {
         // GIVEN: valid form with all fields
         val quote = createQuote("AAPL", 150.0)
-        coEvery { mockAddHolding.execute(any()) } returns Result.success(HoldingId("new-id"))
         
-        val vm = createAddViewModel()
-        vm.onEvent(HoldingContract.HoldingViewEvent.SecuritySelected(quote))
+        coEvery { mockGetStockQuote("AAPL") } returns Result.success(quote)
+        val vm = createPrefillViewModel("AAPL")
         vm.onEvent(HoldingContract.HoldingViewEvent.SharesChanged("5"))
         vm.onEvent(HoldingContract.HoldingViewEvent.PricePerShareChanged("150"))
 
@@ -272,10 +238,91 @@ class HoldingViewModelTest {
         advanceUntilIdle()
 
         // THEN: AddHoldingUseCase.execute() should be called
-        coVerify(exactly = 1) { mockAddHolding.execute(any()) }
+        assertEquals(1, addRepository.added.size)
         assertFalse(vm.viewState.value.isSaving)
         assertTrue(vm.viewState.value.operationCompleted)
         assertFalse(vm.viewState.value.operationIsDelete)
+    }
+
+    @Test
+    fun test_addMode_confirmClicked_emits_added_feedback() = runTest {
+        // GIVEN: a prefilled form and a successful add
+        coEvery { mockGetStockQuote("AAPL") } returns Result.success(createQuote("AAPL", 150.0))
+        val feedback = mutableListOf<PositionFeedback>()
+        backgroundScope.launch(testDispatcher) { positionActions.feedback.collect { feedback += it } }
+        val vm = createPrefillViewModel("AAPL")
+        vm.onEvent(HoldingContract.HoldingViewEvent.SharesChanged("5"))
+
+        // WHEN: user confirms
+        vm.onEvent(HoldingContract.HoldingViewEvent.ConfirmClicked)
+        advanceUntilIdle()
+
+        // THEN: the app shell is told which position was added (for "View" / "Undo")
+        assertEquals(listOf<PositionFeedback>(PositionFeedback.Added("AAPL", HoldingId("new-id"))), feedback)
+    }
+
+    @Test
+    fun test_prefill_sets_price_currency_and_today() = runTest {
+        // GIVEN: the chosen security quotes 187.456 USD
+        coEvery { mockGetStockQuote("AAPL") } returns Result.success(createQuote("AAPL", 187.456))
+
+        // WHEN: the form opens for AAPL
+        val vm = createPrefillViewModel("AAPL")
+        advanceUntilIdle()
+
+        // THEN: only shares remain to be typed
+        val state = vm.viewState.value
+        assertEquals("AAPL", state.selectedSecurity?.ticker)
+        assertEquals("187.46", state.pricePerShare)
+        assertEquals(Currency.USD, state.currency)
+        assertEquals(FIXED_TIMESTAMP, state.purchaseDateMillis)
+        assertFalse(state.isLoadingSecurity)
+        assertEquals(HoldingContract.Mode.ADD, state.mode)
+    }
+
+    @Test
+    fun test_prefill_existing_ticker_switches_to_edit() = runTest {
+        // GIVEN: AAPL already in the portfolio
+        coEvery { mockGetStockQuote("AAPL") } returns Result.success(createQuote("AAPL", 150.0))
+        val existing = Holding(
+            id = HoldingId("h9"),
+            tickerId = "AAPL",
+            shares = 3.0,
+            purchasePrice = 120.0,
+            purchaseCurrency = Currency.USD,
+            purchaseDate = 1L,
+        )
+        every { mockGetPortfolio.execute() } returns flowOf(Result.success(listOf(existing)))
+
+        // WHEN: the form opens for AAPL
+        val vm = createPrefillViewModel("AAPL")
+        advanceUntilIdle()
+
+        // THEN: the user edits the existing position instead of duplicating it
+        val state = vm.viewState.value
+        assertEquals(HoldingContract.Mode.EDIT, state.mode)
+        assertEquals(HoldingId("h9"), state.holdingId)
+        assertEquals("3", state.shares)
+        assertEquals("120", state.pricePerShare)
+    }
+
+    @Test
+    fun test_prefill_quote_failure_stops_loading() = runTest {
+        // GIVEN: the quote cannot be fetched (default mock)
+        // WHEN: the form opens
+        val vm = createPrefillViewModel("XYZ")
+        advanceUntilIdle()
+
+        // THEN: loading ends without a security, so the screen can show the error state
+        assertFalse(vm.viewState.value.isLoadingSecurity)
+        assertNull(vm.viewState.value.selectedSecurity)
+    }
+
+    @Test
+    fun test_toPriceInput_rounds_and_trims() {
+        assertEquals("187.46", 187.456.toPriceInput())
+        assertEquals("150", 150.0.toPriceInput())
+        assertEquals("0.1235", 0.12346.toPriceInput())
     }
 
     // ===== EDIT MODE TESTS =====
@@ -341,8 +388,11 @@ class HoldingViewModelTest {
         // GIVEN: EDIT mode with valid form
         val quote = createQuote("GOOGL", 140.0)
         coEvery { mockUpdateHolding.execute(any()) } returns Result.success(Unit)
+        coEvery { mockGetStockQuote("GOOGL") } returns Result.success(quote)
+        every { mockGetPortfolio.execute() } returns flowOf(
+            Result.success(listOf(Holding(HoldingId("h1"), "GOOGL", 10.0, 130.0, Currency.USD, 1L))),
+        )
         val vm = createEditViewModel(HoldingId("h1"))
-        vm.onEvent(HoldingContract.HoldingViewEvent.SecuritySelected(quote))
         vm.onEvent(HoldingContract.HoldingViewEvent.SharesChanged("20"))
         vm.onEvent(HoldingContract.HoldingViewEvent.PricePerShareChanged("140"))
 
@@ -356,49 +406,24 @@ class HoldingViewModelTest {
 
     @Test
     fun test_editMode_preserves_purchaseDate_on_update() = runTest {
-        // GIVEN: EDIT mode with original holding having specific purchaseDate
-        val originalDate = 1705276800000L // Some historical date
-        val quote = createQuote("TSLA", 250.0)
+        // GIVEN: an existing holding bought on a historical date
+        val originalDate = 1705276800000L
+        coEvery { mockGetStockQuote("TSLA") } returns Result.success(createQuote("TSLA", 250.0))
         coEvery { mockUpdateHolding.execute(any()) } returns Result.success(Unit)
-        
-        val vm = createEditViewModel(HoldingId("h1"))
-        vm.onEvent(HoldingContract.HoldingViewEvent.SecuritySelected(quote))
-        vm.onEvent(HoldingContract.HoldingViewEvent.SharesChanged("15"))
-        vm.onEvent(HoldingContract.HoldingViewEvent.PricePerShareChanged("250"))
-        
-        // Manually set originalHolding to test date preservation
-        val originalHolding = Holding(
-            id = HoldingId("h1"),
-            tickerId = "TSLA",
-            shares = 10.0,
-            purchasePrice = 200.0,
-            purchaseCurrency = Currency.USD,
-            purchaseDate = originalDate,
+        every { mockGetPortfolio.execute() } returns flowOf(
+            Result.success(listOf(Holding(HoldingId("h1"), "TSLA", 10.0, 200.0, Currency.USD, originalDate))),
         )
-        // (In production, this would be loaded from GetSecurityHoldingUseCase)
+        val vm = createEditViewModel(HoldingId("h1"))
+        vm.onEvent(HoldingContract.HoldingViewEvent.SharesChanged("15"))
 
-        // WHEN: user confirms update
+        // WHEN: user confirms the update
         vm.onEvent(HoldingContract.HoldingViewEvent.ConfirmClicked)
         advanceUntilIdle()
 
-        // THEN: UpdateHoldingUseCase.execute() should use current time if no original holding
-        // (In this test, since originalHolding is not set, purchaseDate will be System.currentTimeMillis())
-        coVerify(exactly = 1) { mockUpdateHolding.execute(any()) }
-    }
-
-    @Test
-    fun test_editMode_search_still_works() = runTest {
-        // GIVEN: EDIT mode viewmodel
-        val results = listOf(createQuote("AMZN", 180.0))
-        coEvery { mockSearch("AMZN") } returns Result.success(results)
-        val vm = createEditViewModel()
-
-        // WHEN: user searches for new security (re-selecting)
-        vm.onEvent(HoldingContract.HoldingViewEvent.SearchQueryChanged("AMZN"))
-        advanceUntilIdle()
-
-        // THEN: searchResults should be populated (user can re-select security if needed)
-        assertEquals(results, vm.viewState.value.searchResults)
+        // THEN: the original purchase date is kept
+        coVerify(exactly = 1) {
+            mockUpdateHolding.execute(match { it.purchaseDate == originalDate && it.shares == 15.0 })
+        }
     }
 
     // ===== SHARED TESTS =====
@@ -430,4 +455,17 @@ class HoldingViewModelTest {
         // If we got here without exception, test passes
         assertTrue(true)
     }
+}
+
+private class FakeAddRepository : PortfolioRepository {
+    val added = mutableListOf<Holding>()
+    override fun observePortfolio(): Flow<Result<List<Holding>>> = emptyFlow()
+    override suspend fun getPortfolio(): Result<List<Holding>> = Result.success(emptyList())
+    override suspend fun addHolding(holding: Holding): Result<HoldingId> {
+        added += holding
+        return Result.success(HoldingId("new-id"))
+    }
+    override suspend fun updateHolding(holding: Holding): Result<Unit> = Result.success(Unit)
+    override suspend fun removeHolding(holdingId: HoldingId): Result<Unit> = Result.success(Unit)
+    override suspend fun clearAll(): Result<Unit> = Result.success(Unit)
 }

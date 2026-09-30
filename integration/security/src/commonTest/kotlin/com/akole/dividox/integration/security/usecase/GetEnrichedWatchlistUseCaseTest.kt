@@ -9,6 +9,8 @@ import com.akole.dividox.integration.security.FakePortfolioRepository
 import com.akole.dividox.integration.security.FakeWatchlistRepository
 import com.akole.dividox.integration.security.domain.usecase.GetEnrichedWatchlistUseCase
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -110,5 +112,20 @@ class GetEnrichedWatchlistUseCaseTest {
 
         // THEN
         assertFalse(result.first().isInPortfolio)
+    }
+
+    @Test
+    fun `SHOULD emit stale quote first then fresh quote WHEN cache has expired quote GIVEN watchlist entry`() = runTest {
+        // GIVEN
+        watchlistRepo.addToWatchlist("AAPL")
+        marketRepo.setCachedQuote("AAPL", FakeMarketRepository.quote(ticker = "AAPL", price = 120.0))
+        marketRepo.setQuote("AAPL", FakeMarketRepository.quote(ticker = "AAPL", price = 150.0))
+
+        // WHEN
+        val emissions = sut().take(2).toList()
+
+        // THEN
+        assertEquals(120.0, emissions[0].first().quote?.price)
+        assertEquals(150.0, emissions[1].first().quote?.price)
     }
 }

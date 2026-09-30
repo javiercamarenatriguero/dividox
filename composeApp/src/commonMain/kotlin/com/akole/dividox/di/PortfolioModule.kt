@@ -11,7 +11,10 @@ import com.akole.dividox.component.portfolio.domain.usecase.ExportPortfolioUseCa
 import com.akole.dividox.component.portfolio.domain.usecase.GetPortfolioUseCase
 import com.akole.dividox.component.portfolio.domain.usecase.RemoveHoldingUseCase
 import com.akole.dividox.component.portfolio.domain.usecase.UpdateHoldingUseCase
+import com.akole.dividox.feature.portfolio.PositionActions
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.StateFlow
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.factoryOf
@@ -36,4 +39,13 @@ val portfolioModule: Module = module {
     factoryOf(::AddHoldingUseCase)
     factoryOf(::UpdateHoldingUseCase)
     factoryOf(::RemoveHoldingUseCase)
+    // App-wide scope: position writes must outlive the (optimistically popped) form screen.
+    single {
+        PositionActions(
+            addHolding = get(),
+            updateHolding = get(),
+            removeHolding = get(),
+            scope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
+        )
+    }
 }

@@ -11,12 +11,14 @@ import com.akole.dividox.component.market.domain.usecase.GetMultipleQuotesUseCas
 import com.akole.dividox.component.portfolio.domain.usecase.GetPortfolioUseCase
 import com.akole.dividox.integration.security.FakeMarketRepository
 import com.akole.dividox.integration.security.FakePortfolioRepository
+import com.akole.dividox.integration.security.domain.model.SecurityHolding
 import com.akole.dividox.integration.security.domain.usecase.GetPortfolioSummaryUseCase
 import com.akole.dividox.integration.security.domain.usecase.GetPortfolioWithQuotesUseCase
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 class GetPortfolioSummaryUseCaseTest {
 
@@ -115,9 +117,58 @@ class GetPortfolioSummaryUseCaseTest {
         marketRepo.setDividendInfo("AAPL", FakeMarketRepository.dividendInfo(ticker = "AAPL", annualPayout = 0.96))
 
         // WHEN
-        val summary = sut().first()
+        val summary = sut().first { it.isDividendDataResolved }
 
         // THEN
         assertEquals(9.6, summary.dividendsCollected, 0.0001)
+    }
+
+    // ─── summarize(target) ────────────────────────────────────────────────────
+
+    // Deliberately non-reciprocal rates (EUR→USD 1.10, USD→EUR 0.90): a USD round trip would
+    // turn 1 EUR into 0.99 EUR, so any USD pivot shows up as an inexact result.
+    private fun converterWith(rates: Map<Currency, Map<Currency, Double>>) = CurrencyConverter(
+        GetExchangeRatesUseCase(
+            object : ExchangeRateRepository {
+                override suspend fun getExchangeRates(base: Currency): Result<ExchangeRates> =
+                    rates[base]?.let { Result.success(ExchangeRates(base, LocalDate(2024, 1, 1), it)) }
+                        ?: Result.failure(IllegalStateException("No rates for $base"))
+            },
+        ),
+    )
+
+    private fun securityHolding(quoteCurrency: String, purchaseCurrency: Currency) = SecurityHolding(
+        holding = FakePortfolioRepository.holding(tickerId = "SAN.MC", shares = 10.0, purchasePrice = 4.0, currency = purchaseCurrency),
+        quote = FakeMarketRepository.quote(ticker = "SAN.MC", price = 5.0, currency = quoteCurrency),
+        dividendInfo = null,
+        totalGainPercent = 0.0,
+    )
+
+    @Test
+    fun `SHOULD compute exact value in display currency WHEN holding is in same currency GIVEN non-reciprocal rates`() = runTest {
+        // GIVEN
+        val converter = converterWith(
+            mapOf(Currency.EUR to mapOf(Currency.USD to 1.10), Currency.USD to mapOf(Currency.EUR to 0.90)),
+        )
+        val sut = GetPortfolioSummaryUseCase(getPortfolioWithQuotesUseCase, converter)
+
+        // WHEN
+        val summary = sut.summarize(listOf(securityHolding("EUR", Currency.EUR)), Currency.EUR)
+
+        // THEN — 10 × 5.00 EUR, no USD round trip
+        assertEquals(50.0, summary?.totalValue)
+        assertEquals(10.0, summary?.totalGain)
+    }
+
+    @Test
+    fun `SHOULD return null WHEN exchange rate is unavailable GIVEN holding in foreign currency`() = runTest {
+        // GIVEN — no rates at all
+        val sut = GetPortfolioSummaryUseCase(getPortfolioWithQuotesUseCase, converterWith(emptyMap()))
+
+        // WHEN
+        val summary = sut.summarize(listOf(securityHolding("USD", Currency.USD)), Currency.EUR)
+
+        // THEN — no mixed-currency sum is produced
+        assertNull(summary)
     }
 }

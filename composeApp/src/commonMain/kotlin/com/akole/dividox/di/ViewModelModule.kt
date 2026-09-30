@@ -39,7 +39,7 @@ val viewModelModule: Module = module {
     viewModelOf(::SearchViewModel)
     factory { DeleteAccountUseCase(get(), get(), get(), get()) }
     viewModel { SettingsViewModel(get(), get(), get(), get(), get(), get(), get(), getAppVersion()) }
-    viewModel { PortfolioViewModel(get(), get(), get(), get()) }
+    viewModel { PortfolioViewModel(get(), get(), get(), get(), get()) }
 
     // SecurityDetailViewModel with required ticker parameter
     viewModel { params ->
@@ -68,11 +68,8 @@ val viewModelModule: Module = module {
         HoldingViewModel(
             holdingId = holdingId,
             prefillTicker = prefillTicker,
-            searchSecurities = get(),
             getStockQuote = get(),
-            addHolding = get(),
-            updateHolding = get(),
-            removeHolding = get(),
+            positionActions = get(),
             getPortfolio = get(),
             getCurrentTimeMillis = { getCurrentTimeMillis() },
             observeAppSettings = get(),

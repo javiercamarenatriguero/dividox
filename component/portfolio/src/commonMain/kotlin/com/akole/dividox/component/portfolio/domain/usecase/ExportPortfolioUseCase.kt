@@ -1,7 +1,7 @@
 package com.akole.dividox.component.portfolio.domain.usecase
 
 import com.akole.dividox.component.portfolio.domain.model.Holding
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 

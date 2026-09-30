@@ -9,15 +9,13 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.BasicAlertDialog
@@ -27,8 +25,8 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -42,12 +40,17 @@ import kotlin.time.Clock
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.retain.retain
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -55,16 +58,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.akole.dividox.common.currency.domain.model.Currency
 import com.akole.dividox.common.ui.resources.components.DividoxTopAppBar
-import com.akole.dividox.common.ui.resources.components.ExchangeMarket
-import com.akole.dividox.common.ui.resources.components.MarketFilterRow
-import com.akole.dividox.common.ui.resources.components.SearchBar
 import com.akole.dividox.common.ui.resources.components.connectivity.ConnectivityBannerHost
 import com.akole.dividox.common.ui.resources.components.connectivity.LocalNetworkConnectivityManager
 import com.akole.dividox.common.ui.resources.format.formatPrice
 import com.akole.dividox.common.ui.resources.format.formatTwoDecimals
 import com.akole.dividox.common.ui.resources.theme.DividoxTheme
 import com.akole.dividox.common.ui.resources.theme.spacing
-import com.akole.dividox.component.market.domain.model.SecurityType
 import com.akole.dividox.component.market.domain.model.StockQuote
 import com.akole.dividox.component.market.domain.model.displayName
 import com.akole.dividox.component.portfolio.domain.model.HoldingId
@@ -73,23 +72,23 @@ import dividox.common.ui_resources.generated.resources.action_add_position
 import dividox.common.ui_resources.generated.resources.action_cancel
 import dividox.common.ui_resources.generated.resources.action_delete
 import dividox.common.ui_resources.generated.resources.action_update_position
+import dividox.common.ui_resources.generated.resources.cd_clear_field
 import dividox.common.ui_resources.generated.resources.cd_delete
 import dividox.common.ui_resources.generated.resources.dialog_remove_message
 import dividox.common.ui_resources.generated.resources.dialog_remove_title
+import dividox.common.ui_resources.generated.resources.holding_security_unavailable
 import dividox.common.ui_resources.generated.resources.label_estimated_value
 import dividox.common.ui_resources.generated.resources.label_price_per_share
 import dividox.common.ui_resources.generated.resources.label_purchase_date
 import dividox.common.ui_resources.generated.resources.label_shares
 import dividox.common.ui_resources.generated.resources.label_unknown_position
-import dividox.common.ui_resources.generated.resources.holding_search_security_hint
-import dividox.common.ui_resources.generated.resources.security_type_all
-import dividox.common.ui_resources.generated.resources.security_type_equity
-import dividox.common.ui_resources.generated.resources.security_type_etf
-import dividox.common.ui_resources.generated.resources.security_type_fund
 import kotlin.time.Instant
+import kotlinx.coroutines.delay
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.resources.stringResource
+
+private const val FOCUS_AFTER_TRANSITION_MS = 400L
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -181,245 +180,167 @@ private fun HoldingScreenContent(
         modifier = modifier.padding(horizontal = MaterialTheme.spacing.medium),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium),
     ) {
-        // Search field (for selecting security)
-        SearchSecurityField(
-            query = state.searchQuery,
-            results = state.searchResults,
-            selectedSecurity = state.selectedSecurity,
-            selectedMarket = state.selectedMarket,
-            selectedType = state.selectedType,
-            isLoading = state.isSearching,
-            onQueryChanged = { query ->
-                onEvent(HoldingContract.HoldingViewEvent.SearchQueryChanged(query))
+        val security = state.selectedSecurity
+        when {
+            state.isLoadingSecurity -> Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = MaterialTheme.spacing.xxLarge),
+                contentAlignment = Alignment.Center,
+            ) { CircularProgressIndicator() }
+
+            security == null -> Text(
+                text = stringResource(Res.string.holding_security_unavailable),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(vertical = MaterialTheme.spacing.large),
+            )
+
+            else -> HoldingForm(state = state, security = security, onEvent = onEvent)
+        }
+    }
+}
+
+@Composable
+private fun HoldingForm(
+    state: HoldingContract.HoldingViewState,
+    security: StockQuote,
+    onEvent: (HoldingContract.HoldingViewEvent) -> Unit,
+) {
+    val sharesFocus = remember { FocusRequester() }
+    val keyboard = LocalSoftwareKeyboardController.current
+    // Security is already chosen: jump straight to the only field that has no sensible default.
+    // Wait for the slide-in transition, otherwise the focus request is dropped.
+    LaunchedEffect(Unit) {
+        delay(FOCUS_AFTER_TRANSITION_MS)
+        runCatching { sharesFocus.requestFocus() }
+        keyboard?.show()
+    }
+    Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.medium)) {
+        // Selected security display
+        SelectedSecurityCard(security = security)
+
+        // Shares input
+        OutlinedTextField(
+            value = state.shares,
+            onValueChange = { input ->
+                if (input.all { it.isDigit() }) {
+                    onEvent(HoldingContract.HoldingViewEvent.SharesChanged(input))
+                }
             },
-            onMarketSelected = { market ->
-                onEvent(HoldingContract.HoldingViewEvent.MarketFilterChanged(market))
+            label = { Text(stringResource(Res.string.label_shares)) },
+            modifier = Modifier.fillMaxWidth().focusRequester(sharesFocus),
+            singleLine = true,
+            trailingIcon = {
+                ClearFieldButton(visible = state.shares.isNotEmpty()) {
+                    onEvent(HoldingContract.HoldingViewEvent.SharesChanged(""))
+                }
             },
-            onTypeSelected = { type ->
-                onEvent(HoldingContract.HoldingViewEvent.TypeFilterChanged(type))
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
+        )
+
+        // Price per share input
+        OutlinedTextField(
+            value = state.pricePerShare,
+            onValueChange = { input ->
+                if (input.matches(Regex("^\\d*\\.?\\d*$"))) {
+                    onEvent(HoldingContract.HoldingViewEvent.PricePerShareChanged(input))
+                }
             },
-            onSecuritySelected = { quote ->
-                onEvent(HoldingContract.HoldingViewEvent.SecuritySelected(quote))
+            label = { Text(stringResource(Res.string.label_price_per_share)) },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            trailingIcon = {
+                ClearFieldButton(visible = state.pricePerShare.isNotEmpty()) {
+                    onEvent(HoldingContract.HoldingViewEvent.PricePerShareChanged(""))
+                }
+            },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+        )
+
+        // Currency selector (chips or dropdown)
+        CurrencySelector(
+            selectedCurrency = state.currency,
+            onCurrencySelected = { currency ->
+                onEvent(HoldingContract.HoldingViewEvent.CurrencyChanged(currency))
             },
         )
 
-        if (state.selectedSecurity != null) {
-            // Selected security display
-            SelectedSecurityCard(security = state.selectedSecurity)
+        // Purchase date picker
+        PurchaseDateField(
+            dateMillis = state.purchaseDateMillis,
+            onDateSelected = { millis ->
+                onEvent(HoldingContract.HoldingViewEvent.PurchaseDateChanged(millis))
+            },
+        )
 
-            // Shares input
-            OutlinedTextField(
-                value = state.shares,
-                onValueChange = { input ->
-                    if (input.all { it.isDigit() }) {
-                        onEvent(HoldingContract.HoldingViewEvent.SharesChanged(input))
-                    }
-                },
-                label = { Text(stringResource(Res.string.label_shares)) },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        // Estimated total display
+        EstimatedTotalCard(
+            total = state.estimatedTotal,
+            currency = state.currency,
+        )
+
+        // Error message
+        if (state.error != null) {
+            Text(
+                text = state.error,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.labelSmall,
+                modifier = Modifier.padding(top = MaterialTheme.spacing.small),
             )
+        }
 
-            // Price per share input
-            OutlinedTextField(
-                value = state.pricePerShare,
-                onValueChange = { input ->
-                    if (input.matches(Regex("^\\d*\\.?\\d*$"))) {
-                        onEvent(HoldingContract.HoldingViewEvent.PricePerShareChanged(input))
-                    }
-                },
-                label = { Text(stringResource(Res.string.label_price_per_share)) },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-            )
-
-            // Currency selector (chips or dropdown)
-            CurrencySelector(
-                selectedCurrency = state.currency,
-                onCurrencySelected = { currency ->
-                    onEvent(HoldingContract.HoldingViewEvent.CurrencyChanged(currency))
-                },
-            )
-
-            // Purchase date picker
-            PurchaseDateField(
-                dateMillis = state.purchaseDateMillis,
-                onDateSelected = { millis ->
-                    onEvent(HoldingContract.HoldingViewEvent.PurchaseDateChanged(millis))
-                },
-            )
-
-            // Estimated total display
-            EstimatedTotalCard(
-                total = state.estimatedTotal,
-                currency = state.currency,
-            )
-
-            // Error message
-            if (state.error != null) {
-                Text(
-                    text = state.error,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier.padding(top = MaterialTheme.spacing.small),
-                )
-            }
-
-            // Action buttons
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = MaterialTheme.spacing.medium),
-                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
-            ) {
-                if (state.mode == HoldingContract.Mode.EDIT) {
-                    Button(
-                        onClick = { onEvent(HoldingContract.HoldingViewEvent.DeleteClicked) },
-                        modifier = Modifier
-                            .weight(1f)
-                            .heightIn(min = MaterialTheme.spacing.buttonMinHeight),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.errorContainer,
-                            contentColor = MaterialTheme.colorScheme.error,
-                        ),
-                        enabled = true,
-                    ) {
-                        Icon(Icons.Default.Delete, contentDescription = stringResource(Res.string.cd_delete))
-                        Text(stringResource(Res.string.action_delete))
-                    }
-                }
-
+        // Action buttons
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = MaterialTheme.spacing.medium),
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
+        ) {
+            if (state.mode == HoldingContract.Mode.EDIT) {
                 Button(
-                    onClick = { onEvent(HoldingContract.HoldingViewEvent.ConfirmClicked) },
+                    onClick = { onEvent(HoldingContract.HoldingViewEvent.DeleteClicked) },
                     modifier = Modifier
                         .weight(1f)
                         .heightIn(min = MaterialTheme.spacing.buttonMinHeight),
-                    enabled = state.selectedSecurity != null &&
-                              state.shares.isNotBlank() && state.pricePerShare.isNotBlank(),
-                ) {
-                    Text(
-                        text = when (state.mode) {
-                            HoldingContract.Mode.ADD -> stringResource(Res.string.action_add_position)
-                            HoldingContract.Mode.EDIT -> stringResource(Res.string.action_update_position)
-                        }
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Suppress("LongParameterList")
-@Composable
-private fun SearchSecurityField(
-    query: String,
-    results: List<StockQuote>,
-    selectedSecurity: StockQuote?,
-    selectedMarket: ExchangeMarket,
-    selectedType: SecurityType?,
-    isLoading: Boolean,
-    onQueryChanged: (String) -> Unit,
-    onMarketSelected: (ExchangeMarket) -> Unit,
-    onTypeSelected: (SecurityType?) -> Unit,
-    onSecuritySelected: (StockQuote) -> Unit,
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small)) {
-        SearchBar(
-            query = query,
-            onQueryChange = onQueryChanged,
-            placeholder = stringResource(Res.string.holding_search_security_hint),
-            modifier = Modifier.fillMaxWidth(),
-            enabled = selectedSecurity == null,
-        )
-        if (selectedSecurity == null) {
-            MarketFilterRow(
-                selectedMarket = selectedMarket,
-                onMarketSelected = onMarketSelected,
-                contentPadding = PaddingValues(0.dp),
-            )
-            SecurityTypeFilterRow(
-                selectedType = selectedType,
-                onTypeSelected = onTypeSelected,
-                contentPadding = PaddingValues(0.dp),
-            )
-        }
-
-        if (isLoading) {
-            CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
-        }
-
-        // Show results if not yet selected
-        if (selectedSecurity == null && results.isNotEmpty()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        top = MaterialTheme.spacing.small,
-                        start = MaterialTheme.spacing.small,
-                        end = MaterialTheme.spacing.small,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                        contentColor = MaterialTheme.colorScheme.error,
                     ),
-            ) {
-                results.forEach { quote ->
-                    SecurityResultItem(
-                        quote = quote,
-                        onSelect = { onSecuritySelected(quote) },
-                    )
+                    enabled = true,
+                ) {
+                    Icon(Icons.Default.Delete, contentDescription = stringResource(Res.string.cd_delete))
+                    Text(stringResource(Res.string.action_delete))
                 }
+            }
+
+            Button(
+                onClick = { onEvent(HoldingContract.HoldingViewEvent.ConfirmClicked) },
+                modifier = Modifier
+                    .weight(1f)
+                    .heightIn(min = MaterialTheme.spacing.buttonMinHeight),
+                enabled = state.shares.isNotBlank() && state.pricePerShare.isNotBlank(),
+            ) {
+                Text(
+                    text = when (state.mode) {
+                        HoldingContract.Mode.ADD -> stringResource(Res.string.action_add_position)
+                        HoldingContract.Mode.EDIT -> stringResource(Res.string.action_update_position)
+                    }
+                )
             }
         }
     }
 }
 
 @Composable
-private fun SecurityResultItem(
-    quote: StockQuote,
-    onSelect: () -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onSelect() }
-            .padding(MaterialTheme.spacing.small),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xSmall),
-            ) {
-                Text(
-                    text = quote.ticker,
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
-                )
-                val typeLabel = quote.type.label()
-                if (typeLabel != null) {
-                    Text(
-                        text = typeLabel,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
-            if (quote.name != null) {
-                Text(
-                    text = quote.name!!,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                )
-            }
-            if (quote.exchange != null) {
-                Text(
-                    text = quote.exchange!!,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
+private fun ClearFieldButton(visible: Boolean, onClear: () -> Unit) {
+    if (!visible) return
+    IconButton(onClick = onClear) {
+        Icon(
+            imageVector = Icons.Default.Close,
+            contentDescription = stringResource(Res.string.cd_clear_field),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 
@@ -671,51 +592,12 @@ private fun Long.toFormattedDate(): String {
 @Preview
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun HoldingScreenAddEmptyPreview() {
-    DividoxTheme {
-        HoldingScreenContent(
-            state = HoldingContract.HoldingViewState(
-                mode = HoldingContract.Mode.ADD,
-            ),
-            onEvent = {},
-        )
-    }
-}
-
-@Preview
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun HoldingScreenAddWithResultsPreview() {
-    val mockQuote = StockQuote(
-        ticker = "AAPL",
-        price = 150.0,
-        change = 5.0,
-        changePercent = 3.33,
-        currency = "USD",
-        lastUpdated = kotlin.time.Instant.parse("2024-01-20T00:00:00Z"),
-    )
-    DividoxTheme {
-        HoldingScreenContent(
-            state = HoldingContract.HoldingViewState(
-                mode = HoldingContract.Mode.ADD,
-                searchQuery = "AAP",
-                searchResults = listOf(mockQuote),
-            ),
-            onEvent = {},
-        )
-    }
-}
-
-@Preview
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
 private fun HoldingScreenAddLoadingPreview() {
     DividoxTheme {
         HoldingScreenContent(
             state = HoldingContract.HoldingViewState(
                 mode = HoldingContract.Mode.ADD,
-                searchQuery = "AAPL",
-                isSearching = true,
+                isLoadingSecurity = true,
             ),
             onEvent = {},
         )
@@ -740,9 +622,9 @@ private fun HoldingScreenEditPrefilledPreview() {
                 mode = HoldingContract.Mode.EDIT,
                 holdingId = HoldingId("h1"),
                 selectedSecurity = mockQuote,
-                shares = "10.5",
+                shares = "10",
                 pricePerShare = "320.0",
-                estimatedTotal = 3360.0,
+                estimatedTotal = 3200.0,
             ),
             onEvent = {},
         )
@@ -792,44 +674,12 @@ private fun HoldingScreenAddDarkPreview() {
         HoldingScreenContent(
             state = HoldingContract.HoldingViewState(
                 mode = HoldingContract.Mode.ADD,
-                searchQuery = "AAP",
-                searchResults = listOf(mockQuote),
+                selectedSecurity = mockQuote,
+                shares = "10",
+                pricePerShare = "150",
+                estimatedTotal = 1500.0,
             ),
             onEvent = {},
         )
     }
-}
-
-@Composable
-private fun SecurityTypeFilterRow(
-    selectedType: SecurityType?,
-    onTypeSelected: (SecurityType?) -> Unit,
-    contentPadding: PaddingValues = PaddingValues(0.dp),
-) {
-    val options: List<SecurityType?> = listOf(null) + SecurityType.entries
-    LazyRow(
-        contentPadding = contentPadding,
-        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
-    ) {
-        items(options, key = { it?.name ?: "ALL" }) { type ->
-            FilterChip(
-                selected = selectedType == type,
-                onClick = { onTypeSelected(type) },
-                label = {
-                    Text(
-                        text = type.label() ?: stringResource(Res.string.security_type_all),
-                        style = MaterialTheme.typography.labelSmall,
-                    )
-                },
-            )
-        }
-    }
-}
-
-@Composable
-private fun SecurityType?.label(): String? = when (this) {
-    SecurityType.EQUITY -> stringResource(Res.string.security_type_equity)
-    SecurityType.ETF -> stringResource(Res.string.security_type_etf)
-    SecurityType.MUTUAL_FUND -> stringResource(Res.string.security_type_fund)
-    null -> null
 }

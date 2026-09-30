@@ -68,6 +68,7 @@ class DataStoreExchangeRateLocalDataSource(
         val dto = CachedExchangeRatesDto(
             date = rates.date.toString(),
             rates = rates.rates.entries.associate { (c, r) -> c.code to r },
+            fetchedOn = rates.fetchedOn?.toString(),
         )
         dataStore.edit { prefs ->
             prefs[key] = json.encodeToString(dto)
@@ -83,6 +84,7 @@ class DataStoreExchangeRateLocalDataSource(
                     Currency.entries.firstOrNull { it.code == code }?.let { it to rate }
                 }
                 .toMap(),
+            fetchedOn = fetchedOn?.let(LocalDate::parse),
         )
 
     private companion object {

@@ -11,6 +11,7 @@ import com.akole.dividox.component.portfolio.domain.model.Holding
 import com.akole.dividox.component.portfolio.domain.model.HoldingId
 import com.akole.dividox.integration.security.domain.model.SecurityHolding
 import com.akole.dividox.integration.security.domain.usecase.GetPortfolioWithQuotesUseCase
+import com.akole.dividox.integration.security.domain.usecase.GetPortfolioValueHistoryUseCase
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -40,6 +41,9 @@ class PortfolioViewModelTest {
     private val mockObserveSettings = mockk<ObserveAppSettingsUseCase>()
     private val mockCurrencyConverter = mockk<CurrencyConverter>()
     private val mockConnectivityManager = mockk<NetworkConnectivityManager>()
+    private val mockValueHistory = mockk<GetPortfolioValueHistoryUseCase> {
+        coEvery { this@mockk.invoke(any(), any(), any()) } returns emptyList()
+    }
 
     @BeforeTest
     fun setup() {
@@ -55,7 +59,13 @@ class PortfolioViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun viewModel() = PortfolioViewModel(mockUseCase, mockObserveSettings, mockCurrencyConverter, mockConnectivityManager)
+    private fun viewModel() = PortfolioViewModel(
+        mockUseCase,
+        mockObserveSettings,
+        mockCurrencyConverter,
+        mockConnectivityManager,
+        mockValueHistory,
+    )
 
     private fun createDividendInfo(ticker: String, yield: Double): DividendInfo {
         return DividendInfo(
@@ -266,7 +276,7 @@ class PortfolioViewModelTest {
         advanceUntilIdle()
 
         // WHEN
-        vm.onViewEvent(PortfolioContract.PortfolioViewEvent.SortOrderChanged(SortOrder(SortField.YIELD, ascending = false)))
+        vm.onViewEvent(PortfolioContract.PortfolioViewEvent.SortOrderChanged(SortOrder(SortField.DIVIDEND, ascending = false)))
         advanceUntilIdle()
 
         // THEN
@@ -282,7 +292,7 @@ class PortfolioViewModelTest {
         advanceUntilIdle()
 
         // WHEN
-        vm.onViewEvent(PortfolioContract.PortfolioViewEvent.SortOrderChanged(SortOrder(SortField.YIELD, ascending = true)))
+        vm.onViewEvent(PortfolioContract.PortfolioViewEvent.SortOrderChanged(SortOrder(SortField.DIVIDEND, ascending = true)))
         advanceUntilIdle()
 
         // THEN
@@ -342,9 +352,9 @@ class PortfolioViewModelTest {
         val gainAsc = SortOrder(SortField.GAIN, ascending = true)
 
         // WHEN
-        val switched = gainAsc.toggle(SortField.YIELD)
+        val switched = gainAsc.toggle(SortField.DIVIDEND)
 
         // THEN
-        assertEquals(SortOrder(SortField.YIELD, ascending = false), switched)
+        assertEquals(SortOrder(SortField.DIVIDEND, ascending = false), switched)
     }
 }

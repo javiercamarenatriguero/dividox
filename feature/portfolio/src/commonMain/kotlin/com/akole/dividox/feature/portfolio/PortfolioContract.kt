@@ -4,6 +4,8 @@ import com.akole.dividox.common.mvi.SideEffect
 import com.akole.dividox.common.mvi.ViewEvent
 import com.akole.dividox.common.mvi.ViewState
 import com.akole.dividox.common.currency.domain.model.Currency
+import com.akole.dividox.component.market.domain.model.ChartPeriod
+import com.akole.dividox.integration.security.domain.model.PortfolioValuePoint
 import com.akole.dividox.integration.security.domain.model.SecurityHolding
 
 interface PortfolioContract {
@@ -16,11 +18,20 @@ interface PortfolioContract {
         val currency: Currency = Currency.EUR,
         val error: String? = null,
         val convertedPrices: Map<String, Double> = emptyMap(),
-    ) : ViewState
+        val evolutionPeriod: ChartPeriod = DEFAULT_EVOLUTION_PERIOD,
+        val evolution: List<PortfolioValuePoint> = emptyList(),
+        val isEvolutionLoading: Boolean = true,
+    ) : ViewState {
+        companion object {
+            val DEFAULT_EVOLUTION_PERIOD = ChartPeriod.ONE_YEAR
+            val EVOLUTION_PERIODS = listOf(ChartPeriod.ONE_MONTH, ChartPeriod.ONE_YEAR, ChartPeriod.FIVE_YEARS)
+        }
+    }
 
     sealed interface PortfolioViewEvent : ViewEvent {
         data class SearchQueryChanged(val query: String) : PortfolioViewEvent
         data class SortOrderChanged(val order: SortOrder) : PortfolioViewEvent
+        data class EvolutionPeriodSelected(val period: ChartPeriod) : PortfolioViewEvent
         data object AddHoldingClicked : PortfolioViewEvent
         data class EditHoldingClicked(val holdingId: String) : PortfolioViewEvent
         data class SecurityClicked(val ticker: String) : PortfolioViewEvent

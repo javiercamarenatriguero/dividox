@@ -25,4 +25,11 @@ enum class Currency(val code: String, val symbol: String) {
     MXN("MXN", "MX$"),
     BRL("BRL", "R$"),
     ZAR("ZAR", "R"),
+    SEK("SEK", "SEK "),
+    NOK("NOK", "NOK "),
+    DKK("DKK", "DKK "),
+    PLN("PLN", "zł "),
+    HKD("HKD", "HK$"),
+    SGD("SGD", "S$"),
+    KRW("KRW", "₩"),
 }

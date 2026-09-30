@@ -2,6 +2,7 @@ package com.akole.dividox.di
 
 import com.akole.dividox.integration.security.domain.usecase.GetEnrichedWatchlistUseCase
 import com.akole.dividox.integration.security.domain.usecase.GetPortfolioPeriodGainUseCase
+import com.akole.dividox.integration.security.domain.usecase.GetPortfolioValueHistoryUseCase
 import com.akole.dividox.integration.security.domain.usecase.GetPortfolioSummaryUseCase
 import com.akole.dividox.integration.security.domain.usecase.GetPortfolioWithQuotesUseCase
 import com.akole.dividox.integration.security.domain.usecase.GetSecurityDetailUseCase
@@ -14,6 +15,7 @@ val securityIntegrationModule: Module = module {
     factoryOf(::GetPortfolioWithQuotesUseCase)
     factoryOf(::GetPortfolioSummaryUseCase)
     factoryOf(::GetPortfolioPeriodGainUseCase)
+    factory { GetPortfolioValueHistoryUseCase(get(), get()) }
     factoryOf(::GetEnrichedWatchlistUseCase)
     factoryOf(::GetSecurityDetailUseCase)
     factoryOf(::GetSecurityHoldingUseCase)

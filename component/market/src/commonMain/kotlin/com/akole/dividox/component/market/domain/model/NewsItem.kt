@@ -1,6 +1,6 @@
 package com.akole.dividox.component.market.domain.model
 
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 
 data class NewsItem(
     val id: String,

@@ -7,21 +7,26 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -43,6 +48,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.retain.retain
@@ -68,11 +75,15 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Instant
 import dividox.common.ui_resources.generated.resources.Res
+import dividox.common.ui_resources.generated.resources.cd_clear_search
 import dividox.common.ui_resources.generated.resources.portfolio_edit
 import dividox.common.ui_resources.generated.resources.portfolio_per_share
 import dividox.common.ui_resources.generated.resources.portfolio_purchase_price
 import dividox.common.ui_resources.generated.resources.portfolio_shares_format
+import dividox.common.ui_resources.generated.resources.portfolio_empty_cta
 import dividox.common.ui_resources.generated.resources.portfolio_empty_state
+import dividox.common.ui_resources.generated.resources.portfolio_empty_title
+import dividox.common.ui_resources.generated.resources.search_no_results
 import dividox.common.ui_resources.generated.resources.search_security_hint
 import dividox.common.ui_resources.generated.resources.portfolio_sort_date
 import dividox.common.ui_resources.generated.resources.portfolio_sort_gain
@@ -121,7 +132,8 @@ private fun PortfolioContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues),
+                // Only the top bar inset: the parent scaffold's bottom navigation bar already handles the bottom.
+                .padding(top = paddingValues.calculateTopPadding()),
         ) {
             // Banner positioned right below TopAppBar
             ConnectivityBannerHost(connectivityFlow = connectivityManager.observeConnectivity())
@@ -148,6 +160,21 @@ private fun PortfolioContent(
                     ) {
                         Spacer(modifier = Modifier.height(MaterialTheme.spacing.small))
 
+                        // Hidden only for an empty portfolio; stays visible while searching.
+                        if (state.holdings.isNotEmpty() || state.searchQuery.isNotBlank()) {
+                            PortfolioEvolutionCard(
+                                points = state.evolution,
+                                isLoading = state.isEvolutionLoading,
+                                period = state.evolutionPeriod,
+                                periods = PortfolioContract.PortfolioViewState.EVOLUTION_PERIODS,
+                                currency = state.currency,
+                                onPeriodSelected = { period ->
+                                    onEvent(PortfolioContract.PortfolioViewEvent.EvolutionPeriodSelected(period))
+                                },
+                            )
+                            Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
+                        }
+
                         SearchBar(
                             query = state.searchQuery,
                             onQueryChanged = { query ->
@@ -166,8 +193,18 @@ private fun PortfolioContent(
 
                         Spacer(modifier = Modifier.height(MaterialTheme.spacing.medium))
 
-                        if (state.holdings.isEmpty()) {
-                            EmptyState()
+                        if (state.holdings.isEmpty() && state.searchQuery.isBlank()) {
+                            EmptyState(
+                                onAddClick = { onEvent(PortfolioContract.PortfolioViewEvent.AddHoldingClicked) },
+                            )
+                        } else if (state.holdings.isEmpty()) {
+                            Text(
+                                text = stringResource(Res.string.search_no_results, state.searchQuery),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth().padding(MaterialTheme.spacing.large),
+                            )
                         } else {
                             HoldingsList(
                                 holdings = state.holdings,
@@ -215,6 +252,22 @@ private fun SearchBar(
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+        },
+        trailingIcon = {
+            if (localQuery.isNotEmpty()) {
+                IconButton(
+                    onClick = {
+                        localQuery = ""
+                        onQueryChanged("")
+                    },
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = stringResource(Res.string.cd_clear_search),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
         },
         singleLine = true,
         shape = RoundedCornerShape(12.dp),
@@ -312,6 +365,8 @@ private fun HoldingsList(
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp),
+        // Keep the last card clear of the "Add position" FAB.
+        contentPadding = PaddingValues(bottom = MaterialTheme.spacing.buttonMinHeight + MaterialTheme.spacing.large),
     ) {
         items(holdings) { holding ->
             HoldingCard(
@@ -470,19 +525,38 @@ private fun HoldingCard(
 }
 
 @Composable
-private fun EmptyState(modifier: Modifier = Modifier) {
-    Box(
+private fun EmptyState(onAddClick: () -> Unit, modifier: Modifier = Modifier) {
+    Column(
         modifier = modifier
-            .fillMaxSize()
-            .padding(MaterialTheme.spacing.medium),
-        contentAlignment = Alignment.Center,
+            .fillMaxWidth()
+            .padding(horizontal = MaterialTheme.spacing.large, vertical = MaterialTheme.spacing.xxLarge),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.small),
     ) {
+        Surface(shape = CircleShape, color = MaterialTheme.colorScheme.primaryContainer) {
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier = Modifier.padding(MaterialTheme.spacing.medium).size(MaterialTheme.spacing.xLarge),
+            )
+        }
+        Text(
+            text = stringResource(Res.string.portfolio_empty_title),
+            style = MaterialTheme.typography.titleMedium,
+            textAlign = TextAlign.Center,
+        )
         Text(
             text = stringResource(Res.string.portfolio_empty_state),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
+        Button(onClick = onAddClick, modifier = Modifier.padding(top = MaterialTheme.spacing.small)) {
+            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(MaterialTheme.spacing.iconSmall))
+            Spacer(Modifier.width(MaterialTheme.spacing.small))
+            Text(stringResource(Res.string.portfolio_empty_cta))
+        }
     }
 }
 

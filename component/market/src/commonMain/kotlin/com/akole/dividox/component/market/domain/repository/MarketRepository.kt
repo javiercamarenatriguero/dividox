@@ -13,6 +13,13 @@ import kotlinx.coroutines.flow.Flow
 interface MarketRepository {
     suspend fun getStockQuote(ticker: String): Result<StockQuote>
     suspend fun getMultipleQuotes(tickers: List<String>): Result<List<StockQuote>>
+
+    /**
+     * Returns any locally cached quotes for [tickers], **ignoring TTL** (stale-while-revalidate).
+     * Never hits the network. Used to paint the UI instantly on cold start before
+     * [getMultipleQuotes] returns fresh values.
+     */
+    suspend fun getCachedQuotes(tickers: List<String>): List<StockQuote> = emptyList()
     suspend fun getDividendInfo(ticker: String): Result<DividendInfo>
     suspend fun getCompanyInfo(ticker: String): Result<CompanyInfo>
     suspend fun getDividendHistory(ticker: String): Result<List<DividendInfo>>

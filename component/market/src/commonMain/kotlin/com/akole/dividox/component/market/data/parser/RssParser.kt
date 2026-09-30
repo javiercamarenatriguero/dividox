@@ -1,7 +1,7 @@
 package com.akole.dividox.component.market.data.parser
 
 import com.akole.dividox.component.market.domain.model.NewsItem
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant

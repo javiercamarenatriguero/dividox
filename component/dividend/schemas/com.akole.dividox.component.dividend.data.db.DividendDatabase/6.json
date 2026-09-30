@@ -1,0 +1,328 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 6,
+    "identityHash": "34dda7b7189f474b7f38ad8134f1b341",
+    "entities": [
+      {
+        "tableName": "dividend_payments",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `ticker_id` TEXT NOT NULL, `amount` REAL NOT NULL, `amount_per_share` REAL NOT NULL DEFAULT 0.0, `shares` REAL NOT NULL DEFAULT 0.0, `currency` TEXT NOT NULL, `payment_date` TEXT NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tickerId",
+            "columnName": "ticker_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "amount",
+            "columnName": "amount",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "amountPerShare",
+            "columnName": "amount_per_share",
+            "affinity": "REAL",
+            "notNull": true,
+            "defaultValue": "0.0"
+          },
+          {
+            "fieldPath": "shares",
+            "columnName": "shares",
+            "affinity": "REAL",
+            "notNull": true,
+            "defaultValue": "0.0"
+          },
+          {
+            "fieldPath": "currency",
+            "columnName": "currency",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "paymentDate",
+            "columnName": "payment_date",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "stock_quote_cache",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`ticker` TEXT NOT NULL, `price` REAL NOT NULL, `change` REAL NOT NULL, `change_percent` REAL NOT NULL, `currency` TEXT NOT NULL, `last_updated` INTEGER NOT NULL, `cached_at` INTEGER NOT NULL, `name` TEXT, `exchange` TEXT, `fifty_two_week_high` REAL, `fifty_two_week_low` REAL, `volume` INTEGER, `day_high` REAL, `day_low` REAL, PRIMARY KEY(`ticker`))",
+        "fields": [
+          {
+            "fieldPath": "ticker",
+            "columnName": "ticker",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "price",
+            "columnName": "price",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "change",
+            "columnName": "change",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "changePercent",
+            "columnName": "change_percent",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "currency",
+            "columnName": "currency",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastUpdated",
+            "columnName": "last_updated",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cachedAt",
+            "columnName": "cached_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "exchange",
+            "columnName": "exchange",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "fiftyTwoWeekHigh",
+            "columnName": "fifty_two_week_high",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "fiftyTwoWeekLow",
+            "columnName": "fifty_two_week_low",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "volume",
+            "columnName": "volume",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "dayHigh",
+            "columnName": "day_high",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "dayLow",
+            "columnName": "day_low",
+            "affinity": "REAL"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "ticker"
+          ]
+        }
+      },
+      {
+        "tableName": "company_info_cache",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`ticker` TEXT NOT NULL, `name` TEXT NOT NULL, `exchange` TEXT NOT NULL, `logo_url` TEXT, `cached_at` INTEGER NOT NULL, PRIMARY KEY(`ticker`))",
+        "fields": [
+          {
+            "fieldPath": "ticker",
+            "columnName": "ticker",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "exchange",
+            "columnName": "exchange",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "logoUrl",
+            "columnName": "logo_url",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "cachedAt",
+            "columnName": "cached_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "ticker"
+          ]
+        }
+      },
+      {
+        "tableName": "news_cache",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`cache_key` TEXT NOT NULL, `id` TEXT NOT NULL, `position` INTEGER NOT NULL, `title` TEXT NOT NULL, `publisher` TEXT NOT NULL, `link` TEXT NOT NULL, `published_at` INTEGER NOT NULL, `thumbnail_url` TEXT, `summary` TEXT, `cached_at` INTEGER NOT NULL, PRIMARY KEY(`cache_key`, `id`))",
+        "fields": [
+          {
+            "fieldPath": "cacheKey",
+            "columnName": "cache_key",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "position",
+            "columnName": "position",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "publisher",
+            "columnName": "publisher",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "link",
+            "columnName": "link",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "publishedAt",
+            "columnName": "published_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "thumbnailUrl",
+            "columnName": "thumbnail_url",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "summary",
+            "columnName": "summary",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "cachedAt",
+            "columnName": "cached_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "cache_key",
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "dividend_info_cache",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`ticker` TEXT NOT NULL, `yield` REAL NOT NULL, `annual_payout` REAL NOT NULL, `payout_ratio` REAL NOT NULL, `five_year_growth` REAL NOT NULL, `ex_dividend_date` TEXT, `next_dividend_date` TEXT, `cached_at` INTEGER NOT NULL, PRIMARY KEY(`ticker`))",
+        "fields": [
+          {
+            "fieldPath": "ticker",
+            "columnName": "ticker",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "yield",
+            "columnName": "yield",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "annualPayout",
+            "columnName": "annual_payout",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "payoutRatio",
+            "columnName": "payout_ratio",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fiveYearGrowth",
+            "columnName": "five_year_growth",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "exDividendDate",
+            "columnName": "ex_dividend_date",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "nextDividendDate",
+            "columnName": "next_dividend_date",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "cachedAt",
+            "columnName": "cached_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "ticker"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '34dda7b7189f474b7f38ad8134f1b341')"
+    ]
+  }
+}
